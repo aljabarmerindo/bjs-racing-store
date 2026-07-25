@@ -5,14 +5,14 @@ import YouTubeEmbed from "./YouTubeEmbed";
 
 const VIDEOS = [
   {
-    id: "JYJEdrUTQzE",
-    title: "Demo Spray Paint Metallic BJS Racing",
-    product: "Pilok Metallic Series",
-  },
-  {
     id: "4H3ZedPiIvc",
     title: "Review Underbone System Racing",
     product: "Underbone Racing",
+  },
+  {
+    id: "JYJEdrUTQzE",
+    title: "Demo Spray Paint Metallic BJS Racing",
+    product: "Pilok Metallic Series",
   },
   {
     id: "PDdSFtYcLsE",
