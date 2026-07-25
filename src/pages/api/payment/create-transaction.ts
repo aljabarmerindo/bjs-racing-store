@@ -113,6 +113,29 @@ export const POST: APIRoute = async ({ request, locals }) => {
             }
         }
 
+        // Blok validasi stok flash sale
+        const { data: flashSalesInStock, error: flashSaleStockError } =
+            await supabaseAdmin
+                .from("flash_sales")
+                .select("id, product_id, stock_allocated")
+                .in("product_id", productIds)
+                .eq("is_active", true);
+        if (flashSaleStockError)
+            throw new Error("Gagal memverifikasi stok flash sale.");
+        for (const item of typedCartItems) {
+            const flashSale = flashSalesInStock.find(
+                (fs) => fs.product_id === item.product_id,
+            );
+            if (flashSale && item.quantity > flashSale.stock_allocated) {
+                return new Response(
+                    JSON.stringify({
+                        message: `Stok flash sale untuk produk "${item.name}" tidak mencukupi. Sisa: ${flashSale.stock_allocated}.`,
+                    }),
+                    { status: 409 },
+                );
+            }
+        }
+
         const { data: customer, error: customerError } = await supabaseAdmin
             .from("customers")
             .select("id, nama_pelanggan, telepon")
@@ -200,6 +223,28 @@ export const POST: APIRoute = async ({ request, locals }) => {
             .from("order_items")
             .insert(orderItemsData);
         if (orderItemsError) throw orderItemsError;
+
+        const flashSaleProductIds = typedCartItems.map((item) => item.product_id);
+        const { data: activeFlashSales, error: flashSalesError } =
+          await supabaseAdmin
+            .from("flash_sales")
+            .select("id, product_id, stock_allocated")
+            .in("product_id", flashSaleProductIds)
+            .eq("is_active", true);
+        if (flashSalesError) throw flashSalesError;
+
+        for (const item of typedCartItems) {
+          const flashSale = activeFlashSales.find(
+            (fs) => fs.product_id === item.product_id,
+          );
+          if (!flashSale) continue;
+          const newStock = Math.max(0, (flashSale.stock_allocated || 0) - item.quantity);
+          const { error: decrementError } = await supabaseAdmin
+            .from("flash_sales")
+            .update({ stock_allocated: newStock })
+            .eq("id", flashSale.id);
+          if (decrementError) throw decrementError;
+        }
 
         const paymentGateway = (
             import.meta.env.PAYMENT_GATEWAY || "midtrans"

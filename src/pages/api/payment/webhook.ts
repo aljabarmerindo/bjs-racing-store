@@ -47,6 +47,33 @@ export const POST: APIRoute = async ({ request }) => {
                     .from("payments")
                     .update({ status: transaction_status })
                     .eq("order_id", orderData.id);
+
+                const { data: orderItems } = await supabaseAdmin
+                    .from("order_items")
+                    .select("product_id, quantity")
+                    .eq("order_id", orderData.id);
+                if (orderItems && orderItems.length > 0) {
+                    const productIds = orderItems.map(
+                        (item) => item.product_id,
+                    );
+                    const { data: activeFlashSales } = await supabaseAdmin
+                        .from("flash_sales")
+                        .select("id, product_id, stock_allocated")
+                        .in("product_id", productIds)
+                        .eq("is_active", true);
+
+                    for (const item of orderItems) {
+                        const flashSale = activeFlashSales?.find(
+                            (fs) => fs.product_id === item.product_id,
+                        );
+                        if (!flashSale) continue;
+                        const restoredStock = (flashSale.stock_allocated || 0) + item.quantity;
+                        await supabaseAdmin
+                            .from("flash_sales")
+                            .update({ stock_allocated: restoredStock })
+                            .eq("id", flashSale.id);
+                    }
+                }
             }
         }
 

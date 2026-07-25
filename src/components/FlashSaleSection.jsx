@@ -1,6 +1,7 @@
 // src/components/FlashSaleSection.jsx
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabaseBrowserClient.ts";
+import { nowWIB } from "@/lib/utils.ts";
 import { FiZap, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
 const LIMIT = 6;
@@ -55,7 +56,7 @@ const FlashSaleSection = () => {
         .from("flash_sales")
         .select("*, products(id, nama, image_url, harga_jual)")
         .eq("is_active", true)
-        .gte("valid_until", new Date().toISOString())
+        .gte("valid_until", nowWIB())
         .order("sort_order", { ascending: true })
         .order("created_at", { ascending: false })
         .limit(LIMIT);
@@ -81,9 +82,10 @@ const FlashSaleSection = () => {
   useEffect(() => {
     if (flashSales.length === 0) return;
     const timer = setInterval(() => {
-      const validUntil = flashSales[0]?.valid_until;
-      if (!validUntil) return;
-      const remaining = getTimeRemaining(validUntil);
+      const countdownEnd = Math.min(
+        ...flashSales.map((f) => new Date(f.valid_until).getTime()),
+      );
+      const remaining = getTimeRemaining(new Date(countdownEnd).toISOString());
       setTime(remaining);
     }, 1000);
     return () => clearInterval(timer);

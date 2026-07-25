@@ -21,3 +21,9 @@ export function formatToWIB(dateString: string | Date): string {
 
   return new Intl.DateTimeFormat("id-ID", options).format(date);
 }
+
+export function nowWIB(): string {
+  const now = new Date();
+  const wibDate = new Date(now.getTime() + 3600000 * 7);
+  return wibDate.toISOString();
+}
