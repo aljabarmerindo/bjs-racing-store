@@ -184,3 +184,42 @@ if (orderStatus === 'cancelled') {
     </div>
   </div>
 </MainLayout>
+
+<div id="order-status-poll" data-order-id={order_id} data-order-status={orderStatus} data-status-param={statusParam || ''} class="hidden"></div>
+
+<script>
+  (function() {
+    const el = document.getElementById('order-status-poll');
+    if (!el) return;
+    const orderId = el.dataset.orderId;
+    const orderStatus = el.dataset.orderStatus;
+    const statusParam = el.dataset.statusParam || '';
+
+    if (statusParam !== 'success' || orderStatus !== 'awaiting_payment') return;
+
+    const successStatuses = ['paid', 'processing', 'shipped', 'completed'];
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    async function checkStatus() {
+      if (attempts >= maxAttempts) return;
+      try {
+        const res = await fetch(`/api/payment/status?order_id=${orderId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.status && successStatuses.includes(data.status)) {
+          window.location.reload();
+        }
+      } catch (_) {
+        // ignore
+      } finally {
+        attempts++;
+        if (attempts < maxAttempts) {
+          setTimeout(checkStatus, 3000);
+        }
+      }
+    }
+
+    setTimeout(checkStatus, 2000);
+  })();
+</script>
