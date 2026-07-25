@@ -31,7 +31,7 @@ const MobileMenu = () => {
     if (!isMobileMenuOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-white z-50 flex flex-col md:hidden">
+        <div className="fixed inset-0 bg-white z-50 flex flex-col lg:hidden">
             {/* Header */}
             <div className="flex justify-between items-center px-4 py-4 border-b border-slate-200">
                 <a href="/" className="flex items-center gap-2" onClick={closeMobileMenu}>

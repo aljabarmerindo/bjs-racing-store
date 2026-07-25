@@ -28,7 +28,7 @@ const navLinks = [
         </a>
         
         {/* Desktop nav links */}
-        <nav class="hidden md:flex items-center space-x-4 mobile:space-x-6 tablet:space-x-8">
+        <nav class="hidden lg:flex items-center space-x-4 mobile:space-x-6 tablet:space-x-8">
             {navLinks.map(link => ( 
                 <a href={link.path} class="font-semibold text-slate-600 hover:text-orange-500 transition-colors text-sm mobile:text-base">
                     {link.name} 
@@ -37,14 +37,14 @@ const navLinks = [
         </nav>
         
         {/* Desktop action icons */}
-        <div class="hidden md:flex items-center gap-4 mobile:gap-5 tablet:gap-6">
+        <div class="hidden lg:flex items-center gap-4 mobile:gap-5 tablet:gap-6">
             <WishlistIcon client:visible />
             <CartIcon client:visible />
             <AuthMenu client:load />
         </div>
         
         {/* Mobile action icons + hamburger */}
-        <div class="md:hidden flex items-center gap-3">
+        <div class="lg:hidden flex items-center gap-3">
             <WishlistIcon client:visible />
             <CartIcon client:visible />
             <MobileMenuButton client:load />
