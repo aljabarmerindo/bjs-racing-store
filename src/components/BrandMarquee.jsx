@@ -14,7 +14,7 @@ const FALLBACK_BRANDS = [
   { id: "showa", name: "Showa", logo_url: null },
 ];
 
-const DURATION = 8;
+const DURATION = 14;
 
 const BrandLogo = ({ brand }) => (
   <div className="flex-none px-6 mobile:px-8 flex flex-col items-center justify-center select-none gap-1.5">
