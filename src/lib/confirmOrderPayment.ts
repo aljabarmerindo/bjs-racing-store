@@ -98,9 +98,32 @@ export async function confirmOrderPayment(
         `[LOGGING] Berhasil mencatat ${stockLogEntries.length} item ke stock_logs.`,
       );
     } else {
-      console.log(
-        `[LOGGING] Transaksi POS untuk ${orderNumber} sudah ada (konflik), lewati stock_logs.`,
+      const { data: existingLogs } = await supabaseAdmin
+        .from("stock_logs")
+        .select("product_id")
+        .eq("keterangan", `Penjualan Online - Order #${orderData.order_number}`);
+
+      const existingProductIds = new Set(
+        (existingLogs || []).map((log: any) => log.product_id),
       );
+
+      const newLogs = stockLogEntries.filter(
+        (entry: any) => !existingProductIds.has(entry.product_id),
+      );
+
+      if (newLogs.length > 0) {
+        const { error: stockLogError } = await supabaseAdmin
+          .from("stock_logs")
+          .insert(newLogs);
+        if (stockLogError) throw stockLogError;
+        console.log(
+          `[LOGGING] Retry: mencatat ${newLogs.length} item baru ke stock_logs.`,
+        );
+      } else {
+        console.log(
+          `[LOGGING] Semua stock_logs untuk ${orderNumber} sudah tercatat.`,
+        );
+      }
     }
 
     return { ok: true };

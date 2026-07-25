@@ -123,8 +123,7 @@ function detectDeviceCapabilities() {
     isLandscape,
     userAgent
   };
-  
-  console.log('🔄 BJS Racing - Device detected:', window.deviceInfo);
+   
   return window.deviceInfo;
 }
 
@@ -137,12 +136,10 @@ function handleOrientationChange() {
     html.classList.add('landscape');
     html.classList.remove('portrait');
     document.dispatchEvent(new CustomEvent('orientationlandscape'));
-    console.log('📱 Orientation changed: Landscape');
   } else {
     html.classList.add('portrait');
     html.classList.remove('landscape');
     document.dispatchEvent(new CustomEvent('orientationportrait'));
-    console.log('📱 Orientation changed: Portrait');
   }
 }
 
@@ -213,7 +210,6 @@ document.addEventListener('DOMContentLoaded', function() {
   window.addEventListener('appinstalled', () => {
     installButton.style.display = 'none';
     deferredPrompt = null;
-    console.log('PWA was installed');
   });
 });
 

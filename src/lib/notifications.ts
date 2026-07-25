@@ -82,7 +82,7 @@ const EVENT_TEMPLATES: Record<
       `Halo ${d.customerName || "Customer"}!\n\n` +
       `Pesanan ${d.orderNumber} sudah dikirim via ${d.courierName || "kurir"}. ` +
       `No. Resi: ${d.trackingNumber || "-"}\n` +
-      `Estimasi tib a: ${d.etd || "akan diinfokan"}\n\n` +
+      `Estimasi tiba: ${d.etd || "akan diinfokan"}\n\n` +
       `Terima kasih,\n${d.storeName || "BJS Racing Store"}`,
     email: {
       subject: (d) => `Pesanan ${d.orderNumber} Sudah Dikirim - ${d.storeName || "BJS Racing Store"}`,

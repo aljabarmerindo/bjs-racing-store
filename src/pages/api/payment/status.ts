@@ -21,11 +21,19 @@ export const GET: APIRoute = async (context) => {
       .select("id")
       .eq("auth_user_id", session.user.id)
       .single();
+
+    if (!customer) {
+      return new Response(
+        JSON.stringify({ message: "Profil customer tidak ditemukan." }),
+        { status: 404 },
+      );
+    }
+
     const { data: order, error } = await supabaseAdmin
       .from("orders")
       .select("status")
       .eq("id", orderId)
-      .eq("customer_id", customer?.id)
+      .eq("customer_id", customer.id)
       .single();
     if (error || !order) {
       return new Response(

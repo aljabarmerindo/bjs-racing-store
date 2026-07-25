@@ -1,9 +1,9 @@
 // File: src/components/CheckoutView.tsx
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useAppStore } from "../lib/store.ts";
 import type { CartItem, Address } from "../lib/store.ts";
 import { getOsrmRoute, formatDistance, formatDuration } from "@/lib/osrm";
-import { getPaymentFee } from "@/lib/paymentFee";
+import { getPaymentFee, type PaymentMethod } from "@/lib/paymentFee";
 
 declare global {
   interface Window {
@@ -98,8 +98,7 @@ export default function CheckoutView() {
     order_id: string;
   } | null>(null);
   const [isPolling, setIsPolling] = useState(false);
-  const [shippingCacheKey, setShippingCacheKey] = useState<string>("");
-  const [shippingCache, setShippingCache] = useState<any>(null);
+  const shippingCacheRef = useRef<{ key: string; services: any[]; selected: any } | null>(null);
   const [isRateCheckCooldown, setIsRateCheckCooldown] = useState(false);
   const [isRateCheckPermanentlyDisabled, setIsRateCheckPermanentlyDisabled] = useState(false);
   const [rapidClickCount, setRapidClickCount] = useState(0);
@@ -108,24 +107,15 @@ export default function CheckoutView() {
     "qris" | "dana" | "ovo" | "gopay" | "shopeepay" | "transfer_bank" | "virtual_account" | null
   >(null);
 
-  const PAYMENT_METHOD_OPTIONS = [
-    { value: "qris", label: "QRIS" },
-    { value: "dana", label: "DANA" },
-    { value: "ovo", label: "OVO" },
-    { value: "gopay", label: "GoPay" },
-    { value: "shopeepay", label: "ShopeePay" },
-    { value: "transfer_bank", label: "Transfer Bank" },
-    { value: "virtual_account", label: "Virtual Account" },
+  const PAYMENT_METHOD_OPTIONS: { value: PaymentMethod; label: string; description?: string }[] = [
+    { value: "qris", label: "QRIS", description: "QRIS / E-Wallet" },
+    { value: "dana", label: "DANA", description: "E-Wallet DANA" },
+    { value: "ovo", label: "OVO", description: "E-Wallet OVO" },
+    { value: "gopay", label: "GoPay", description: "E-Wallet GoPay" },
+    { value: "shopeepay", label: "ShopeePay", description: "ShopeePay" },
+    { value: "transfer_bank", label: "Transfer Bank", description: "TF Bank" },
+    { value: "virtual_account", label: "Virtual Account", description: "VA" },
   ];
-
-  const paymentFee = useMemo(() => {
-    if (!selectedPaymentMethod) return 0;
-    const feeBase =
-      subtotal + (selectedShipping?.cost || 0) - (appliedVoucher?.discount_amount || 0);
-    return getPaymentFee(selectedPaymentMethod, feeBase);
-  }, [selectedPaymentMethod, subtotal, selectedShipping, appliedVoucher]);
-
-  const PAYMENT_GATEWAY_FEE = paymentFee;
 
   const totalWeight = useMemo(
     () => calculateTotalWeight(),
@@ -139,6 +129,13 @@ export default function CheckoutView() {
       ),
     [items],
   );
+
+  const paymentFee = useMemo(() => {
+    if (!selectedPaymentMethod) return 0;
+    const feeBase =
+      subtotal + (selectedShipping?.cost || 0) - (appliedVoucher?.discount_amount || 0);
+    return getPaymentFee(selectedPaymentMethod, feeBase);
+  }, [selectedPaymentMethod, subtotal, selectedShipping, appliedVoucher]);
 
   const finalTotal = useMemo(() => {
     const totalBeforeDiscount =
@@ -241,9 +238,10 @@ export default function CheckoutView() {
 
   const fetchShippingCosts = useCallback(async () => {
     const cacheKey = `${selectedAddressId}-${totalWeight}`;
-    if (shippingCacheKey === cacheKey && shippingCache) {
-      setShippingServices(shippingCache.services);
-      setSelectedShipping(shippingCache.selected);
+    const cached = shippingCacheRef.current;
+    if (cached && cached.key === cacheKey) {
+      setShippingServices(cached.services);
+      setSelectedShipping(cached.selected);
       return;
     }
 
@@ -344,8 +342,7 @@ export default function CheckoutView() {
         cost: services[0].cost,
         etd: services[0].etd,
       });
-      setShippingCacheKey(cacheKey);
-      setShippingCache({ services, selected: services[0] });
+      shippingCacheRef.current = { key: cacheKey, services, selected: services[0] };
     } catch (err) {
       setError(err instanceof Error ? err.message : "Terjadi kesalahan.");
       setShippingServices([]);
@@ -356,8 +353,6 @@ export default function CheckoutView() {
     selectedAddressId,
     totalWeight,
     addresses,
-    shippingCacheKey,
-    shippingCache,
   ]);
 
   useEffect(() => {
@@ -592,9 +587,8 @@ export default function CheckoutView() {
                      return;
                    }
                    
-                   setShippingCacheKey("");
-                   setShippingCache(null);
-                   setIsRateCheckCooldown(true);
+                    shippingCacheRef.current = null;
+                    setIsRateCheckCooldown(true);
                    setTimeout(() => setIsRateCheckCooldown(false), 120000);
                  }}
                  className="text-sm font-medium text-blue-600 hover:text-blue-800 disabled:text-gray-400"

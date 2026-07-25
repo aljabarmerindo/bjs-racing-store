@@ -12,7 +12,7 @@ export const POST: APIRoute = async (context) => {
       return new Response("OK", { status: 200 });
     }
 
-    if (!verifyBiteshipWebhook(context.request.headers)) {
+    if (!verifyBiteshipWebhook(context.request.headers, raw)) {
       return new Response("Unauthorized", { status: 401 });
     }
 

@@ -18,6 +18,16 @@ export const GET: APIRoute = async ({ locals, params }) => {
     });
   }
 
+  const escapeHtml = (str: string | number | null | undefined): string => {
+    if (str == null) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  };
+
   try {
     const { data: customer } = await supabaseAdmin
       .from("customers")
@@ -59,7 +69,7 @@ export const GET: APIRoute = async ({ locals, params }) => {
 
     const items = (order.order_items || [])
       .map((item: any) => {
-        const name = item.products?.nama || item.product_name || "Produk";
+        const name = escapeHtml(item.products?.nama || item.product_name || "Produk");
         return {
           name,
           qty: item.quantity,
@@ -78,7 +88,7 @@ export const GET: APIRoute = async ({ locals, params }) => {
       <html>
       <head>
         <meta charset="utf-8" />
-        <title>Invoice ${order.order_number}</title>
+        <title>Invoice ${escapeHtml(order.order_number)}</title>
         <style>
           body { font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #333; }
           .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
@@ -101,18 +111,18 @@ export const GET: APIRoute = async ({ locals, params }) => {
           </div>
           <div class="info">
             <h2>INVOICE</h2>
-            <p><strong>No. Pesanan:</strong> ${order.order_number}</p>
+            <p><strong>No. Pesanan:</strong> ${escapeHtml(order.order_number)}</p>
             <p><strong>Tanggal:</strong> ${new Date(order.created_at).toLocaleDateString("id-ID")}</p>
-            <p><strong>Status:</strong> ${order.status === "paid" ? "LUNAS" : order.status}</p>
+            <p><strong>Status:</strong> ${order.status === "paid" ? "LUNAS" : escapeHtml(order.status)}</p>
           </div>
         </div>
 
         <div class="section">
           <h3>Pelanggan</h3>
-          <p>${order.shipping_address?.recipient_name || customer.nama_pelanggan}</p>
-          <p>${order.shipping_address?.full_address || ""}</p>
-          <p>${order.shipping_address?.destination_text || ""}</p>
-          <p>${order.shipping_address?.recipient_phone || ""}</p>
+          <p>${escapeHtml(order.shipping_address?.recipient_name || customer.nama_pelanggan)}</p>
+          <p>${escapeHtml(order.shipping_address?.full_address || "")}</p>
+          <p>${escapeHtml(order.shipping_address?.destination_text || "")}</p>
+          <p>${escapeHtml(order.shipping_address?.recipient_phone || "")}</p>
         </div>
 
         <div class="section">
@@ -167,8 +177,8 @@ export const GET: APIRoute = async ({ locals, params }) => {
 
         <div class="section">
           <h3>Pembayaran</h3>
-          <p><strong>Metode:</strong> ${order.payment_method || "Midtrans"}</p>
-          <p><strong>Status:</strong> ${order.payment_status || order.status}</p>
+          <p><strong>Metode:</strong> ${escapeHtml(order.payment_method || "Midtrans")}</p>
+          <p><strong>Status:</strong> ${escapeHtml(order.payment_status || order.status)}</p>
         </div>
 
         <script>

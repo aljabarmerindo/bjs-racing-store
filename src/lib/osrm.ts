@@ -53,9 +53,12 @@ export async function getOsrmRoute(
     const dy = destination[1] - origin[1];
     const dist = Math.sqrt(dx * dx + dy * dy);
 
+    const distanceMeters = Math.round(dist * 111_000);
+    const durationSeconds = Math.round(distanceMeters / 20);
+
     return {
-      distanceMeters: Math.round(dist * 111_000),
-      durationSeconds: Math.round(dist * 180_000),
+      distanceMeters,
+      durationSeconds,
       geometry: [origin, destination],
       fallback: true,
     };

@@ -158,7 +158,25 @@ export async function createBiteshipOrder(
   };
 }
 
-export function verifyBiteshipWebhook(headers: Headers): boolean {
+export function verifyBiteshipWebhook(
+  headers: Headers,
+  rawBody: string,
+): boolean {
   if (!WEBHOOK_SECRET) return false;
-  return headers.get(WEBHOOK_KEY) === WEBHOOK_SECRET;
+
+  const signature = headers.get(WEBHOOK_KEY);
+  if (!signature) return false;
+
+  const expected = crypto
+    .createHmac("sha256", WEBHOOK_SECRET)
+    .update(rawBody)
+    .digest("hex");
+
+  if (signature.length !== expected.length) return false;
+
+  let result = 0;
+  for (let i = 0; i < signature.length; i++) {
+    result |= signature.charCodeAt(i) ^ expected.charCodeAt(i);
+  }
+  return result === 0;
 }

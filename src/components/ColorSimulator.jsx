@@ -65,21 +65,26 @@ const ColorSimulator = ({ initialProductId }) => {
   useEffect(() => {
     const fetchInitialData = async () => {
       setLoading(true);
-      const [objectsRes, productsRes, variantsRes, linesRes] =
-        await Promise.all([
-          supabase.from("simulation_objects").select("*").order("name"),
-          supabase
-            .from("products")
-            .select("*, suppliers(nama_supplier)")
-            .eq("kategori", "Pilok")
-            .order("merek"),
-          supabase.from("simulation_variants").select("*"),
-          supabase.from("product_lines").select("*"),
-        ]);
-      setObjects(objectsRes.data || []);
-      setAllColorProducts(productsRes.data || []);
-      setSimulationVariants(variantsRes.data || []);
-      setProductLines(linesRes.data || []);
+      const results = await Promise.allSettled([
+        supabase.from("simulation_objects").select("*").order("name"),
+        supabase
+          .from("products")
+          .select("*, suppliers(nama_supplier)")
+          .eq("kategori", "Pilok")
+          .order("merek"),
+        supabase.from("simulation_variants").select("*"),
+        supabase.from("product_lines").select("*"),
+      ]);
+
+      setObjects(results[0].status === "fulfilled" ? results[0].value.data || [] : []);
+      setAllColorProducts(results[1].status === "fulfilled" ? results[1].value.data || [] : []);
+      setSimulationVariants(results[2].status === "fulfilled" ? results[2].value.data || [] : []);
+      setProductLines(results[3].status === "fulfilled" ? results[3].value.data || [] : []);
+
+      if (results.some((r) => r.status === "rejected")) {
+        console.error("Gagal memuat data simulator:", results);
+      }
+
       setLoading(false);
     };
     fetchInitialData();

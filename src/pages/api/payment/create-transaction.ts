@@ -1,7 +1,7 @@
 // File: /src/pages/api/payment/create-transaction.ts
 import type { APIRoute } from "astro";
 import { supabaseAdmin } from "@/lib/supabaseServer.ts";
-import { getPaymentFee, toMidtransPaymentCode } from "@/lib/paymentFee";
+import { getPaymentFee, toMidtransPaymentCode, type PaymentMethod } from "@/lib/paymentFee";
 import { validateAndComputeVoucher, consumeVoucher } from "@/lib/voucher.ts";
 import { generateBriQrMpm, BRI_CONFIG } from "@/lib/bri.ts";
 import { sendOrderNotification } from "@/lib/notifications.ts";
@@ -17,12 +17,12 @@ interface FrontendCartItem {
 }
 
 function generateOrderNumber() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    const randomPart = Math.random().toString(36).substring(2, 7).toUpperCase();
-    return `BJS-${year}${month}${day}-${randomPart}`;
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const randomPart = crypto.randomUUID().split("-")[0].toUpperCase();
+  return `BJS-${year}${month}${day}-${randomPart}`;
 }
 
 async function computeServerDiscount({
@@ -158,11 +158,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
         );
         const finalShippingCost = Number(shipping_cost) || 0;
         const paymentMethod = String(payment_method || "").toLowerCase();
-        const feeBase = subtotalProducts + finalShippingCost;
-        const finalPaymentGatewayFee = getPaymentFee(
-            paymentMethod,
-            feeBase,
-        );
 
         const { discount_amount: finalDiscountAmount, voucherId: appliedVoucherId } =
             await computeServerDiscount({
@@ -172,6 +167,15 @@ export const POST: APIRoute = async ({ request, locals }) => {
                 shipping_cost: finalShippingCost,
                 cartProductIds: typedCartItems.map((item) => item.product_id),
             });
+
+        const feeBase =
+          subtotalProducts +
+          finalShippingCost -
+          (finalDiscountAmount || 0);
+        const finalPaymentGatewayFee = getPaymentFee(
+          paymentMethod as PaymentMethod,
+          feeBase,
+        );
 
         const totalAmount =
             subtotalProducts +
@@ -385,8 +389,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
             orderNumber: newOrder.order_number,
             customerName: customer.nama_pelanggan,
             amount: totalAmount,
-            storeName: "BJS Racing Store",
-            storePhone: "+6288101169213",
+            storeName: import.meta.env.STORE_NAME || "BJS Racing Store",
+            storePhone: import.meta.env.STORE_PHONE || "+6288101169213",
           },
         }).catch((err: unknown) => console.error("Gagal kirim notifikasi order_created:", err));
 

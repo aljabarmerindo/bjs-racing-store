@@ -63,12 +63,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const customerId = await getCustomerId(session);
     const formData = await request.json();
 
+    const { customer_id, auth_user_id, ...safeFormData } = formData || {};
+
     const { data: newAddress, error } = await supabaseAdmin
       .from("customer_addresses")
       .insert({
         customer_id: customerId,
         auth_user_id: session.user.id,
-        ...formData,
+        ...safeFormData,
       })
       .select()
       .single();
@@ -100,13 +102,13 @@ export const PUT: APIRoute = async ({ request, locals }) => {
 
   try {
     const customerId = await getCustomerId(session);
-    const { id: addressId, ...updateData } = await request.json();
+    const { id: addressId, customer_id, auth_user_id, ...safeUpdateData } = await request.json();
 
     if (!addressId) throw new Error("ID Alamat diperlukan.");
 
     const { data, error } = await supabaseAdmin
       .from("customer_addresses")
-      .update(updateData)
+      .update(safeUpdateData)
       .eq("id", addressId)
       .eq("customer_id", customerId)
       .select()
