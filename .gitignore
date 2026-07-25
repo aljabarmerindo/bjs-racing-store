@@ -1,3 +1,6 @@
+# TypeScript build info
+tsconfig.tsbuildinfo
+
 # build output
 dist/
 # generated types
