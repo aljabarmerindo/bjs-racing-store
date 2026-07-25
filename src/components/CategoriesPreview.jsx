@@ -1,6 +1,6 @@
 // src/components/CategoriesPreview.jsx
 import React from "react";
-import { FiDroplet, FiCircle, FiCpu, FiTool } from "react-icons/fi";
+import { FiDroplet } from "react-icons/fi";
 
 const CATEGORIES = [
   {
@@ -11,33 +11,6 @@ const CATEGORIES = [
     gradient: "from-orange-400 to-orange-500",
     iconBg: "bg-orange-100",
     iconColor: "text-orange-500",
-  },
-  {
-    name: "Spray Paint",
-    href: "/spray-paint",
-    icon: FiCircle,
-    count: "80",
-    gradient: "from-orange-500 to-red-400",
-    iconBg: "bg-red-50",
-    iconColor: "text-red-500",
-  },
-  {
-    name: "Onderdil",
-    href: "/onderdil",
-    icon: FiCpu,
-    count: "200",
-    gradient: "from-amber-400 to-orange-500",
-    iconBg: "bg-amber-50",
-    iconColor: "text-amber-600",
-  },
-  {
-    name: "Aksesoris",
-    href: "/aksesoris",
-    icon: FiTool,
-    count: "50",
-    gradient: "from-orange-400 to-amber-500",
-    iconBg: "bg-orange-50",
-    iconColor: "text-orange-600",
   },
 ];
 
