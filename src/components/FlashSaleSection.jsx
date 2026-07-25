@@ -5,15 +5,18 @@ import { FiZap, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
 const LIMIT = 6;
 
-const getTimeRemaining = () => {
+const getTimeRemaining = (validUntil) => {
   const now = new Date();
-  const midnight = new Date(now);
-  midnight.setHours(24, 0, 0, 0);
-  const diff = midnight - now;
+  const end = new Date(validUntil);
+  const diff = end - now;
+  if (diff <= 0) {
+    return { hours: 0, minutes: 0, seconds: 0, expired: true };
+  }
   return {
     hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
     minutes: Math.floor((diff / (1000 * 60)) % 60),
-    seconds: Math.floor((diff / 1000) % 60),
+    seconds: Math.floor((diff / 1000)) % 60,
+    expired: false,
   };
 };
 
@@ -38,48 +41,53 @@ const SkeletonCard = () => (
 );
 
 const FlashSaleSection = () => {
-  const [time, setTime] = useState(getTimeRemaining);
-  const [products, setProducts] = useState([]);
+  const [time, setTime] = useState({ hours: 0, minutes: 0, seconds: 0, expired: false });
+  const [flashSales, setFlashSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef(null);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(true);
 
-  useEffect(() => {
-    const timer = setInterval(() => setTime(getTimeRemaining()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const fetchProducts = useCallback(async () => {
+  const fetchFlashSales = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .gt("stok", 0)
-        .order("harga_jual", { ascending: true })
+        .from("flash_sales")
+        .select("*, products(id, nama, image_url, harga_jual)")
+        .eq("is_active", true)
+        .gte("valid_until", new Date().toISOString())
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false })
         .limit(LIMIT);
 
       if (error) {
-        console.error("Error fetching flash sale products:", error);
-        setProducts([]);
+        console.error("Error fetching flash sales:", error);
+        setFlashSales([]);
       } else {
-        const discounted = (data || []).filter(
-          (p) => p.harga_coret && p.harga_coret > p.harga_jual,
-        );
-        setProducts(discounted.length > 0 ? discounted : data || []);
+        setFlashSales(data || []);
       }
     } catch (err) {
       console.error("Unexpected error:", err);
-      setProducts([]);
+      setFlashSales([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+    fetchFlashSales();
+  }, [fetchFlashSales]);
+
+  useEffect(() => {
+    if (flashSales.length === 0) return;
+    const timer = setInterval(() => {
+      const validUntil = flashSales[0]?.valid_until;
+      if (!validUntil) return;
+      const remaining = getTimeRemaining(validUntil);
+      setTime(remaining);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [flashSales]);
 
   const checkScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -108,10 +116,13 @@ const FlashSaleSection = () => {
     });
   }, []);
 
+  if (flashSales.length === 0 && !loading) {
+    return null;
+  }
+
   return (
     <section className="bg-gradient-to-r from-orange-500 via-orange-400 to-red-400 py-10 mobile:py-14 tablet:py-16 overflow-hidden">
       <div className="container mx-auto px-3 mobile:px-4 tablet:px-6">
-        {/* Header */}
         <div className="flex flex-col mobile:flex-row items-center justify-between gap-4 mb-8 mobile:mb-10">
           <div className="flex items-center gap-3">
             <FiZap className="w-6 h-6 mobile:w-7 mobile:h-7 text-yellow-300" fill="currentColor" />
@@ -123,28 +134,27 @@ const FlashSaleSection = () => {
             </span>
           </div>
 
-          {/* Countdown */}
-          <div className="flex items-center gap-2">
-            {["hours", "minutes", "seconds"].map((unit, i) => (
-              <React.Fragment key={unit}>
-                <div className="bg-white rounded-lg px-3 py-2 mobile:px-4 mobile:py-2.5 shadow-lg">
-                  <span className="text-xl mobile:text-2xl font-bold text-orange-600 tabular-nums">
-                    {pad(time[unit])}
-                  </span>
-                </div>
-                {i < 2 && (
-                  <span className="text-white text-xl mobile:text-2xl font-bold animate-pulse">
-                    :
-                  </span>
-                )}
-              </React.Fragment>
-            ))}
-          </div>
+          {!time.expired && (
+            <div className="flex items-center gap-2">
+              {["hours", "minutes", "seconds"].map((unit, i) => (
+                <React.Fragment key={unit}>
+                  <div className="bg-white rounded-lg px-3 py-2 mobile:px-4 mobile:py-2.5 shadow-lg">
+                    <span className="text-xl mobile:text-2xl font-bold text-orange-600 tabular-nums">
+                      {pad(time[unit])}
+                    </span>
+                  </div>
+                  {i < 2 && (
+                    <span className="text-white text-xl mobile:text-2xl font-bold animate-pulse">
+                      :
+                    </span>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Products */}
         <div className="relative">
-          {/* Arrow Prev */}
           <button
             onClick={() => scroll("prev")}
             disabled={!canScrollPrev}
@@ -158,7 +168,6 @@ const FlashSaleSection = () => {
             <FiChevronLeft className="w-5 h-5" />
           </button>
 
-          {/* Arrow Next */}
           <button
             onClick={() => scroll("next")}
             disabled={!canScrollNext}
@@ -172,7 +181,6 @@ const FlashSaleSection = () => {
             <FiChevronRight className="w-5 h-5" />
           </button>
 
-          {/* Scroll Container */}
           <div
             ref={scrollRef}
             className="flex gap-3 overflow-x-auto scroll-smooth scrollbar-hide px-1 py-1"
@@ -186,20 +194,18 @@ const FlashSaleSection = () => {
               ? Array.from({ length: LIMIT }).map((_, i) => (
                   <SkeletonCard key={i} />
                 ))
-              : products.map((product) => {
-                  const hasDiscount =
-                    product.harga_coret && product.harga_coret > product.harga_jual;
-                  const discountPct = hasDiscount
-                    ? Math.round(
-                        ((product.harga_coret - product.harga_jual) /
-                          product.harga_coret) *
-                          100,
-                      )
-                    : 0;
+              : flashSales.map((flashSale) => {
+                  const product = flashSale.products;
+                  if (!product) return null;
+                  const discountPct = Math.round(
+                    ((flashSale.original_price - flashSale.flash_price) /
+                      flashSale.original_price) *
+                      100,
+                  );
 
                   return (
                     <a
-                      key={product.id}
+                      key={flashSale.id}
                       href={`/products/${product.id}`}
                       className="flex-none w-40 mobile:w-44 bg-white rounded-xl shadow-md overflow-hidden border border-slate-200 hover:border-orange-300 hover:shadow-lg transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white"
                     >
@@ -215,23 +221,19 @@ const FlashSaleSection = () => {
                         ) : (
                           <div className="w-full h-full bg-slate-100" />
                         )}
-                        {hasDiscount && (
-                          <div className="absolute top-1.5 left-1.5 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded">
-                            -{discountPct}%
-                          </div>
-                        )}
+                        <div className="absolute top-1.5 left-1.5 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded">
+                          -{discountPct}%
+                        </div>
                       </div>
                       <div className="p-2.5">
                         <h3 className="text-xs mobile:text-sm font-semibold text-slate-800 line-clamp-2 mb-1">
                           {product.nama}
                         </h3>
-                        {hasDiscount && (
-                          <p className="text-[10px] text-slate-400 line-through">
-                            {formatRupiah(product.harga_coret)}
-                          </p>
-                        )}
+                        <p className="text-[10px] text-slate-400 line-through">
+                          {formatRupiah(flashSale.original_price)}
+                        </p>
                         <p className="text-sm mobile:text-base font-bold text-orange-500">
-                          {formatRupiah(product.harga_jual)}
+                          {formatRupiah(flashSale.flash_price)}
                         </p>
                       </div>
                     </a>
