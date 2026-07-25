@@ -48,10 +48,10 @@ export function getPaymentFee(method: PaymentMethod, amount: number): number {
       fee = amount * 0.02;
       break;
     case "transfer_bank":
-      fee = 4000 + amount * 0.11;
+      fee = 4000 + 4000 * 0.11;
       break;
     case "virtual_account":
-      fee = 4000 + amount * 0.11;
+      fee = 4000 + 4000 * 0.11;
       break;
     default:
       fee = 0;
