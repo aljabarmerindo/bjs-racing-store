@@ -4,8 +4,7 @@ import { supabase } from "@/lib/supabaseBrowserClient.ts";
 import ProductCard from "./ProductCard.jsx";
 
 const TABS = [
-  { id: "terlaris", label: "Terlaris", sort: "total_terjual", ascending: false },
-  { id: "terbaru", label: "Terbaru", sort: "created_at", ascending: false },
+  { id: "terlaris", label: "Terlaris", sort: "total_penjualan", ascending: false },
   { id: "diskon", label: "Diskon", sort: null },
 ];
 
@@ -43,7 +42,7 @@ const FeaturedProducts = () => {
       } else {
         const tab = TABS.find((t) => t.id === tabId);
         query = supabase
-          .from("products")
+          .from("products_with_revenue")
           .select("*")
           .gt("stok", 0)
           .order(tab.sort, { ascending: tab.ascending })
