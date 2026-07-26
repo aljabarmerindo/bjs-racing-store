@@ -1,22 +1,11 @@
 // File: src/components/AddressForm.tsx
-// Deskripsi: Versi lengkap dengan validasi penuh di handleSubmit.
+// Deskripsi: Versi lengkap dengan Biteship Maps Search Area untuk autocomplete alamat.
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useAppStore } from "@/lib/store";
 import type { Address, FormDataState } from "@/lib/store";
 import MapPicker, { type MapPickerResult } from "./MapPicker";
-
-// --- Tipe Data ---
-interface RajaOngkirResult {
-  id: number;
-  city_id?: string;
-  province_id?: string;
-  subdistrict_name: string;
-  district_name: string;
-  city_name: string;
-  province_name: string;
-  zip_code: string;
-}
+import type { BiteshipAreaResult } from "@/lib/biteship";
 
 interface AddressFormProps {
   isOpen: boolean;
@@ -38,7 +27,6 @@ const initialFormState: FormDataState = {
   longitude: "",
 };
 
-// --- Komponen React ---
 export default function AddressForm({
   isOpen,
   onClose,
@@ -48,7 +36,7 @@ export default function AddressForm({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<RajaOngkirResult[]>([]);
+  const [searchResults, setSearchResults] = useState<BiteshipAreaResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
@@ -83,7 +71,6 @@ export default function AddressForm({
     }
   }, [addressToEdit, isOpen]);
 
-  // --- Logika Pencarian Kota RajaOngkir ---
   const performSearch = useCallback(async (query: string) => {
     if (query.length < 3) {
       setSearchResults([]);
@@ -93,14 +80,14 @@ export default function AddressForm({
     setIsSearching(true);
     try {
       const response = await fetch(
-        `/api/rajaongkir/search-city?query=${encodeURIComponent(query)}`,
+        `/api/shipping/biteship/search-area?q=${encodeURIComponent(query)}`,
       );
-      if (!response.ok) throw new Error("Gagal mencari kota.");
-      const results: RajaOngkirResult[] = await response.json();
+      if (!response.ok) throw new Error("Gagal mencari area.");
+      const results: BiteshipAreaResult[] = await response.json();
       setSearchResults(results);
       setIsDropdownOpen(true);
     } catch (error) {
-      console.error("RajaOngkir search error:", error);
+      console.error("Biteship Maps search error:", error);
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -116,7 +103,6 @@ export default function AddressForm({
     return () => clearTimeout(debounceTimer);
   }, [searchQuery, formData.destination_text, performSearch]);
 
-  // --- Event Handlers ---
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
@@ -132,17 +118,25 @@ export default function AddressForm({
     }
   };
 
-  const handleCitySelect = (city: RajaOngkirResult) => {
-    const fullText = `${city.subdistrict_name}, ${city.district_name}, ${city.city_name}, ${city.province_name}`;
+  const handleAreaSelect = (area: BiteshipAreaResult) => {
+    const fullText = [
+      area.administrativeLevel4,
+      area.administrativeLevel3,
+      area.administrativeLevel2,
+      area.administrativeLevel1,
+    ].filter(Boolean).join(", ");
+
     setFormData((prev) => ({
       ...prev,
-      destination: String(city.id),
-      destination_text: fullText,
-      postal_code: city.zip_code,
-      city_id: city.city_id || "",
-      province_id: city.province_id || "",
+      destination: area.id,
+      destination_text: fullText || area.name,
+      postal_code: area.postalCode || prev.postal_code,
+      city_id: area.administrativeLevel2 || "",
+      province_id: area.administrativeLevel1 || "",
+      latitude: area.latitude || prev.latitude,
+      longitude: area.longitude || prev.longitude,
     }));
-    setSearchQuery(fullText);
+    setSearchQuery(fullText || area.name);
     setIsDropdownOpen(false);
   };
 
@@ -190,27 +184,19 @@ export default function AddressForm({
     }));
   };
 
-  /**
-   * Menangani submit form utama.
-   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setErrorMessage("");
 
-    // ==================================================================
-    // == PERBAIKAN VALIDASI LENGKAP                                   ==
-    // ==================================================================
-    // 1. Validasi pemilihan destinasi dari dropdown
     if (!formData.destination) {
       setErrorMessage(
-        "Kota/Kecamatan harus dipilih dari hasil pencarian dropdown.",
+        "Alamat/Area harus dipilih dari hasil pencarian dropdown.",
       );
       setIsLoading(false);
       return;
     }
 
-    // 2. Validasi field wajib lainnya (Nama, Telepon, Alamat Lengkap)
     if (
       !formData.recipient_name ||
       !formData.recipient_phone ||
@@ -239,7 +225,6 @@ export default function AddressForm({
     }
   };
 
-  // --- Render JSX ---
   if (!isOpen) return null;
 
   return (
@@ -260,7 +245,6 @@ export default function AddressForm({
               </button>
             </div>
             <div className="max-h-[70vh] overflow-y-auto pr-2 space-y-4">
-              {/* Field: Label Alamat */}
               <div>
                 <label
                   htmlFor="label"
@@ -278,7 +262,6 @@ export default function AddressForm({
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"
                 />
               </div>
-              {/* Field: Nama Penerima */}
               <div>
                 <label
                   htmlFor="recipient_name"
@@ -296,7 +279,6 @@ export default function AddressForm({
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"
                 />
               </div>
-              {/* Field: Nomor Telepon */}
               <div>
                 <label
                   htmlFor="recipient_phone"
@@ -314,19 +296,18 @@ export default function AddressForm({
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"
                 />
               </div>
-              {/* Field: Pencarian Kota RajaOngkir */}
               <div className="relative">
                 <label
-                  htmlFor="city-search"
+                  htmlFor="area-search"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Kota / Kabupaten / Kecamatan
+                  Cari Alamat / Area
                 </label>
                 <input
                   type="text"
-                  id="city-search"
+                  id="area-search"
                   autoComplete="off"
-                  placeholder="Ketik min. 3 huruf..."
+                  placeholder="Ketik alamat atau nama area..."
                   value={searchQuery}
                   onChange={handleSearchInputChange}
                   onFocus={() => setIsDropdownOpen(true)}
@@ -339,20 +320,31 @@ export default function AddressForm({
                       {isSearching && (
                         <div className="p-2 text-gray-500">Mencari...</div>
                       )}
-                      {searchResults.map((city) => (
+                      {searchResults.map((area) => (
                         <div
-                          key={city.id}
-                          onMouseDown={() => handleCitySelect(city)}
+                          key={area.id}
+                          onMouseDown={() => handleAreaSelect(area)}
                           className="cursor-pointer p-2 hover:bg-orange-100"
                         >
-                          <div className="font-semibold text-gray-800">{`${city.subdistrict_name}, ${city.district_name}`}</div>
-                          <div className="text-xs text-gray-500">{`${city.city_name}, ${city.province_name}`}</div>
+                          <div className="font-semibold text-gray-800">{area.name}</div>
+                          <div className="text-xs text-gray-500">
+                            {[
+                              area.administrativeLevel4,
+                              area.administrativeLevel3,
+                              area.administrativeLevel2,
+                              area.administrativeLevel1,
+                            ]
+                              .filter(Boolean)
+                              .join(", ") || area.type}
+                          </div>
+                          {area.postalCode && (
+                            <div className="text-xs text-gray-400">Kode pos: {area.postalCode}</div>
+                          )}
                         </div>
                       ))}
                     </div>
                   )}
               </div>
-              {/* Field: Alamat Lengkap */}
               <div>
                 <label
                   htmlFor="full_address"
@@ -371,7 +363,6 @@ export default function AddressForm({
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"
                 ></textarea>
               </div>
-              {/* Field: Kode Pos */}
               <div>
                 <label
                   htmlFor="postal_code"
@@ -389,7 +380,6 @@ export default function AddressForm({
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 bg-gray-100 focus:ring-orange-500 focus:border-orange-500"
                 />
               </div>
-              {/* Map Picker */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Pilih Lokasi di Map
@@ -403,7 +393,6 @@ export default function AddressForm({
                   onSelect={handleMapSelect}
                 />
               </div>
-              {/* Field: Koordinat (untuk kurir GoSend/Biteship) */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label

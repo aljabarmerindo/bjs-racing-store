@@ -7,7 +7,8 @@ export type OrderEvent =
   | "payment_confirmed"
   | "order_shipped"
   | "order_completed"
-  | "order_cancelled";
+  | "order_cancelled"
+  | "shipping_status_update";
 
 export interface NotificationPayload {
   to: string;
@@ -127,10 +128,30 @@ const EVENT_TEMPLATES: Record<
         `<p>Terima kasih,<br/>${d.storeName || "BJS Racing Store"}</p>`,
     },
   },
+  shipping_status_update: {
+    whatsapp: (d) =>
+      `Halo ${d.customerName || "Customer"}!\n\n` +
+      `Status pengiriman pesanan ${d.orderNumber} diperbarui: ${d.shippingStatus || "sedang diproses"}.\n` +
+      `No. Resi: ${d.trackingNumber || "-"}\n\n` +
+      `Terima kasih,\n${d.storeName || "BJS Racing Store"}`,
+    email: {
+      subject: (d) => `Update Pengiriman ${d.orderNumber} - ${d.storeName || "BJS Racing Store"}`,
+      body: (d) =>
+        `<h2>Update Pengiriman</h2>` +
+        `<p>Halo ${d.customerName || "Customer"},</p>` +
+        `<p>Status pengiriman pesanan <strong>${d.orderNumber}</strong> diperbarui: <strong>${d.shippingStatus || "sedang diproses"}</strong>.</p>` +
+        `<p>No. Resi: <strong>${d.trackingNumber || "-"}</strong></p>` +
+        `<p>Terima kasih,<br/>${d.storeName || "BJS Racing Store"}</p>`,
+    },
+  },
 };
 
 async function sendWhatsApp(payload: NotificationPayload): Promise<NotificationResult> {
   const provider = (import.meta.env.WHATSAPP_PROVIDER || "").toLowerCase();
+
+  if (provider === "fonnte") {
+    return sendFonnte(payload);
+  }
 
   if (provider === "wablas") {
     return sendWablas(payload);
@@ -142,7 +163,7 @@ async function sendWhatsApp(payload: NotificationPayload): Promise<NotificationR
 
   return {
     success: false,
-    message: "WhatsApp provider tidak dikonfigurasi. Set WHATSAPP_PROVIDER=wablas atau waapi.",
+    message: "WhatsApp provider tidak dikonfigurasi. Set WHATSAPP_PROVIDER=fonnte, wablas atau waapi.",
   };
 }
 
@@ -208,6 +229,40 @@ async function sendWaApi(payload: NotificationPayload): Promise<NotificationResu
   }
 
   return { success: true, provider: "waapi" };
+}
+
+async function sendFonnte(payload: NotificationPayload): Promise<NotificationResult> {
+  const apiKey = import.meta.env.FONNTE_API_KEY;
+  const sender = import.meta.env.FONNTE_SENDER_NUMBER;
+  if (!apiKey || !sender) {
+    return { success: false, message: "FONNTE credentials tidak dikonfigurasi.", provider: "fonnte" };
+  }
+
+  const template = EVENT_TEMPLATES[payload.event].whatsapp(payload.data);
+  const response = await fetch("https://api.fonnte.com/api/send-message", {
+    method: "POST",
+    headers: {
+      Authorization: apiKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      target: payload.to,
+      message: template,
+      sender,
+      countryCode: "62",
+    }),
+  });
+
+  const result = await response.json();
+  if (!response.ok || result.status !== true) {
+    return {
+      success: false,
+      message: result.reason || "Gagal mengirim WhatsApp via FONNTE.",
+      provider: "fonnte",
+    };
+  }
+
+  return { success: true, provider: "fonnte" };
 }
 
 async function sendEmail(payload: NotificationPayload): Promise<NotificationResult> {

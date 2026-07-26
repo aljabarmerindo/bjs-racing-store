@@ -158,6 +158,8 @@ export default function CheckoutView() {
     if (code === "pos") return `POS Indonesia: ${s}`;
     if (code === "sicepat") return `SiCepat: ${s}`;
     if (code === "jne") return `JNE: ${s}`;
+    if (code === "jnt") return `J&T: ${s}`;
+    if (code === "gojek") return `GOJEK: ${s}`;
     return s;
   };
 
@@ -260,11 +262,12 @@ export default function CheckoutView() {
 
     setIsLoadingCosts(true);
     try {
+      const services: any[] = [];
+
       const checkInternalResponse = await fetch(
         `/api/shipping/check-local-availability?destination_id=${selectedAddress.destination}`,
       );
       const checkInternalResult = await checkInternalResponse.json();
-      const services: any[] = [];
 
       if (checkInternalResult.available) {
         services.push({
@@ -277,50 +280,51 @@ export default function CheckoutView() {
         });
       }
 
-      const rajaongkirDestination =
-        selectedAddress.city_id || selectedAddress.destination;
-      const rajaongkirResponse = await fetch(
-        "/api/shipping/rajaongkir/rates",
+      const hasCoordinates =
+        !!selectedAddress.latitude && !!selectedAddress.longitude;
+      const hasPostalCode = !!selectedAddress.postal_code;
+
+      if (!hasCoordinates && !hasPostalCode) {
+        setError(
+          "Alamat belum lengkap untuk pengiriman. Tambahkan koordinat atau kode pos di buku alamat.",
+        );
+        setShippingServices([]);
+        setSelectedShipping(null);
+        setIsLoadingCosts(false);
+        return;
+      }
+
+      const couriers: string[] = [];
+      if (hasCoordinates) couriers.push("gojek");
+      if (hasPostalCode) couriers.push("pos", "jne", "jnt", "sicepat");
+
+      const biteshipResponse = await fetch(
+        "/api/shipping/biteship/rates",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            destination: rajaongkirDestination,
+            destination: {
+              latitude: selectedAddress.latitude ? Number(selectedAddress.latitude) : undefined,
+              longitude: selectedAddress.longitude ? Number(selectedAddress.longitude) : undefined,
+              postal_code: selectedAddress.postal_code || undefined,
+            },
             weight: totalWeight,
-            couriers: ["pos", "jne", "sicepat"],
+            couriers: couriers.join(","),
           }),
         },
       );
-      const rajaongkirResult = await rajaongkirResponse.json();
-      if (rajaongkirResponse.ok) {
-        const mapped = (rajaongkirResult || [])
-          .filter((o: any) => {
-            if (o.code === "pos") {
-              const service = String(o.service || "").toUpperCase();
-              return (
-                service !== "PAKETPOS DANGEROUS GOODS" &&
-                service !== "PAKETPOS VALUABLE GOODS"
-              );
-            }
-            if (o.code === "jne") {
-              const service = String(o.service || "").toUpperCase();
-              return (
-                service !== "JTR" &&
-                service !== "JTR<130" &&
-                service !== "JTR>130" &&
-                service !== "JTR>200"
-              );
-            }
-            return true;
-          })
-          .map((o: any) => ({
-            service: o.service,
-            code: o.code,
-            name: o.name,
-            cost: o.cost,
-            etd: o.etd,
-            description: o.description,
-          }));
+
+      const biteshipResult = await biteshipResponse.json();
+      if (biteshipResponse.ok && Array.isArray(biteshipResult)) {
+        const mapped = biteshipResult.map((o: any) => ({
+          service: o.courier_service_name || o.service,
+          code: o.courier_name || o.code,
+          name: o.courier_name || o.name,
+          cost: o.price || o.cost,
+          etd: o.duration || o.etd,
+          description: o.description || "",
+        }));
         services.push(...mapped);
       }
 
@@ -482,6 +486,33 @@ export default function CheckoutView() {
         }
         return;
       }
+
+      const biteshipCodes = new Set(["gojek", "pos", "jne", "jnt", "sicepat"]);
+      const isBiteshipCourier =
+        courierDetails?.code && biteshipCodes.has(String(courierDetails.code).toLowerCase());
+
+      if (isBiteshipCourier && result.order_id) {
+        void (async () => {
+          try {
+            await fetch("/api/shipping/biteship/book", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                order_id: result.order_id,
+                courier_company: courierDetails?.name || "biteship",
+                courier_service_code: courierDetails?.code || "",
+              }),
+            });
+          } catch (bookingError) {
+            console.error("Gagal booking Biteship:", bookingError);
+            addToast({
+              type: "warning",
+              message: "Pesanan dibuat, tetapi booking pengiriman gagal. Admin akan memprosesnya.",
+            });
+          }
+        })();
+      }
+
       if (result.qr_content) {
         setQrData({
           qr_content: result.qr_content,
@@ -636,47 +667,59 @@ export default function CheckoutView() {
                     }}
                     className="flex-shrink-0"
                   />
-                   <div className="ml-3 flex-grow flex justify-between w-full text-sm flex-wrap gap-2">
-                       <div className="flex items-center gap-3">
-                         {service.code === "internal" && (
-                           <img
-                             src="/icons/bjs-racing.png"
-                             alt="BJS RACING"
-                             className="h-8 w-auto object-contain"
-                           />
-                         )}
-                         {service.code === "pos" && (
-                           <img
-                             src="/icons/pos-indonesia.png"
-                             alt="POS Indonesia"
-                             className="h-8 w-auto object-contain"
-                           />
-                         )}
-                          {service.code === "jne" && (
-                           <img
-                             src="/icons/jne.png"
-                             alt="JNE Express"
-                             className="h-8 w-auto object-contain"
-                           />
-                         )}
-                         {service.code === "sicepat" && (
-                           <img
-                             src="/icons/sicepat.png"
-                             alt="SiCepat Express"
-                             className="h-8 w-auto object-contain"
-                           />
-                         )}
-                           <div>
-                           <p className="font-semibold">
-                             {formatServiceName(service.service, service.code)}
-                           </p>
-                            {formatEtd(service.etd) && (
-                              <p className="text-blue-600">
-                                Estimasi {formatEtd(service.etd)}
-                              </p>
-                            )}
-                         </div>
-                     </div>
+                    <div className="ml-3 flex-grow flex justify-between w-full text-sm flex-wrap gap-2">
+                        <div className="flex items-center gap-3">
+                          {service.code === "internal" && (
+                            <img
+                              src="/icons/bjs-racing.png"
+                              alt="BJS RACING"
+                              className="h-8 w-auto object-contain"
+                            />
+                          )}
+                          {service.code === "gojek" && (
+                            <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-green-100 text-green-700 font-bold text-xs">
+                              GOJEK
+                            </span>
+                          )}
+                          {service.code === "pos" && (
+                            <img
+                              src="/icons/pos-indonesia.png"
+                              alt="POS Indonesia"
+                              className="h-8 w-auto object-contain"
+                            />
+                          )}
+                           {service.code === "jne" && (
+                            <img
+                              src="/icons/jne.png"
+                              alt="JNE Express"
+                              className="h-8 w-auto object-contain"
+                            />
+                          )}
+                          {service.code === "jnt" && (
+                            <img
+                              src="/icons/j&t.jpg"
+                              alt="J&T Express"
+                              className="h-8 w-auto object-contain"
+                            />
+                          )}
+                          {service.code === "sicepat" && (
+                            <img
+                              src="/icons/sicepat.png"
+                              alt="SiCepat Express"
+                              className="h-8 w-auto object-contain"
+                            />
+                          )}
+                            <div>
+                            <p className="font-semibold">
+                              {formatServiceName(service.service, service.code)}
+                            </p>
+                             {formatEtd(service.etd) && (
+                               <p className="text-blue-600">
+                                 Estimasi {formatEtd(service.etd)}
+                               </p>
+                             )}
+                          </div>
+                      </div>
                       <p className="font-bold whitespace-nowrap text-orange-600">
                         {formatRupiah(service.cost)}
                       </p>

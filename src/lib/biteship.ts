@@ -158,6 +158,42 @@ export async function createBiteshipOrder(
   };
 }
 
+export interface BiteshipAreaResult {
+  id: string;
+  name: string;
+  type: string;
+  country: string;
+  administrativeLevel1?: string;
+  administrativeLevel2?: string;
+  administrativeLevel3?: string;
+  administrativeLevel4?: string;
+  latitude: string;
+  longitude: string;
+  postalCode?: string;
+}
+
+export async function searchBiteshipAreas(query: string): Promise<BiteshipAreaResult[]> {
+  if (!query || query.length < 3) return [];
+  const json = await biteshipRequest(
+    "GET",
+    `/v1/maps/areas?countries=ID&input=${encodeURIComponent(query)}&type=single&limit=10`,
+  );
+  const areas = (json.areas || json.data || []) as any[];
+  return areas.map((area) => ({
+    id: String(area.id || area.area_id || ""),
+    name: area.name || area.area_name || "",
+    type: area.type || "",
+    country: area.country || "",
+    administrativeLevel1: area.administrative_level_1 || area.province_name || "",
+    administrativeLevel2: area.administrative_level_2 || area.city_name || "",
+    administrativeLevel3: area.administrative_level_3 || area.district_name || "",
+    administrativeLevel4: area.administrative_level_4 || area.subdistrict_name || "",
+    latitude: String(area.latitude || area.lat || ""),
+    longitude: String(area.longitude || area.lng || ""),
+    postalCode: area.postal_code || area.zip_code || "",
+  }));
+}
+
 export function verifyBiteshipWebhook(
   headers: Headers,
   rawBody: string,
