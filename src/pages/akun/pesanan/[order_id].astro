@@ -3,9 +3,7 @@
 import MainLayout from '@/layouts/MainLayout.astro';
 import { supabaseAdmin } from '@/lib/supabaseServer.ts';
 import { formatToWIB } from '@/lib/utils.ts';
-import OrderTrackingMap from '@/components/OrderTrackingMap.tsx';
 
-// 1. Proteksi Halaman & Ambil Data dari Server
 const { session } = Astro.locals;
 const { order_id } = Astro.params;
 const statusParam = Astro.url.searchParams.get('status');
@@ -14,48 +12,50 @@ if (!session) {
   return Astro.redirect('/login');
 }
 
-// Ambil customer ID terlebih dahulu untuk keamanan
-const { data: customer } = await supabaseAdmin
-  .from('customers')
-  .select('id')
-  .eq('auth_user_id', session.user.id)
-  .single();
+let customer = null;
+let order = null;
 
-if (!customer) {
-  // Jika profil customer tidak ditemukan, bisa jadi error atau pengguna baru
-  // Redirect ke halaman utama untuk keamanan
-  return Astro.redirect('/404');
-}
+try {
+  const { data: customerData, error: customerError } = await supabaseAdmin
+    .from('customers')
+    .select('id')
+    .eq('auth_user_id', session.user.id)
+    .single();
 
-// 2. Ambil data pesanan (order) yang spesifik untuk pengguna ini
-const { data: order, error } = await supabaseAdmin
-  .from('orders')
-  .select(`
-    *,
-    order_items (
+  if (customerError || !customerData) {
+    return Astro.redirect('/404');
+  }
+  customer = customerData;
+
+  const { data: orderData, error: orderError } = await supabaseAdmin
+    .from('orders')
+    .select(`
       *,
-      products (
-        nama,
-        image_url
+      order_items (
+        *,
+        products (
+          nama,
+          image_url
+        )
       )
-    )
-  `)
-  .eq('id', order_id)
-  .eq('customer_id', customer.id) // Filter keamanan paling penting!
-  .single();
+    `)
+    .eq('id', order_id)
+    .eq('customer_id', customer.id)
+    .single();
 
-// Jika pesanan tidak ditemukan atau bukan milik pengguna ini, redirect ke 404
-if (error || !order) {
-  return Astro.redirect('/404');
+  if (orderError || !orderData) {
+    return Astro.redirect('/404');
+  }
+  order = orderData;
+} catch (error) {
+  console.error('Order detail fetch error:', error);
+  return new Response('Terjadi kesalahan saat memuat data pesanan.', { status: 500 });
 }
 
-// Helper untuk format Rupiah dan Tanggal
 const formatRupiah = (number: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(number || 0);
 
-// Tentukan pesan status berdasarkan parameter URL dan data DB
 let statusMessage = { title: "Status Pesanan Tidak Diketahui", description: "Silakan hubungi customer service kami.", color: "bg-gray-100 text-gray-800" };
 const orderStatus = order.status;
-// Daftar status yang dianggap "sukses"
 const successStatuses = ['paid', 'processing', 'shipped', 'completed'];
 
 if (statusParam === 'success' || successStatuses.includes(orderStatus)) {
@@ -75,10 +75,14 @@ if (statusParam === 'pending' || orderStatus === 'awaiting_payment') {
 if (orderStatus === 'cancelled') {
   statusMessage = { title: "Pesanan Dibatalkan", description: "Pesanan ini telah dibatalkan.", color: "bg-red-100 text-red-800" };
 }
+
+const hasShipping = order.shipping_address && typeof order.shipping_address === 'object';
+const hasCourier = order.courier_details && typeof order.courier_details === 'object';
+const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.latitude) && Number.isFinite(order.shipping_address.longitude);
 ---
+
 <MainLayout title={`Detail Pesanan ${order.order_number}`}>
   <div class="max-w-4xl mx-auto py-8">
-
     <div class:list={["p-6 rounded-xl mb-8", statusMessage.color]}>
       <h2 class="text-2xl font-bold">{statusMessage.title}</h2>
       <p class="mt-2">{statusMessage.description}</p>
@@ -101,26 +105,28 @@ if (orderStatus === 'cancelled') {
         <div>
           <h3 class="font-bold text-lg mb-4">Dikirim Ke:</h3>
           <div class="text-slate-600 space-y-1">
-            {order.shipping_address && (
+            {hasShipping ? (
               <>
                 <p class="font-semibold">{order.shipping_address.recipient_name || '-'}</p>
                 <p>{order.shipping_address.recipient_phone || '-'}</p>
                 <p>{order.shipping_address.full_address || '-'}</p>
                 <p>{order.shipping_address.destination_text || '-'}</p>
               </>
+            ) : (
+              <p class="text-slate-400">Alamat tidak tersedia</p>
             )}
-            {!order.shipping_address && <p class="text-slate-400">Alamat tidak tersedia</p>}
           </div>
           <h3 class="font-bold text-lg mt-6 mb-4">Metode Pengiriman:</h3>
           <div class="text-slate-600 space-y-1">
-            {order.courier_details && (
+            {hasCourier ? (
               <>
                 <p class="font-semibold">{order.courier_details.name || '-'} - {order.courier_details.service || '-'}</p>
                 <p>Estimasi Tiba: {order.courier_details.etd || '-'}</p>
               </>
+            ) : (
+              <p class="text-slate-400">Metode pengiriman tidak tersedia</p>
             )}
-            {!order.courier_details && <p class="text-slate-400">Metode pengiriman tidak tersedia</p>}
-            {order.shipping_receipt_number && order.courier_details && (
+            {order.shipping_receipt_number && hasCourier && (
               <div class="mt-2">
                 <p>
                   No. Resi: <span class="font-bold text-slate-800">{order.shipping_receipt_number}</span>
@@ -136,15 +142,12 @@ if (orderStatus === 'cancelled') {
             )}
           </div>
 
-          {order.shipping_address?.latitude && order.shipping_address?.longitude && (
+          {hasCoordinates && (
             <div class="mt-6">
               <h3 class="font-bold text-lg mb-2">Rute Pengiriman</h3>
-              <OrderTrackingMap
-                client:load
-                customerLat={order.shipping_address.latitude}
-                customerLng={order.shipping_address.longitude}
-                customerAddress={order.shipping_address.destination_text || order.shipping_address.full_address}
-              />
+              <div id="map-placeholder" data-lat={order.shipping_address.latitude} data-lng={order.shipping_address.longitude} data-address={order.shipping_address.destination_text || order.shipping_address.full_address} class="h-[420px] w-full rounded-lg border border-slate-200 bg-slate-100 flex items-center justify-center text-slate-500">
+                Peta akan dimuat di sini
+              </div>
             </div>
           )}
         </div>
@@ -184,42 +187,3 @@ if (orderStatus === 'cancelled') {
     </div>
   </div>
 </MainLayout>
-
-<div id="order-status-poll" data-order-id={order_id} data-order-status={orderStatus} data-status-param={statusParam || ''} class="hidden"></div>
-
-<script>
-  (function() {
-    const el = document.getElementById('order-status-poll');
-    if (!el) return;
-    const orderId = el.dataset.orderId;
-    const orderStatus = el.dataset.orderStatus;
-    const statusParam = el.dataset.statusParam || '';
-
-    if (statusParam !== 'success' || orderStatus !== 'awaiting_payment') return;
-
-    const successStatuses = ['paid', 'processing', 'shipped', 'completed'];
-    let attempts = 0;
-    const maxAttempts = 10;
-
-    async function checkStatus() {
-      if (attempts >= maxAttempts) return;
-      try {
-        const res = await fetch(`/api/payment/status?order_id=${orderId}`);
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data.status && successStatuses.includes(data.status)) {
-          window.location.reload();
-        }
-      } catch (_) {
-        // ignore
-      } finally {
-        attempts++;
-        if (attempts < maxAttempts) {
-          setTimeout(checkStatus, 3000);
-        }
-      }
-    }
-
-    setTimeout(checkStatus, 2000);
-  })();
-</script>
