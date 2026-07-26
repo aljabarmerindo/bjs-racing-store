@@ -4,6 +4,7 @@ import type { APIRoute } from "astro";
 import { supabaseAdmin } from "@/lib/supabaseServer.ts";
 import { verifyBiteshipWebhook } from "@/lib/biteship.ts";
 import { sendOrderNotification } from "@/lib/notifications.ts";
+import { scheduleRetry } from "@/lib/retryQueue.ts";
 
 const SHIPPING_STATUS_LABEL: Record<string, string> = {
   pending: "menunggu",
@@ -74,21 +75,27 @@ export const POST: APIRoute = async (context) => {
 
       const phone = customer?.telepon || cd?.recipient_phone || "";
       if (phone) {
-        void sendOrderNotification({
-          to: phone,
-          channel: "whatsapp",
-          event: "shipping_status_update",
-          data: {
-            orderNumber: o.order_number,
-            customerName: customer?.nama_pelanggan,
-            trackingNumber: waybill || cd.waybill_id,
-            shippingStatus: normalizeStatus(status),
-            storeName: import.meta.env.STORE_NAME || "BJS Racing Store",
-            storePhone: import.meta.env.STORE_PHONE || "+6288101169213",
-          },
-        }).catch((err: unknown) =>
-          console.error("[Biteship] notifikasi gagal:", err),
-        );
+        const sendNotification = async () => {
+          try {
+            await sendOrderNotification({
+              to: phone,
+              channel: "whatsapp",
+              event: "shipping_status_update",
+              data: {
+                orderNumber: o.order_number,
+                customerName: customer?.nama_pelanggan,
+                trackingNumber: waybill || cd.waybill_id,
+                shippingStatus: normalizeStatus(status),
+                storeName: import.meta.env.STORE_NAME || "BJS Racing Store",
+                storePhone: import.meta.env.STORE_PHONE || "+6288101169213",
+              },
+            });
+          } catch (err) {
+            console.error("[Biteship] notifikasi gagal:", err);
+          }
+        };
+
+        void sendNotification();
       }
     }
 

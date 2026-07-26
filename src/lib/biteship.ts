@@ -194,6 +194,30 @@ export async function searchBiteshipAreas(query: string): Promise<BiteshipAreaRe
   }));
 }
 
+export interface BiteshipTrackingResult {
+  status: string;
+  history: Array<{
+    status: string;
+    note: string;
+    timestamp: string;
+    location?: string;
+  }>;
+}
+
+export async function getBiteshipTracking(trackingId: string): Promise<BiteshipTrackingResult> {
+  const json = await biteshipRequest("GET", `/v1/trackings/${encodeURIComponent(trackingId)}`);
+  const history = (json.history || []).map((h: any) => ({
+    status: h.status || "",
+    note: h.note || h.description || "",
+    timestamp: h.timestamp || h.created_at || "",
+    location: h.location || h.city || "",
+  }));
+  return {
+    status: json.status || json.current_status || "",
+    history,
+  };
+}
+
 export function verifyBiteshipWebhook(
   headers: Headers,
   rawBody: string,

@@ -62,6 +62,14 @@ if (!admin.ok) {
         <div id="top-products" class="space-y-2"></div>
       </div>
     </div>
+
+    <div class="bg-white p-6 rounded-xl shadow-md">
+      <h2 class="text-xl font-bold mb-4">Monitoring Pengiriman</h2>
+      <p class="text-sm text-slate-500 mb-4">50 shipment terbaru dengan status pengiriman.</p>
+      <div id="shipment-table" class="overflow-x-auto">
+        <p class="text-sm text-slate-500">Memuat data...</p>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -75,17 +83,17 @@ if (!admin.ok) {
       }
       const data = await res.json();
 
-      const formatRupiah = (number: number) =>
+      const formatRupiah = (number) =>
         new Intl.NumberFormat('id-ID', {
           style: 'currency',
           currency: 'IDR',
           minimumFractionDigits: 0,
         }).format(number || 0);
 
-      document.getElementById('total-revenue')!.textContent = formatRupiah(data.summary.totalRevenue);
-      document.getElementById('total-orders')!.textContent = String(data.summary.totalOrders);
-      document.getElementById('avg-order')!.textContent = formatRupiah(data.summary.avgOrderValue);
-      document.getElementById('shipping-fee')!.textContent = formatRupiah(data.summary.shippingTotal + data.summary.gatewayFeeTotal);
+      document.getElementById('total-revenue').textContent = formatRupiah(data.summary.totalRevenue);
+      document.getElementById('total-orders').textContent = String(data.summary.totalOrders);
+      document.getElementById('avg-order').textContent = formatRupiah(data.summary.avgOrderValue);
+      document.getElementById('shipping-fee').textContent = formatRupiah(data.summary.shippingTotal + data.summary.gatewayFeeTotal);
 
       const dailyEntries = Object.entries(data.dailyRevenue || {}).sort((a, b) => a[0].localeCompare(b[0]));
       const dailyContainer = document.getElementById('daily-chart');
@@ -132,7 +140,7 @@ if (!admin.ok) {
         if (!products.length) {
           topContainer.innerHTML = '<p class="text-sm text-slate-500">Belum ada data penjualan.</p>';
         }
-        products.forEach((product: any, idx: number) => {
+        products.forEach((product, idx) => {
           const row = document.createElement('div');
           row.className = 'flex items-center justify-between py-2 border-b last:border-b-0';
           row.innerHTML = `
@@ -148,6 +156,51 @@ if (!admin.ok) {
     }
 
     loadAnalytics();
+  </script>
+  <script>
+    async function loadShipments() {
+      const container = document.getElementById('shipment-table');
+      if (!container) return;
+      try {
+        const res = await fetch('/api/admin/shipment-monitoring');
+        if (!res.ok) throw new Error('Gagal memuat monitoring');
+        const data = await res.json();
+        if (!data.length) {
+          container.innerHTML = '<p class="text-sm text-slate-500">Belum ada data pengiriman.</p>';
+          return;
+        }
+        container.innerHTML = `
+          <table class="min-w-full text-sm">
+            <thead class="bg-slate-100">
+              <tr>
+                <th class="px-3 py-2 text-left">Order</th>
+                <th class="px-3 py-2 text-left">Kurir</th>
+                <th class="px-3 py-2 text-left">Layanan</th>
+                <th class="px-3 py-2 text-left">Waybill</th>
+                <th class="px-3 py-2 text-left">Status</th>
+                <th class="px-3 py-2 text-left">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.map((s) => `
+                <tr class="border-b">
+                  <td class="px-3 py-2">${s.order_number}</td>
+                  <td class="px-3 py-2">${s.courier}</td>
+                  <td class="px-3 py-2">${s.service}</td>
+                  <td class="px-3 py-2">${s.waybill_id}</td>
+                  <td class="px-3 py-2 capitalize">${s.shipping_status.replace(/_/g, ' ')}</td>
+                  <td class="px-3 py-2">Rp ${new Intl.NumberFormat('id-ID').format(s.total || 0)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      } catch (err) {
+        container.innerHTML = `<p class="text-sm text-red-500">${err instanceof Error ? err.message : 'Gagal memuat monitoring'}</p>`;
+      }
+    }
+
+    loadShipments();
   </script>
   <script>
     (function() {
