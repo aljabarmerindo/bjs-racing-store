@@ -340,8 +340,9 @@ export const useAppStore = create<StoreState>()(
       set({ items: [], isCartLoading: false });
     },
     calculateTotalWeight: () => {
+      const DEFAULT_WEIGHT_GRAM = 500;
       return get().items.reduce(
-        (total, item) => total + (item.berat_gram || 0) * item.quantity,
+        (total, item) => total + (item.berat_gram || DEFAULT_WEIGHT_GRAM) * item.quantity,
         0,
       );
     },

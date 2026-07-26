@@ -248,7 +248,11 @@ export default function CheckoutView() {
     setShippingServices([]);
     setSelectedShipping(null);
     setError("");
-    if (!selectedAddressId || totalWeight === 0) return;
+    if (!selectedAddressId) return;
+    if (totalWeight === 0) {
+      setError("Berat produk belum tersedia. Silakan hubungi customer service.");
+      return;
+    }
     const selectedAddress = addresses.find(
       (addr: Address) => addr.id === selectedAddressId,
     );

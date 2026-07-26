@@ -23,7 +23,11 @@ export const POST: APIRoute = async ({ request }) => {
 
         const { transaction_status, fraud_status } = midtransNotification;
 
-        if (transaction_status == "settlement" && fraud_status == "accept") {
+        const isSettlement =
+          transaction_status === "settlement" &&
+          (!fraud_status || fraud_status === "accept");
+
+        if (isSettlement) {
             const result = await confirmOrderPayment(order_id);
             if (!result.ok) {
                 console.error(
