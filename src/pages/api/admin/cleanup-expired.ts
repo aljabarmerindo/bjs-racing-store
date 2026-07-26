@@ -1,18 +1,21 @@
 // File: src/pages/api/admin/cleanup-expired.ts
-import type { APIRoute } from "astro";
+import type { APIRoute, APIContext } from "astro";
 import { supabaseAdmin } from "@/lib/supabaseServer.ts";
 import { requireAdminOrServiceToken } from "@/lib/adminAuth.ts";
 
 export const POST: APIRoute = async (context) => {
+  return handleCleanup(context);
+};
+
+export const GET: APIRoute = async (context) => {
+  return handleCleanup(context);
+};
+
+async function handleCleanup(context: APIContext) {
   const admin = await requireAdminOrServiceToken(context);
   if (!admin.ok) {
     return new Response(JSON.stringify({ message: admin.message }), {
       status: admin.status,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-      },
     });
   }
 
@@ -83,13 +86,7 @@ export const POST: APIRoute = async (context) => {
         message: `Berhasil membatalkan ${cancelledIds.length} order expired.`,
         cancelledOrders: cancelledIds,
       }),
-      { status: 200,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        },
-      },
+      { status: 200 },
     );
   } catch (error) {
     console.error("Cleanup expired orders error:", error);
@@ -98,24 +95,7 @@ export const POST: APIRoute = async (context) => {
         success: false,
         message: error instanceof Error ? error.message : "Gagal cleanup order expired.",
       }),
-      { status: 500,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        },
-      },
+      { status: 500 },
     );
   }
-};
-
-export const OPTIONS: APIRoute = async () => {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    },
-  });
-};
+}
