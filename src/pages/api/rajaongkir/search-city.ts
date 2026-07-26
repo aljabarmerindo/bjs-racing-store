@@ -31,10 +31,6 @@ export const GET: APIRoute = async ({ url }) => {
     const result = await response.json();
 
     if (!response.ok || result.meta.status !== "success") {
-      console.error(
-        "RajaOngkir Search API Error:",
-        JSON.stringify(result, null, 2),
-      );
       const errorMessage =
         result?.meta?.message || "Gagal mencari destinasi dari RajaOngkir.";
       return new Response(JSON.stringify({ message: errorMessage }), {
@@ -42,21 +38,11 @@ export const GET: APIRoute = async ({ url }) => {
       });
     }
 
-    // Logging bisa dihapus jika sudah tidak diperlukan
-    if (result.data && result.data.length > 0) {
-      console.log(
-        "[DEBUG] Struktur Data Mentah RajaOngkir:",
-        JSON.stringify(result.data[0], null, 2),
-      );
-    }
-
     return new Response(JSON.stringify(result.data || []), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    // --- PERBAIKAN TYPE CHECKING ---
-    // Periksa tipe 'error' sebelum mengakses properti '.message'
     let errorMessage = "Terjadi kesalahan yang tidak diketahui pada server.";
     if (error instanceof Error) {
       errorMessage = error.message;

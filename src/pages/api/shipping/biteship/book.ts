@@ -55,7 +55,7 @@ export const POST: APIRoute = async (context) => {
       name: it.products?.nama || "Item BJS",
       description: "Pesanan BJS Racing",
       quantity: it.quantity,
-      weight: 500,
+      weight: it.products?.berat_gram || 500,
       value: Number(it.price) || 0,
     }));
 

@@ -297,7 +297,7 @@ const ProductDetailView = ({ initialProduct, allProductVariants }) => {
                         <button
                             onClick={handleAddToCart}
                             disabled={selectedVariant.stok <= 0}
-                            className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg transition-colors disabled:bg-slate-400"
+                            className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition-colors disabled:bg-slate-400"
                         >
                             <FiShoppingCart />
                             <span>

@@ -28,11 +28,11 @@ export const POST: APIRoute = async ({ request, url }) => {
     const body = JSON.parse(rawBody);
     const orderNumber =
       body.partnerReferenceNo || body.referenceNo || body.orderId;
-    const status = body.status || body.responseCode;
+    const status = body.status ?? body.responseCode ?? "";
+    // Removed Midtrans-specific "settlement" status from BRI callback
     const isPaid =
       status === "SUCCESS" ||
       status === "2002700" ||
-      status === "settlement" ||
       body.responseMessage === "Success";
 
     if (!orderNumber) return new Response("OK", { status: 200 });

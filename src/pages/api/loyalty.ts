@@ -62,6 +62,21 @@ export const POST: APIRoute = async ({ request, locals }) => {
       });
     }
 
+    const numericPoints = Number(points);
+    const allowedTypes = ["earn", "redeem", "bonus", "admin_adjustment"];
+    if (!Number.isInteger(numericPoints) || numericPoints <= 0) {
+      return new Response(
+        JSON.stringify({ message: "Points harus berupa angka bulat lebih dari 0." }),
+        { status: 400 },
+      );
+    }
+    if (!allowedTypes.includes(type)) {
+      return new Response(
+        JSON.stringify({ message: "Tipe points tidak valid." }),
+        { status: 400 },
+      );
+    }
+
     const { data: customer } = await supabaseAdmin
       .from("customers")
       .select("id")
@@ -78,7 +93,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       .from("loyalty_points")
       .insert({
         customer_id: customer.id,
-        points: Number(points),
+        points: numericPoints,
         type,
         description: description || null,
         order_id: order_id || null,

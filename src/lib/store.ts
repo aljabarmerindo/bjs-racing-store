@@ -352,7 +352,7 @@ export const useAppStore = create<StoreState>()(
 
     addToast: (toast) => {
       const id =
-        Date.now().toString() + Math.random().toString(36).slice(2, 11); // PERBAIKAN 4: Ganti .substr() dengan .slice()
+        Date.now().toString() + Math.random().toString(36).slice(2, 11) + Math.random().toString(36).slice(2, 6); // PERBAIKAN 4: Ganti .substr() dengan .slice()
       set((state) => ({ toasts: [...state.toasts, { ...toast, id }] }));
     },
     removeToast: (toastId) => {

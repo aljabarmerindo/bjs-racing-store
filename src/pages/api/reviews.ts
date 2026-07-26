@@ -48,6 +48,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
       );
     }
 
+    const numericRating = Number(rating);
+    if (!Number.isInteger(numericRating) || numericRating < 1 || numericRating > 5) {
+      return new Response(
+        JSON.stringify({ message: "Rating harus berupa angka antara 1 sampai 5." }),
+        { status: 400 },
+      );
+    }
+
     const { data: customer } = await supabaseAdmin
       .from("customers")
       .select("id")
@@ -81,7 +89,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         product_id,
         customer_id: customer.id,
         order_id,
-        rating: Number(rating),
+        rating: numericRating,
         comment: comment || null,
       })
       .select()
@@ -99,7 +107,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       const currentRating = Number(product.rating) || 0;
       const currentCount = Number(product.jumlah_ulasan) || 0;
       const newCount = currentCount + 1;
-      const newRating = currentRating + (Number(rating) - currentRating) / newCount;
+      const newRating = currentRating + (numericRating - currentRating) / newCount;
 
       await supabaseAdmin
         .from("products")

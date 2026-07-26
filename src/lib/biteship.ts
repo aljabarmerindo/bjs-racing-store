@@ -4,8 +4,8 @@ import crypto from "crypto";
 
 const BITESHIP_BASE = "https://api.biteship.com";
 const API_KEY = import.meta.env.BITESHIP_API_KEY || "";
-const ORIGIN_LAT = import.meta.env.BITESHIP_ORIGIN_LAT || "";
-const ORIGIN_LNG = import.meta.env.BITESHIP_ORIGIN_LNG || "";
+const ORIGIN_LAT = Number(import.meta.env.BITESHIP_ORIGIN_LAT || 0);
+const ORIGIN_LNG = Number(import.meta.env.BITESHIP_ORIGIN_LNG || 0);
 const WEBHOOK_KEY = import.meta.env.BITESHIP_WEBHOOK_KEY || "X-Biteship-Signature";
 const WEBHOOK_SECRET = import.meta.env.BITESHIP_WEBHOOK_SECRET || "";
 
@@ -121,11 +121,11 @@ export async function createBiteshipOrder(
     origin_contact_name: p.origin.contactName,
     origin_contact_phone: p.origin.contactPhone,
     origin_address: p.origin.address,
-    origin_postal_code: Number(p.origin.postalCode),
+    origin_postal_code: p.origin.postalCode ? Number(p.origin.postalCode) : undefined,
     destination_contact_name: p.destination.contactName,
     destination_contact_phone: p.destination.contactPhone,
     destination_address: p.destination.address,
-    destination_postal_code: Number(p.destination.postalCode),
+    destination_postal_code: p.destination.postalCode ? Number(p.destination.postalCode) : undefined,
     courier_company: p.courierCompany,
     courier_type: p.courierType,
     delivery_type: p.deliveryType || "now",
