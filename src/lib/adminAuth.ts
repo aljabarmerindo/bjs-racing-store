@@ -24,3 +24,15 @@ export async function requireAdmin(context: APIContext): Promise<AdminAuth> {
   }
   return { ok: true, status: 200, message: "ok", session };
 }
+
+export async function requireAdminOrServiceToken(context: APIContext): Promise<AdminAuth> {
+  const authHeader = context.request.headers.get("authorization");
+  const serviceToken = authHeader?.replace(/^Bearer\s+/i, "").trim();
+  const expectedToken = context.locals.runtime?.env?.ADMIN_API_TOKEN;
+
+  if (expectedToken && serviceToken && serviceToken === expectedToken) {
+    return { ok: true, status: 200, message: "ok" };
+  }
+
+  return requireAdmin(context);
+}

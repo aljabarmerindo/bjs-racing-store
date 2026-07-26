@@ -12,6 +12,22 @@ if (!admin.ok) {
   <div class="space-y-6">
     <h1 class="text-3xl font-bold">Dashboard Analytics</h1>
 
+    <div class="bg-white p-6 rounded-xl shadow-md mb-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold">Maintenance</h2>
+          <p class="text-sm text-slate-500">Bersihkan order yang sudah expired dan belum dibayar.</p>
+        </div>
+        <button
+          id="cleanup-expired-btn"
+          class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+        >
+          Bersihkan Order Expired
+        </button>
+      </div>
+      <p id="cleanup-expired-message" class="mt-3 text-sm hidden"></p>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-orange-500">
         <p class="text-sm text-slate-500">Total Pendapatan (30 hari)</p>
@@ -133,4 +149,35 @@ if (!admin.ok) {
 
     loadAnalytics();
   </script>
+  <script>
+    (function() {
+      const btn = document.getElementById('cleanup-expired-btn');
+      const msg = document.getElementById('cleanup-expired-message');
+      if (!btn || !msg) return;
+
+      btn.addEventListener('click', async () => {
+        if (!confirm('Yakin ingin membatalkan semua order yang sudah expired? Aksi ini tidak bisa dibatalkan.')) return;
+
+        btn.disabled = true;
+        btn.textContent = 'Memproses...';
+        msg.classList.add('hidden');
+
+        try {
+          const res = await fetch('/api/admin/cleanup-expired', { method: 'POST' });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.message || 'Gagal cleanup');
+          msg.textContent = data.message;
+          msg.className = 'mt-3 text-sm text-green-600';
+        } catch (err) {
+          msg.textContent = err instanceof Error ? err.message : 'Gagal cleanup.';
+          msg.className = 'mt-3 text-sm text-red-600';
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Bersihkan Order Expired';
+          msg.classList.remove('hidden');
+        }
+      });
+    })();
+  </script>
+
 </AdminLayout>

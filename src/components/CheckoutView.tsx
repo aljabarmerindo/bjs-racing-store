@@ -512,6 +512,10 @@ export default function CheckoutView() {
           setIsProcessingPayment(false);
         },
         onClose: function () {
+          addToast({
+            type: "warning",
+            message: "Pembayaran dibatalkan. Anda bisa mencoba lagi dengan klik tombol Lanjut ke Pembayaran.",
+          });
           setIsProcessingPayment(false);
         },
       });
