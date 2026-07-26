@@ -103,6 +103,32 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
+          <h3 class="font-bold text-lg mb-4">Ringkasan Pembayaran:</h3>
+          <div class="bg-slate-50 rounded-lg p-4 space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span class="text-slate-600">Subtotal Produk</span>
+              <span class="font-semibold text-slate-800">{formatRupiah((order.order_items || []).reduce((sum, item) => sum + ((item.quantity || 0) * (item.price || 0)), 0))}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-600">Ongkos Kirim</span>
+              <span class="font-semibold text-slate-800">{formatRupiah(order.shipping_cost || 0)}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-600">Fee Transaksi</span>
+              <span class="font-semibold text-slate-800">{formatRupiah(order.payment_gateway_fee || 0)}</span>
+            </div>
+            {(order.discount_amount || 0) > 0 && (
+              <div class="flex justify-between">
+                <span class="text-slate-600">Diskon</span>
+                <span class="font-semibold text-green-600">-{formatRupiah(order.discount_amount || 0)}</span>
+              </div>
+            )}
+            <div class="border-t border-slate-200 pt-2 flex justify-between">
+              <span class="font-bold text-slate-800">Total Pembayaran</span>
+              <span class="font-bold text-orange-600">{formatRupiah(order.total_amount || 0)}</span>
+            </div>
+          </div>
+
           <h3 class="font-bold text-lg mb-4">Dikirim Ke:</h3>
           <div class="text-slate-600 space-y-1">
             {hasShipping ? (
