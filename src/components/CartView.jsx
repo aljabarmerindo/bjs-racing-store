@@ -20,24 +20,44 @@ const CartView = () => {
 
   if (items.length === 0) {
     return (
-      <div className="text-center py-20">
-        <h2 className="text-2xl font-semibold text-slate-700">
+      <div className="text-center py-16">
+        <div className="mx-auto w-24 h-24 bg-orange-50 rounded-full flex items-center justify-center mb-6">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-12 w-12 text-orange-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"
+            />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">
           Keranjang Belanja Anda Kosong
         </h2>
-        <p className="text-slate-500 mt-2">
-          Mari jelajahi produk kami dan temukan yang Anda butuhkan!
+        <p className="text-slate-500 max-w-md mx-auto mb-8">
+          Segera isi keranjang dengan produk Pilok pilihan Anda. Gratis ongkir untuk wilayah Jepara dan sekitarnya.
         </p>
         <a
-          href="/pilok" // Arahkan ke halaman produk utama
-          className="mt-6 inline-block bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition-colors mt-2"
+          href="/pilok"
+          className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
         >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
           Mulai Belanja Pilok
-        </a>
-        <a
-          href="/pilok" // Arahkan ke halaman produk utama
-          className="mt-6 inline-block bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-        >
-          Mulai Belanja Onderdil / Aksesoris
         </a>
       </div>
     );
@@ -48,7 +68,6 @@ const CartView = () => {
       <div className="space-y-4">
         {items.map((item) => {
           const quantity = item.quantity || 0;
-          // PERBAIKAN 1: Tentukan apakah tombol tambah harus dinonaktifkan
           const isPlusDisabled = quantity >= item.stok;
 
           return (
@@ -69,7 +88,6 @@ const CartView = () => {
                 <p className="text-sm text-slate-500">
                   {item.merek} - {item.ukuran}
                 </p>
-                {/* PERBAIKAN 2: Tampilkan sisa stok */}
                 <p className="text-xs text-slate-400 mt-1">
                   Sisa Stok: {item.stok}
                 </p>
@@ -94,13 +112,11 @@ const CartView = () => {
                       parseInt(e.target.value, 10) || 1,
                     )
                   }
-                  // PERBAIKAN 3: Batasi input maksimal sesuai stok
                   max={item.stok}
                   className="w-12 text-center font-semibold border-none focus:ring-0 bg-transparent"
                 />
                 <button
                   onClick={() => updateQuantity(item.product_id, quantity + 1)}
-                  // PERBAIKAN 4: Terapkan kondisi disabled pada tombol
                   disabled={isPlusDisabled}
                   className="w-8 h-8 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -140,7 +156,6 @@ const CartView = () => {
 
       <div className="mt-8 flex flex-col sm:flex-row justify-end">
         <div className="w-full max-w-sm">
-          {/* ... Bagian Subtotal dan Tombol Checkout tidak berubah ... */}
           <div className="flex justify-between text-lg">
             <span className="text-slate-600">Subtotal</span>
             <span className="font-bold text-slate-800">
