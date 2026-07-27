@@ -73,16 +73,27 @@ export default function AddressForm({
 
   useEffect(() => {
     if (!isOpen) return;
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalBodyPaddingRight = document.body.style.paddingRight;
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-    document.body.style.overflow = "hidden";
-    if (scrollbarWidth > 0) {
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-    }
+    const html = document.documentElement;
+    const body = document.body;
+    const scrollY = window.scrollY;
+    const originalHtmlOverflow = html.style.overflow;
+    const originalBodyPaddingRight = body.style.paddingRight;
+    const originalBodyPosition = body.style.position;
+    const originalBodyTop = body.style.top;
+    const originalBodyWidth = body.style.width;
+    const scrollbarWidth = window.innerWidth - html.clientWidth;
+    html.style.overflow = "hidden";
+    body.style.paddingRight = scrollbarWidth > 0 ? `${scrollbarWidth}px` : "";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
     return () => {
-      document.body.style.overflow = originalBodyOverflow;
-      document.body.style.paddingRight = originalBodyPaddingRight;
+      html.style.overflow = originalHtmlOverflow;
+      body.style.paddingRight = originalBodyPaddingRight;
+      body.style.position = originalBodyPosition;
+      body.style.top = originalBodyTop;
+      body.style.width = originalBodyWidth;
+      window.scrollTo(0, scrollY);
     };
   }, [isOpen]);
 
