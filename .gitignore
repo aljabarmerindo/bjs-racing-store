@@ -32,3 +32,6 @@ pnpm-debug.log*
 .kilo/
 .vercel
 .env*
+
+# Python cache
+__pycache__/
