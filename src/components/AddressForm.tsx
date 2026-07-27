@@ -71,32 +71,6 @@ export default function AddressForm({
     }
   }, [addressToEdit, isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const html = document.documentElement;
-    const body = document.body;
-    const scrollY = window.scrollY;
-    const originalHtmlOverflow = html.style.overflow;
-    const originalBodyPaddingRight = body.style.paddingRight;
-    const originalBodyPosition = body.style.position;
-    const originalBodyTop = body.style.top;
-    const originalBodyWidth = body.style.width;
-    const scrollbarWidth = window.innerWidth - html.clientWidth;
-    html.style.overflow = "hidden";
-    body.style.paddingRight = scrollbarWidth > 0 ? `${scrollbarWidth}px` : "";
-    body.style.position = "fixed";
-    body.style.top = `-${scrollY}px`;
-    body.style.width = "100%";
-    return () => {
-      html.style.overflow = originalHtmlOverflow;
-      body.style.paddingRight = originalBodyPaddingRight;
-      body.style.position = originalBodyPosition;
-      body.style.top = originalBodyTop;
-      body.style.width = originalBodyWidth;
-      window.scrollTo(0, scrollY);
-    };
-  }, [isOpen]);
-
   const performSearch = useCallback(async (query: string) => {
     if (query.length < 3) {
       setSearchResults([]);
@@ -254,23 +228,30 @@ export default function AddressForm({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+    <div
+      className="fixed inset-0 z-50 sm:flex sm:items-center sm:justify-center sm:p-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="absolute inset-0 bg-black/50 sm:bg-black/60 sm:backdrop-blur-sm" />
+
+      <div className="relative z-10 flex flex-col h-full w-full bg-white sm:h-auto sm:max-w-lg sm:max-h-[90vh] sm:rounded-xl sm:shadow-2xl">
         <form onSubmit={handleSubmit} noValidate className="flex flex-col h-full">
-          <div className="flex items-center justify-between p-6 border-b border-gray-100 flex-shrink-0">
-            <h3 className="text-xl font-bold text-slate-800">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 flex-shrink-0 sm:px-6">
+            <h3 className="text-lg font-bold text-slate-800 sm:text-xl">
               {addressToEdit ? "Ubah Alamat" : "Tambah Alamat Baru"}
             </h3>
             <button
               type="button"
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-800 text-3xl leading-none transition-colors"
+              className="p-1 -mr-1 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
             >
-              &times;
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-5">
+          <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5 space-y-4 sm:px-6 sm:space-y-5">
             {errorMessage && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
                 {errorMessage}
@@ -278,7 +259,7 @@ export default function AddressForm({
             )}
 
             <div>
-              <label htmlFor="label" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="label" className="block text-sm font-medium text-slate-700 mb-1.5">
                 Label Alamat
               </label>
               <input
@@ -288,12 +269,12 @@ export default function AddressForm({
                 value={formData.label}
                 onChange={handleChange}
                 placeholder="Contoh: Rumah, Kantor"
-                className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
               />
             </div>
 
             <div>
-              <label htmlFor="recipient_name" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="recipient_name" className="block text-sm font-medium text-slate-700 mb-1.5">
                 Nama Penerima <span className="text-red-500">*</span>
               </label>
               <input
@@ -303,12 +284,12 @@ export default function AddressForm({
                 value={formData.recipient_name}
                 onChange={handleChange}
                 required
-                className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
               />
             </div>
 
             <div>
-              <label htmlFor="recipient_phone" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="recipient_phone" className="block text-sm font-medium text-slate-700 mb-1.5">
                 Nomor Telepon <span className="text-red-500">*</span>
               </label>
               <input
@@ -318,12 +299,12 @@ export default function AddressForm({
                 value={formData.recipient_phone}
                 onChange={handleChange}
                 required
-                className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
               />
             </div>
 
             <div className="relative">
-              <label htmlFor="area-search" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="area-search" className="block text-sm font-medium text-slate-700 mb-1.5">
                 Cari Alamat / Area
               </label>
               <input
@@ -335,11 +316,11 @@ export default function AddressForm({
                 onChange={handleSearchInputChange}
                 onFocus={() => setIsDropdownOpen(true)}
                 onBlur={handleInputBlur}
-                className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
               />
               {isDropdownOpen &&
                 (searchResults.length > 0 || isSearching) && (
-                  <div className="absolute z-[60] mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-base shadow-xl ring-1 ring-black ring-opacity-5">
+                  <div className="absolute z-[60] mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-base shadow-xl ring-1 ring-black/5">
                     {isSearching && (
                       <div className="p-3 text-gray-500 text-sm">Mencari...</div>
                     )}
@@ -370,7 +351,7 @@ export default function AddressForm({
             </div>
 
             <div>
-              <label htmlFor="full_address" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="full_address" className="block text-sm font-medium text-slate-700 mb-1.5">
                 Alamat Lengkap <span className="text-red-500">*</span>
               </label>
               <textarea
@@ -381,13 +362,13 @@ export default function AddressForm({
                 rows={3}
                 required
                 placeholder="Nama jalan, nomor rumah, RT/RW"
-                className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors resize-none"
+                className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors resize-none"
               ></textarea>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label htmlFor="postal_code" className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="postal_code" className="block text-sm font-medium text-slate-700 mb-1.5">
                   Kode Pos
                 </label>
                 <input
@@ -397,26 +378,26 @@ export default function AddressForm({
                   value={formData.postal_code}
                   onChange={handleChange}
                   readOnly
-                  className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 bg-gray-100 text-gray-600 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                  className="w-full border border-gray-200 rounded-lg p-3 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
                 />
               </div>
               <div>
-                <label htmlFor="recipient_phone" className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="recipient_phone_dup" className="block text-sm font-medium text-slate-700 mb-1.5">
                   No Telepon
                 </label>
                 <input
                   type="tel"
-                  id="recipient_phone"
+                  id="recipient_phone_dup"
                   name="recipient_phone"
                   value={formData.recipient_phone}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">
                 Pilih Lokasi di Map
               </label>
               <p className="text-xs text-gray-500 mb-2">
@@ -431,9 +412,9 @@ export default function AddressForm({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label htmlFor="latitude" className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="latitude" className="block text-sm font-medium text-slate-700 mb-1.5">
                   Latitude
                 </label>
                 <input
@@ -443,11 +424,11 @@ export default function AddressForm({
                   value={formData.latitude}
                   onChange={handleChange}
                   placeholder="-6.2..."
-                  className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
                 />
               </div>
               <div>
-                <label htmlFor="longitude" className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="longitude" className="block text-sm font-medium text-slate-700 mb-1.5">
                   Longitude
                 </label>
                 <input
@@ -457,7 +438,7 @@ export default function AddressForm({
                   value={formData.longitude}
                   onChange={handleChange}
                   placeholder="106.8..."
-                  className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
                 />
               </div>
             </div>
@@ -472,18 +453,18 @@ export default function AddressForm({
             </button>
           </div>
 
-          <div className="bg-gray-50 px-6 py-4 flex justify-end space-x-3 rounded-b-lg flex-shrink-0 border-t border-gray-100">
+          <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50 px-5 py-3 flex justify-end gap-3 sm:px-6 sm:py-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-100 transition-colors"
+              className="flex-1 sm:flex-none px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-100 transition-colors text-sm"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="px-4 py-2.5 bg-orange-500 text-white font-bold rounded-lg hover:bg-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              className="flex-1 sm:flex-none px-4 py-2.5 bg-orange-500 text-white font-bold rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm"
             >
               {isLoading ? "Menyimpan..." : "Simpan Alamat"}
             </button>

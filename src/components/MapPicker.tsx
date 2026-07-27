@@ -144,7 +144,8 @@ const MapPicker = ({
           width: "100%",
           borderRadius: 12,
           zIndex: 0,
-          position: "relative"
+          position: "relative",
+          touchAction: "pan-y"
         }}
       />
       {loading && (
