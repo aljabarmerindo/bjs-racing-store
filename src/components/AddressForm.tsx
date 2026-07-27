@@ -396,22 +396,6 @@ export default function AddressForm({
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Pilih Lokasi di Map
-              </label>
-              <p className="text-xs text-gray-500 mb-2">
-                Klik atau seret marker untuk menentukan koordinat alamat.
-              </p>
-              <div className="relative rounded-lg overflow-hidden border border-gray-200">
-                <MapPicker
-                  latitude={formData.latitude}
-                  longitude={formData.longitude}
-                  onSelect={handleMapSelect}
-                />
-              </div>
-            </div>
-
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label htmlFor="latitude" className="block text-sm font-medium text-slate-700 mb-1.5">
@@ -451,6 +435,23 @@ export default function AddressForm({
             >
               {isGeocoding ? "Mencari..." : "Cari Koordinat Otomatis (GoSend)"}
             </button>
+          </div>
+
+          <div className="flex-shrink-0 border-t border-gray-200 px-5 pt-3 pb-1 sm:px-6">
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+              Pilih Lokasi di Map
+            </label>
+            <p className="text-xs text-gray-500 mb-2">
+              Klik atau seret marker untuk menentukan koordinat alamat.
+            </p>
+            <div className="relative rounded-lg overflow-hidden border border-gray-200 max-h-60 sm:max-h-72">
+              <MapPicker
+                latitude={formData.latitude}
+                longitude={formData.longitude}
+                onSelect={handleMapSelect}
+                height={240}
+              />
+            </div>
           </div>
 
           <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50 px-5 py-3 flex justify-end gap-3 sm:px-6 sm:py-4">
