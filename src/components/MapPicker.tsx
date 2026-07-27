@@ -139,9 +139,9 @@ const MapPicker = ({
     <div className="relative" style={{ zIndex: 0 }}>
       <div
         ref={containerRef}
-        style={{ 
-          height: typeof height === "number" ? `${height}px` : height, 
-          width: "100%", 
+        style={{
+          height: typeof height === "number" ? `${height}px` : height,
+          width: "100%",
           borderRadius: 12,
           zIndex: 0,
           position: "relative"
@@ -153,7 +153,6 @@ const MapPicker = ({
         </div>
       )}
     </div>
-  );
   );
 };
 
