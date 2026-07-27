@@ -10,9 +10,11 @@ export function supabaseServerClient(context: APIContext) {
     import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
-        get: (key) => context.cookies.get(key)?.value,
-        set: (key, value, options) => context.cookies.set(key, value, options),
-        remove: (key, options) => context.cookies.delete(key, options),
+        get: (key: string) => context.cookies.get(key)?.value,
+        set: (key: string, value: string, options: Record<string, unknown>) =>
+          context.cookies.set(key, value, options),
+        remove: (key: string, options: Record<string, unknown>) =>
+          context.cookies.delete(key, options),
       },
     },
   );
