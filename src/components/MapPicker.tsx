@@ -40,6 +40,7 @@ const MapPicker = ({
 
     try {
       const L = (await import("leaflet")).default;
+      await import("leaflet/dist/leaflet.css");
       setLeafletLoaded(true);
 
       const lat = typeof latitude === "number" && Number.isFinite(latitude) ? latitude : DEFAULT_CENTER[0];
@@ -78,6 +79,10 @@ const MapPicker = ({
 
       mapRef.current = map;
       markerRef.current = marker;
+
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 300);
     } catch (error) {
       console.error("Failed to initialize map:", error);
     }
