@@ -1,7 +1,5 @@
 // File: src/components/MapPicker.tsx
 import React, { useEffect, useRef, useState } from "react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 
 const DEFAULT_CENTER: [number, number] = [-6.5244682, 110.7674915];
 
@@ -32,49 +30,57 @@ const MapPicker = ({
   height = 320,
 }: MapPickerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const markerRef = useRef<L.Marker | null>(null);
+  const mapRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
   const [loading, setLoading] = useState(false);
+  const [leafletLoaded, setLeafletLoaded] = useState(false);
 
-  const initMap = () => {
+  const initMap = async () => {
     if (!containerRef.current || mapRef.current) return;
 
-    const lat = typeof latitude === "number" && Number.isFinite(latitude) ? latitude : DEFAULT_CENTER[0];
-    const lng = typeof longitude === "number" && Number.isFinite(longitude) ? longitude : DEFAULT_CENTER[1];
+    try {
+      const L = (await import("leaflet")).default;
+      setLeafletLoaded(true);
 
-    const map = L.map(containerRef.current, {
-      zoomControl: true,
-      attributionControl: true,
-    }).setView([lat, lng], 15);
+      const lat = typeof latitude === "number" && Number.isFinite(latitude) ? latitude : DEFAULT_CENTER[0];
+      const lng = typeof longitude === "number" && Number.isFinite(longitude) ? longitude : DEFAULT_CENTER[1];
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19,
-    }).addTo(map);
+      const map = L.map(containerRef.current, {
+        zoomControl: true,
+        attributionControl: true,
+      }).setView([lat, lng], 15);
 
-    const marker = L.marker([lat, lng], {
-      icon: L.divIcon({
-        html: pickerIconHtml,
-        className: "",
-        iconSize: [22, 22],
-        iconAnchor: [11, 11],
-      }),
-      draggable: true,
-    }).addTo(map);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      }).addTo(map);
 
-    marker.on("dragend", async () => {
-      const pos = marker.getLatLng();
-      await fetchReverse(pos.lat, pos.lng);
-    });
+      const marker = L.marker([lat, lng], {
+        icon: L.divIcon({
+          html: pickerIconHtml,
+          className: "",
+          iconSize: [22, 22],
+          iconAnchor: [11, 11],
+        }),
+        draggable: true,
+      }).addTo(map);
 
-    map.on("click", async (e) => {
-      marker.setLatLng(e.latlng);
-      await fetchReverse(e.latlng.lat, e.latlng.lng);
-    });
+      marker.on("dragend", async () => {
+        const pos = marker.getLatLng();
+        await fetchReverse(pos.lat, pos.lng);
+      });
 
-    mapRef.current = map;
-    markerRef.current = marker;
+      map.on("click", async (e) => {
+        marker.setLatLng(e.latlng);
+        await fetchReverse(e.latlng.lat, e.latlng.lng);
+      });
+
+      mapRef.current = map;
+      markerRef.current = marker;
+    } catch (error) {
+      console.error("Failed to initialize map:", error);
+    }
   };
 
   const fetchReverse = async (lat: number, lng: number) => {
