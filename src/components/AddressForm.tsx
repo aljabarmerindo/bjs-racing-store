@@ -228,146 +228,140 @@ export default function AddressForm({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg transform transition-all">
-        <form onSubmit={handleSubmit} noValidate>
-          <div className="p-6">
-            <div className="flex justify-between items-center pb-3">
-              <h3 className="text-xl font-bold">
-                {addressToEdit ? "Ubah Alamat" : "Tambah Alamat Baru"}
-              </h3>
-              <button
-                type="button"
-                onClick={onClose}
-                className="text-gray-400 hover:text-gray-800 text-3xl leading-none"
-              >
-                &times;
-              </button>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+        <form onSubmit={handleSubmit} noValidate className="flex flex-col h-full">
+          <div className="flex items-center justify-between p-6 border-b border-gray-100 flex-shrink-0">
+            <h3 className="text-xl font-bold text-slate-800">
+              {addressToEdit ? "Ubah Alamat" : "Tambah Alamat Baru"}
+            </h3>
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-800 text-3xl leading-none transition-colors"
+            >
+              &times;
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-5">
+            {errorMessage && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {errorMessage}
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="label" className="block text-sm font-medium text-slate-700 mb-1">
+                Label Alamat
+              </label>
+              <input
+                type="text"
+                id="label"
+                name="label"
+                value={formData.label}
+                onChange={handleChange}
+                placeholder="Contoh: Rumah, Kantor"
+                className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+              />
             </div>
-            <div className="max-h-[70vh] overflow-y-auto pr-2 space-y-4">
-              <div>
-                <label
-                  htmlFor="label"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Label Alamat
-                </label>
-                <input
-                  type="text"
-                  id="label"
-                  name="label"
-                  value={formData.label}
-                  onChange={handleChange}
-                  placeholder="Contoh: Rumah, Kantor"
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="recipient_name"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Nama Penerima
-                </label>
-                <input
-                  type="text"
-                  id="recipient_name"
-                  name="recipient_name"
-                  value={formData.recipient_name}
-                  onChange={handleChange}
-                  required
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="recipient_phone"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Nomor Telepon
-                </label>
-                <input
-                  type="tel"
-                  id="recipient_phone"
-                  name="recipient_phone"
-                  value={formData.recipient_phone}
-                  onChange={handleChange}
-                  required
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"
-                />
-              </div>
-              <div className="relative">
-                <label
-                  htmlFor="area-search"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Cari Alamat / Area
-                </label>
-                <input
-                  type="text"
-                  id="area-search"
-                  autoComplete="off"
-                  placeholder="Ketik alamat atau nama area..."
-                  value={searchQuery}
-                  onChange={handleSearchInputChange}
-                  onFocus={() => setIsDropdownOpen(true)}
-                  onBlur={handleInputBlur}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"
-                />
-                {isDropdownOpen &&
-                  (searchResults.length > 0 || isSearching) && (
-                    <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5">
-                      {isSearching && (
-                        <div className="p-2 text-gray-500">Mencari...</div>
-                      )}
-                      {searchResults.map((area) => (
-                        <div
-                          key={area.id}
-                          onMouseDown={() => handleAreaSelect(area)}
-                          className="cursor-pointer p-2 hover:bg-orange-100"
-                        >
-                          <div className="font-semibold text-gray-800">{area.name}</div>
-                          <div className="text-xs text-gray-500">
-                            {[
-                              area.administrativeLevel4,
-                              area.administrativeLevel3,
-                              area.administrativeLevel2,
-                              area.administrativeLevel1,
-                            ]
-                              .filter(Boolean)
-                              .join(", ") || area.type}
-                          </div>
-                          {area.postalCode && (
-                            <div className="text-xs text-gray-400">Kode pos: {area.postalCode}</div>
-                          )}
+
+            <div>
+              <label htmlFor="recipient_name" className="block text-sm font-medium text-slate-700 mb-1">
+                Nama Penerima <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="recipient_name"
+                name="recipient_name"
+                value={formData.recipient_name}
+                onChange={handleChange}
+                required
+                className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="recipient_phone" className="block text-sm font-medium text-slate-700 mb-1">
+                Nomor Telepon <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                id="recipient_phone"
+                name="recipient_phone"
+                value={formData.recipient_phone}
+                onChange={handleChange}
+                required
+                className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+              />
+            </div>
+
+            <div className="relative">
+              <label htmlFor="area-search" className="block text-sm font-medium text-slate-700 mb-1">
+                Cari Alamat / Area
+              </label>
+              <input
+                type="text"
+                id="area-search"
+                autoComplete="off"
+                placeholder="Ketik alamat atau nama area..."
+                value={searchQuery}
+                onChange={handleSearchInputChange}
+                onFocus={() => setIsDropdownOpen(true)}
+                onBlur={handleInputBlur}
+                className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+              />
+              {isDropdownOpen &&
+                (searchResults.length > 0 || isSearching) && (
+                  <div className="absolute z-[60] mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-base shadow-xl ring-1 ring-black ring-opacity-5">
+                    {isSearching && (
+                      <div className="p-3 text-gray-500 text-sm">Mencari...</div>
+                    )}
+                    {searchResults.map((area) => (
+                      <div
+                        key={area.id}
+                        onMouseDown={() => handleAreaSelect(area)}
+                        className="cursor-pointer p-3 hover:bg-orange-50 transition-colors border-b border-gray-100 last:border-b-0"
+                      >
+                        <div className="font-semibold text-gray-800 text-sm">{area.name}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          {[
+                            area.administrativeLevel4,
+                            area.administrativeLevel3,
+                            area.administrativeLevel2,
+                            area.administrativeLevel1,
+                          ]
+                            .filter(Boolean)
+                            .join(", ") || area.type}
                         </div>
-                      ))}
-                    </div>
-                  )}
-              </div>
+                        {area.postalCode && (
+                          <div className="text-xs text-gray-400 mt-0.5">Kode pos: {area.postalCode}</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+            </div>
+
+            <div>
+              <label htmlFor="full_address" className="block text-sm font-medium text-slate-700 mb-1">
+                Alamat Lengkap <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                id="full_address"
+                name="full_address"
+                value={formData.full_address}
+                onChange={handleChange}
+                rows={3}
+                required
+                placeholder="Nama jalan, nomor rumah, RT/RW"
+                className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors resize-none"
+              ></textarea>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label
-                  htmlFor="full_address"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Alamat Lengkap
-                </label>
-                <textarea
-                  id="full_address"
-                  name="full_address"
-                  value={formData.full_address}
-                  onChange={handleChange}
-                  rows={3}
-                  required
-                  placeholder="Nama jalan, nomor rumah, RT/RW"
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"
-                ></textarea>
-              </div>
-              <div>
-                <label
-                  htmlFor="postal_code"
-                  className="block text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="postal_code" className="block text-sm font-medium text-slate-700 mb-1">
                   Kode Pos
                 </label>
                 <input
@@ -377,83 +371,93 @@ export default function AddressForm({
                   value={formData.postal_code}
                   onChange={handleChange}
                   readOnly
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 bg-gray-100 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 bg-gray-100 text-gray-600 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Pilih Lokasi di Map
+                <label htmlFor="recipient_phone" className="block text-sm font-medium text-slate-700 mb-1">
+                  No Telepon
                 </label>
-                <p className="text-xs text-gray-500 mb-2">
-                  Klik atau seret marker untuk menentukan koordinat alamat.
-                </p>
+                <input
+                  type="tel"
+                  id="recipient_phone"
+                  name="recipient_phone"
+                  value={formData.recipient_phone}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Pilih Lokasi di Map
+              </label>
+              <p className="text-xs text-gray-500 mb-2">
+                Klik atau seret marker untuk menentukan koordinat alamat.
+              </p>
+              <div className="relative rounded-lg overflow-hidden border border-gray-200">
                 <MapPicker
                   latitude={formData.latitude}
                   longitude={formData.longitude}
                   onSelect={handleMapSelect}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label
-                    htmlFor="latitude"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Latitude
-                  </label>
-                  <input
-                    type="text"
-                    id="latitude"
-                    name="latitude"
-                    value={formData.latitude}
-                    onChange={handleChange}
-                    placeholder="-6.2..."
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="longitude"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Longitude
-                  </label>
-                  <input
-                    type="text"
-                    id="longitude"
-                    name="longitude"
-                    value={formData.longitude}
-                    onChange={handleChange}
-                    placeholder="106.8..."
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"
-                  />
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={handleGeocode}
-                disabled={isGeocoding}
-                className="text-sm text-orange-600 hover:underline disabled:opacity-50"
-              >
-                {isGeocoding ? "Mencari..." : "Cari Koordinat Otomatis (GoSend)"}
-              </button>
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="latitude" className="block text-sm font-medium text-slate-700 mb-1">
+                  Latitude
+                </label>
+                <input
+                  type="text"
+                  id="latitude"
+                  name="latitude"
+                  value={formData.latitude}
+                  onChange={handleChange}
+                  placeholder="-6.2..."
+                  className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                />
+              </div>
+              <div>
+                <label htmlFor="longitude" className="block text-sm font-medium text-slate-700 mb-1">
+                  Longitude
+                </label>
+                <input
+                  type="text"
+                  id="longitude"
+                  name="longitude"
+                  value={formData.longitude}
+                  onChange={handleChange}
+                  placeholder="106.8..."
+                  className="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleGeocode}
+              disabled={isGeocoding}
+              className="text-sm text-orange-600 hover:text-orange-700 underline disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isGeocoding ? "Mencari..." : "Cari Koordinat Otomatis (GoSend)"}
+            </button>
           </div>
-          <div className="bg-gray-50 px-6 py-4 flex justify-end space-x-3 rounded-b-lg items-center">
-            {errorMessage && (
-              <p className="text-red-500 text-sm mr-auto">{errorMessage}</p>
-            )}
+
+          <div className="bg-gray-50 px-6 py-4 flex justify-end space-x-3 rounded-b-lg flex-shrink-0 border-t border-gray-100">
             <button
               type="button"
               onClick={onClose}
-              className="bg-gray-200 text-gray-700 font-semibold px-4 py-2 rounded-md hover:bg-gray-300"
+              className="px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-100 transition-colors"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="bg-orange-500 text-white font-bold px-4 py-2 rounded-md hover:bg-orange-600 transition-opacity disabled:opacity-50"
+              className="px-4 py-2.5 bg-orange-500 text-white font-bold rounded-lg hover:bg-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
             >
               {isLoading ? "Menyimpan..." : "Simpan Alamat"}
             </button>

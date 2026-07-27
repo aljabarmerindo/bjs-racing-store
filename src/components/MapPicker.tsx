@@ -136,17 +136,24 @@ const MapPicker = ({
   }, [latitude, longitude]);
 
   return (
-    <div className="relative">
+    <div className="relative" style={{ zIndex: 0 }}>
       <div
         ref={containerRef}
-        style={{ height: typeof height === "number" ? `${height}px` : height, width: "100%", borderRadius: 12 }}
+        style={{ 
+          height: typeof height === "number" ? `${height}px` : height, 
+          width: "100%", 
+          borderRadius: 12,
+          zIndex: 0,
+          position: "relative"
+        }}
       />
       {loading && (
-        <div className="absolute inset-0 bg-white/60 flex items-center justify-center rounded-lg">
+        <div className="absolute inset-0 bg-white/60 flex items-center justify-center rounded-lg" style={{ zIndex: 10 }}>
           <p className="text-sm text-slate-600">Memuat alamat...</p>
         </div>
       )}
     </div>
+  );
   );
 };
 
