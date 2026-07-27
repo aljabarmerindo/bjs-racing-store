@@ -30,3 +30,5 @@ pnpm-debug.log*
 
 # Kilo Code internal workspace (plans, bundled node_modules)
 .kilo/
+.vercel
+.env*
