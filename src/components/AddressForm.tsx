@@ -229,12 +229,12 @@ export default function AddressForm({
 
   return (
     <div
-      className="fixed inset-0 z-50 sm:flex sm:items-center sm:justify-center sm:p-4"
+      className="fixed inset-0 z-50"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="absolute inset-0 bg-black/50 sm:bg-black/60 sm:backdrop-blur-sm" />
 
-      <div className="relative z-10 flex flex-col h-full w-full bg-white sm:h-auto sm:max-w-lg sm:max-h-[90vh] sm:rounded-xl sm:shadow-2xl">
+      <div className="relative z-10 flex flex-col h-full w-full bg-white sm:max-w-lg sm:mx-auto sm:my-8 sm:rounded-xl sm:shadow-2xl">
         <form onSubmit={handleSubmit} noValidate className="flex flex-col h-full">
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 flex-shrink-0 sm:px-6">
             <h3 className="text-lg font-bold text-slate-800 sm:text-xl">
