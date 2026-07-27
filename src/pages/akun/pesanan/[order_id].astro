@@ -107,7 +107,7 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
           <div class="bg-slate-50 rounded-lg p-4 space-y-2 text-sm">
             <div class="flex justify-between">
               <span class="text-slate-600">Subtotal Produk</span>
-              <span class="font-semibold text-slate-800">{formatRupiah((order.order_items || []).reduce((sum, item) => sum + ((item.quantity || 0) * (item.price || 0)), 0))}</span>
+              <span class="font-semibold text-slate-800">{formatRupiah((order.order_items || []).reduce((sum: number, item: any) => sum + ((item.quantity || 0) * (item.price || 0)), 0))}</span>
             </div>
             <div class="flex justify-between">
               <span class="text-slate-600">Ongkos Kirim</span>
@@ -168,14 +168,28 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
             )}
           </div>
 
-          {hasCoordinates && (
-            <div class="mt-6">
-              <h3 class="font-bold text-lg mb-2">Rute Pengiriman</h3>
-              <div id="map-placeholder" data-lat={order.shipping_address.latitude} data-lng={order.shipping_address.longitude} data-address={order.shipping_address.destination_text || order.shipping_address.full_address} class="h-[420px] w-full rounded-lg border border-slate-200 bg-slate-100 flex items-center justify-center text-slate-500">
-                Peta akan dimuat di sini
-              </div>
-            </div>
-          )}
+           {hasCoordinates && (
+             <div class="mt-6">
+               <h3 class="font-bold text-lg mb-2">Rute Pengiriman</h3>
+               <div id="map-placeholder" data-lat={order.shipping_address.latitude} data-lng={order.shipping_address.longitude} data-address={order.shipping_address.destination_text || order.shipping_address.full_address} class="h-[420px] w-full rounded-lg border border-slate-200 bg-slate-100 flex items-center justify-center text-slate-500">
+                 Peta akan dimuat di sini
+               </div>
+             </div>
+           )}
+
+           {hasCourier && order.courier_details.tracking_id && (
+             <div class="mt-6">
+               <h3 class="font-bold text-lg mb-2">Lacak Pengiriman</h3>
+               <div id="tracking-container" class="bg-slate-50 rounded-lg p-4">
+                 <p class="text-sm text-slate-500 mb-2">No. Resi: <span id="tracking-id" class="font-mono font-semibold text-slate-700">{order.courier_details.tracking_id}</span></p>
+                 <button id="refresh-tracking" class="mb-4 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700">
+                   Refresh Status
+                 </button>
+                 <div id="tracking-status" class="text-sm text-slate-600">Klik tombol di atas untuk melihat status terbaru.</div>
+                 <div id="tracking-timeline" class="mt-4 space-y-3 hidden"></div>
+               </div>
+             </div>
+           )}
         </div>
         <div>
           <h3 class="font-bold text-lg mb-4">Ringkasan Item:</h3>
@@ -218,3 +232,47 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
     </div>
   </div>
 </MainLayout>
+
+<script>
+  (function() {
+    const trackingId = '{order.courier_details.tracking_id || ""}';
+    if (!trackingId) return;
+
+    const refreshBtn = document.getElementById('refresh-tracking');
+    const statusEl = document.getElementById('tracking-status');
+    const timelineEl = document.getElementById('tracking-timeline');
+
+    async function loadTracking() {
+      if (!statusEl || !timelineEl) return;
+      statusEl.textContent = 'Memuat status...';
+      timelineEl.classList.add('hidden');
+
+      try {
+        const res = await fetch(`/api/shipping/biteship/track?trackingId=${encodeURIComponent(trackingId)}`);
+        if (!res.ok) throw new Error('Gagal memuat tracking');
+        const data = await res.json();
+
+        statusEl.textContent = data.status ? `Status: ${data.status}` : 'Status tidak tersedia.';
+
+        if (data.history && data.history.length > 0) {
+          timelineEl.classList.remove('hidden');
+          timelineEl.innerHTML = data.history.map((h: any) => `
+            <div class="border-l-2 border-blue-500 pl-4">
+              <p class="text-sm font-semibold text-slate-800">${h.status}</p>
+              <p class="text-xs text-slate-500">${h.note || ''}</p>
+              <p class="text-xs text-slate-400">${h.timestamp ? new Date(h.timestamp).toLocaleString('id-ID') : ''}</p>
+            </div>
+          `).join('');
+        }
+      } catch (err) {
+        statusEl.textContent = err instanceof Error ? err.message : 'Gagal memuat tracking.';
+      }
+    }
+
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', loadTracking);
+    }
+
+    loadTracking();
+  })();
+</script>

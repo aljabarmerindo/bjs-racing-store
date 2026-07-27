@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Shipping Label - BJS RACING</title>
+    <style>
+        @page {
+            size: 80mm 100mm;
+            margin: 1.5mm;
+            background-color: #ffffff;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #000000;
+            font-size: 6.5pt;
+            line-height: 1.15;
+            background-color: #ffffff;
+        }
+
+        .label-container {
+            width: 100%;
+            border: 1pt solid #000000;
+            background: #ffffff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        td {
+            padding: 2px 3px;
+            vertical-align: middle;
+        }
+
+        .border-bottom {
+            border-bottom: 0.8pt solid #000000;
+        }
+
+        .border-right {
+            border-right: 0.8pt solid #000000;
+        }
+
+        /* Header Section */
+        .logo-jne {
+            font-weight: 900;
+            font-size: 10pt;
+            color: #003399;
+            font-style: italic;
+            line-height: 1;
+        }
+
+        .logo-jne-sub {
+            font-size: 4pt;
+            color: #d32f2f;
+            font-style: normal;
+            font-weight: bold;
+            display: block;
+            letter-spacing: 0.3px;
+        }
+
+        .logo-bjs {
+            text-align: right;
+            padding-right: 4px;
+        }
+
+        .bjs-title {
+            font-size: 8.5pt;
+            font-weight: 900;
+            color: #d32f2f;
+            letter-spacing: -0.2px;
+            font-style: italic;
+        }
+
+        .bjs-sub {
+            font-size: 5.5pt;
+            font-weight: bold;
+            color: #111111;
+            display: block;
+            margin-top: -1px;
+        }
+
+        .bjs-url {
+            font-size: 5pt;
+            color: #444;
+            font-weight: bold;
+        }
+
+        /* Barcode section */
+        .barcode-section {
+            text-align: center;
+            padding: 3px 2px 2px 2px;
+        }
+
+        .resi-text {
+            font-size: 7.5pt;
+            font-weight: bold;
+            margin-top: 1px;
+        }
+
+        /* Information Lines */
+        .info-text {
+            font-size: 6.5pt;
+            padding: 2px 4px;
+        }
+
+        /* Ref, Qty, Weight Table */
+        .ref-table td {
+            padding: 2px 3px;
+            font-size: 6pt;
+        }
+
+        /* Address Section */
+        .address-header {
+            font-weight: bold;
+            font-size: 6pt;
+            margin-bottom: 1px;
+        }
+
+        .address-box {
+            height: 62px;
+            vertical-align: top;
+            padding: 3px;
+            font-size: 5.8pt;
+            line-height: 1.15;
+        }
+
+        .address-name {
+            font-weight: bold;
+            font-size: 6.5pt;
+        }
+
+        /* Item & Notes */
+        .item-box {
+            font-size: 5.8pt;
+            padding: 2px 4px;
+            line-height: 1.15;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            font-size: 5.2pt;
+            color: #222222;
+            padding: 2px 1px;
+            line-height: 1.1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="label-container">
+    <!-- Header: Logo Ekspedisi & Logo BJS RACING -->
+    <table style="height: 32px;" class="border-bottom">
+        <tr>
+            <td style="width: 45%;" class="border-right">
+                <div style="text-align: center;">
+                    <span class="logo-jne">JNE</span>
+                    <span class="logo-jne-sub">EXPRESS ACROSS NATIONS</span>
+                </div>
+            </td>
+            <td style="width: 55%;" class="logo-bjs">
+                <span class="bjs-title">🏁 BJS</span>
+                <span class="bjs-sub">BJS RACING</span>
+                <span class="bjs-url">bjs-racing.com</span>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Barcode & Resi -->
+    <div class="barcode-section border-bottom">
+        <svg width="200" height="28" viewBox="0 0 200 28" style="max-width: 98%;">
+            <rect x="0" y="0" width="200" height="28" fill="#ffffff"/>
+            <path d="M 4 0 V 28 M 7 0 V 28 M 9 0 V 28 M 14 0 V 28 M 18 0 V 28 M 20 0 V 28 M 25 0 V 28 M 30 0 V 28 M 32 0 V 28 M 35 0 V 28 M 40 0 V 28 M 45 0 V 28 M 50 0 V 28 M 52 0 V 28 M 57 0 V 28 M 60 0 V 28 M 62 0 V 28 M 67 0 V 28 M 72 0 V 28 M 75 0 V 28 M 82 0 V 28 M 85 0 V 28 M 87 0 V 28 M 92 0 V 28 M 95 0 V 28 M 100 0 V 28 M 105 0 V 28 M 110 0 V 28 M 115 0 V 28 M 117 0 V 28 M 120 0 V 28 M 125 0 V 28 M 130 0 V 28 M 135 0 V 28 M 137 0 V 28 M 140 0 V 28 M 145 0 V 28 M 150 0 V 28 M 152 0 V 28 M 160 0 V 28 M 162 0 V 28 M 167 0 V 28 M 172 0 V 28 M 175 0 V 28 M 177 0 V 28 M 183 0 V 28 M 188 0 V 28 M 192 0 V 28 M 196 0 V 28" stroke="#000000" stroke-width="1.8"/>
+        </svg>
+        <div class="resi-text">Nomor Resi - J1234567890</div>
+    </div>
+
+    <!-- Ongkos Kirim -->
+    <div class="info-text border-bottom">
+        Ongkos Kirim: Rp. 38,000
+    </div>
+
+    <!-- Jenis Layanan & Kode Rute -->
+    <div class="info-text border-bottom">
+        Jenis Layanan - Reguler. Kode Rute - ROUTEC123
+    </div>
+
+    <!-- Reference Number, Quantity, Weight -->
+    <table class="ref-table border-bottom">
+        <tr>
+            <td style="width: 50%;" class="border-right">
+                <strong>Reference Number</strong><br>
+                shpy-qa-1535-1
+            </td>
+            <td style="width: 50%;">
+                Quantity: <strong>3 Pcs</strong><br>
+                Weight: <strong>1.9 Kg</strong>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Address Section -->
+    <table class="border-bottom">
+        <tr>
+            <td style="width: 50%;" class="border-right address-box">
+                <div class="address-header">Alamat Penerima:</div>
+                <div class="address-name">John Doe</div>
+                <div>0812******90</div>
+                <div>Menteng Park Apartments, Menteng, Jakarta Pusat, DKI Jakarta, 10310</div>
+                <div style="margin-top: 2px;"><strong>Asuransi: Rp. 2,000</strong></div>
+            </td>
+            <td style="width: 50%;" class="address-box">
+                <div class="address-header">Alamat Pengirim:</div>
+                <div class="address-name">BJS RACING Official</div>
+                <div>081279912345</div>
+                <div>Stasiun Gambir, Gambir, Jakarta Pusat, DKI Jakarta, 10110</div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Jenis Barang -->
+    <div class="item-box border-bottom">
+        <strong>Jenis Barang:</strong> [SKU-SEPATU] 1x Sepatu John - Sepatu kulit Garut [SKU-CINCIN] 2x Cincin John - Cincin emas 24 karat
+    </div>
+
+    <!-- Catatan -->
+    <div class="item-box border-bottom">
+        <strong>Catatan:</strong> Please handle with care. Fragile items inside.
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        Pengiriman melalui platform BJS RACING<br>
+        <strong>bjs-racing.com</strong>
+    </div>
+</div>
+
+</body>
+</html>
