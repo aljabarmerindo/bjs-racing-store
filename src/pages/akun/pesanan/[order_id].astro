@@ -3,6 +3,7 @@
 import MainLayout from '@/layouts/MainLayout.astro';
 import { supabaseAdmin } from '@/lib/supabaseServer.ts';
 import { formatToWIB } from '@/lib/utils.ts';
+import ShippingLabel from '@/components/ShippingLabel.tsx';
 
 const { session } = Astro.locals;
 const { order_id } = Astro.params;
@@ -164,6 +165,37 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
                 >
                   Lacak Pengiriman
                 </a>
+              </div>
+            )}
+
+            {hasCourier && (
+              <div class="mt-6">
+                <h3 class="font-bold text-lg mb-2">Shipping Label</h3>
+                <ShippingLabel
+                  courierCode={order.courier_details.code || order.courier_details.courier_company || ''}
+                  courierName={order.courier_details.name || order.courier_details.courier_company || 'Biteship'}
+                  routingCode={order.courier_details.courier_service_code || order.courier_details.service || '-'}
+                  waybillId={order.courier_details.waybill_id || order.courier_details.tracking_id || order.shipping_receipt_number || '-'}
+                  shippingCost={order.shipping_cost || 0}
+                  serviceName={order.courier_details.service || order.courier_details.courier_service_name || '-'}
+                  referenceId={order.order_number || '-'}
+                  quantity={(order.order_items || []).length}
+                  weight={(order.order_items || []).reduce((sum: number, item: any) => sum + ((item.products?.berat_gram || 500) * (item.quantity || 1)), 0)}
+                  recipientName={order.shipping_address.recipient_name || '-'}
+                  recipientPhone={order.shipping_address.recipient_phone || '-'}
+                  recipientAddress={order.shipping_address.full_address || '-'}
+                  recipientCity={order.shipping_address.destination_text || '-'}
+                  recipientPostal={order.shipping_address.postal_code || '-'}
+                  senderName={import.meta.env.BITESHIP_ORIGIN_NAME || 'BJS Racing Store'}
+                  senderPhone={import.meta.env.BITESHIP_ORIGIN_PHONE || '-'}
+                  senderAddress={import.meta.env.BITESHIP_ORIGIN_ADDRESS || '-'}
+                  senderCity="Jepara, Jawa Tengah"
+                  senderPostal={import.meta.env.BITESHIP_ORIGIN_POSTAL || '-'}
+                  items={(order.order_items || []).map((item: any) => `${item.quantity}x ${item.products?.nama || 'Item'}`).join(', ') || '-'}
+                  notes={order.notes || ''}
+                  codAmount={order.payment_method === 'cod' ? order.total_amount : 0}
+                  insuranceAmount={0}
+                />
               </div>
             )}
           </div>

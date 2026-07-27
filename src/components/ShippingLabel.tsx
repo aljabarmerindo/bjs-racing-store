@@ -1,10 +1,12 @@
 // File: src/components/ShippingLabel.tsx
-// Shipping label generator untuk print thermal printer 80mm.
-// Format mengikuti sample Biteship shipping label.
+// Shipping label generator untuk print thermal printer 80mm + export PNG.
+import { useRef } from "react";
+import { toPng } from "html-to-image";
+import * as BWIPJS from "bwip-js";
 
 interface ShippingLabelProps {
+  courierCode?: string;
   courierName?: string;
-  courierLogo?: string;
   routingCode?: string;
   waybillId?: string;
   shippingCost?: number;
@@ -29,13 +31,24 @@ interface ShippingLabelProps {
   insuranceAmount?: number;
 }
 
+const COURIER_LOGOS: Record<string, string> = {
+  gojek: "/icons/gojek.png",
+  jne: "/icons/jne.png",
+  jnt: "/icons/j&t.png",
+  "j&t": "/icons/j&t.png",
+  "j&t cargo": "/icons/j&tcargo.png",
+  pos: "/icons/pos-indonesia.png",
+  sicepat: "/icons/sicepat.png",
+  internal: "/icons/bjs-racing.png",
+};
+
 export default function ShippingLabel({
-  courierName = "JNE",
-  courierLogo = "",
+  courierCode = "",
+  courierName = "Biteship",
   routingCode = "-",
   waybillId = "-",
   shippingCost = 0,
-  serviceName = "Reguler",
+  serviceName = "-",
   referenceId = "-",
   quantity = 1,
   weight = 0,
@@ -48,182 +61,134 @@ export default function ShippingLabel({
   senderName = "BJS RACING Official",
   senderPhone = "-",
   senderAddress = "-",
-  senderCity = "-",
+  senderCity = "Jepara, Jawa Tengah",
   senderPostal = "-",
   items = "-",
   notes = "",
   codAmount = 0,
   insuranceAmount = 0,
 }: ShippingLabelProps) {
+  const labelRef = useRef<HTMLDivElement>(null);
   const weightText = weight >= 1000 ? `${(weight / 1000).toFixed(2)} Kg` : `${weight} gram`;
-  const formatRupiah = (value: number) =>
-    new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value || 0);
+  const logoPath = COURIER_LOGOS[(courierCode || "").toLowerCase()] || "";
+
+  const generateBarcode = (text: string) => {
+    try {
+      const canvas = document.createElement("canvas");
+      BWIPJS.toCanvas(canvas, {
+        bcid: "code128",
+        text: String(text || "-"),
+        scale: 2,
+        height: 18,
+        includetext: false,
+      });
+      return canvas.toDataURL("image/png");
+    } catch {
+      return null;
+    }
+  };
+
+  const handlePrint = () => {
+    if (!labelRef.current) return;
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+    const content = labelRef.current.innerHTML;
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Shipping Label - ${waybillId}</title>
+          <style>
+            @page { size: 80mm 100mm; margin: 1.5mm; background: #fff; }
+            * { box-sizing: border-box; }
+            body { margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; color: #000; font-size: 6.5pt; line-height: 1.15; }
+            img { max-width: 100%; height: auto; }
+            table { width: 100%; border-collapse: collapse; }
+            td { padding: 2px 3px; vertical-align: middle; }
+            .border-bottom { border-bottom: 0.8pt solid #000; }
+            .border-right { border-right: 0.8pt solid #000; }
+            .no-print { display: none !important; }
+          </style>
+        </head>
+        <body>
+          <div style="width: 80mm; max-width: 80mm; border: 1pt solid #000; background: #fff; padding: 0; margin: 0;">
+            ${content}
+          </div>
+          <script>window.onload = () => { window.print(); }</script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  const handleDownloadPng = async () => {
+    if (!labelRef.current) return;
+    const dataUrl = await toPng(labelRef.current, {
+      cacheBust: true,
+      pixelRatio: 3,
+      backgroundColor: "#ffffff",
+    });
+    const link = document.createElement("a");
+    link.download = `label-${waybillId || "order"}.png`;
+    link.href = dataUrl;
+    link.click();
+  };
+
+  const barcodeSrc = generateBarcode(waybillId);
 
   return (
-    <div className="label-container">
-      <style>
-        {`
-          @page {
-            size: 80mm 100mm;
-            margin: 1.5mm;
-            background-color: #ffffff;
-          }
-          *, *::before, *::after {
-            box-sizing: border-box;
-          }
-          .label-container {
-            width: 80mm;
-            max-width: 80mm;
-            border: 1pt solid #000000;
-            background: #ffffff;
-            font-family: Arial, Helvetica, sans-serif;
-            color: #000000;
-            font-size: 6.5pt;
-            line-height: 1.15;
-            padding: 0;
-            margin: 0;
-          }
-          .label-container table {
-            width: 100%;
-            border-collapse: collapse;
-          }
-          .label-container td {
-            padding: 2px 3px;
-            vertical-align: middle;
-          }
-          .border-bottom {
-            border-bottom: 0.8pt solid #000000;
-          }
-          .border-right {
-            border-right: 0.8pt solid #000000;
-          }
-          .logo-courier {
-            font-weight: 900;
-            font-size: 10pt;
-            text-align: center;
-            line-height: 1;
-          }
-          .logo-courier-sub {
-            font-size: 4pt;
-            font-weight: bold;
-            display: block;
-            letter-spacing: 0.3px;
-          }
-          .logo-bjs {
-            text-align: right;
-            padding-right: 4px;
-          }
-          .bjs-title {
-            font-size: 8.5pt;
-            font-weight: 900;
-            color: #d32f2f;
-            letter-spacing: -0.2px;
-            font-style: italic;
-          }
-          .bjs-sub {
-            font-size: 5.5pt;
-            font-weight: bold;
-            color: #111111;
-            display: block;
-            margin-top: -1px;
-          }
-          .bjs-url {
-            font-size: 5pt;
-            color: #444;
-            font-weight: bold;
-          }
-          .barcode-section {
-            text-align: center;
-            padding: 3px 2px 2px 2px;
-          }
-          .resi-text {
-            font-size: 7.5pt;
-            font-weight: bold;
-            margin-top: 1px;
-          }
-          .info-text {
-            font-size: 6.5pt;
-            padding: 2px 4px;
-          }
-          .ref-table td {
-            padding: 2px 3px;
-            font-size: 6pt;
-          }
-          .address-header {
-            font-weight: bold;
-            font-size: 6pt;
-            margin-bottom: 1px;
-          }
-          .address-box {
-            vertical-align: top;
-            padding: 3px;
-            font-size: 5.8pt;
-            line-height: 1.15;
-          }
-          .address-name {
-            font-weight: bold;
-            font-size: 6.5pt;
-          }
-          .item-box {
-            font-size: 5.8pt;
-            padding: 2px 4px;
-            line-height: 1.15;
-          }
-          .footer {
-            text-align: center;
-            font-size: 5.2pt;
-            color: #222222;
-            padding: 2px 1px;
-            line-height: 1.1;
-          }
-          @media print {
-            body {
-              margin: 0;
-              padding: 0;
-            }
-            .no-print {
-              display: none !important;
-            }
-          }
-        `}
-      </style>
-
-        {/* Header: Logo Ekspedisi & Logo BJS RACING */}
+    <div className="space-y-3">
+      <div
+        ref={labelRef}
+        className="label-container"
+        style={{
+          width: "80mm",
+          maxWidth: "80mm",
+          border: "1pt solid #000",
+          background: "#fff",
+          fontFamily: "Arial, Helvetica, sans-serif",
+          color: "#000",
+          fontSize: "6.5pt",
+          lineHeight: 1.15,
+        }}
+      >
         <table style={{ height: "32px" }} className="border-bottom">
           <tr>
             <td style={{ width: "45%" }} className="border-right">
               <div style={{ textAlign: "center" }}>
-                <div className="logo-courier">
-                  {courierName}
-                  <span className="logo-courier-sub">EXPRESS ACROSS NATIONS</span>
-                </div>
+                {logoPath ? (
+                  <img src={logoPath} alt={courierName} style={{ height: "22px", objectFit: "contain" }} />
+                ) : (
+                  <div style={{ fontWeight: 900, fontSize: "10pt", lineHeight: 1 }}>
+                    {courierName}
+                    <div style={{ fontSize: "4pt", fontWeight: "bold", letterSpacing: "0.3px" }}>EXPRESS ACROSS NATIONS</div>
+                  </div>
+                )}
               </div>
             </td>
-            <td style={{ width: "55%" }} className="logo-bjs">
-              <div className="bjs-title">🏁 BJS</div>
-              <div className="bjs-sub">BJS RACING</div>
-              <div className="bjs-url">bjs-racing.com</div>
+            <td style={{ width: "55%" }}>
+              <div style={{ textAlign: "right", paddingRight: "4px" }}>
+                <div style={{ fontSize: "8.5pt", fontWeight: 900, color: "#d32f2f", letterSpacing: "-0.2px", fontStyle: "italic" }}>🏁 BJS</div>
+                <div style={{ fontSize: "5.5pt", fontWeight: "bold", color: "#111", marginTop: "-1px", display: "block" }}>BJS RACING</div>
+                <div style={{ fontSize: "5pt", color: "#444", fontWeight: "bold" }}>bjs-racing.com</div>
+              </div>
             </td>
           </tr>
         </table>
 
-        {/* Barcode & Resi */}
-        <div className="barcode-section border-bottom">
-          <div className="resi-text">Nomor Resi - {waybillId}</div>
+        <div style={{ textAlign: "center", padding: "3px 2px 2px 2px" }} className="border-bottom">
+          {barcodeSrc && <img src={barcodeSrc} alt="barcode" style={{ height: "18px" }} />}
+          <div style={{ fontSize: "7.5pt", fontWeight: "bold", marginTop: "1px" }}>Nomor Resi - {waybillId}</div>
         </div>
 
-        {/* Ongkos Kirim */}
-        <div className="info-text border-bottom">
-          Ongkos Kirim: {formatRupiah(shippingCost)}
+        <div style={{ fontSize: "6.5pt", padding: "2px 4px" }} className="border-bottom">
+          Ongkos Kirim: Rp. {shippingCost.toLocaleString("id-ID")}
         </div>
 
-        {/* Jenis Layanan & Kode Rute */}
-        <div className="info-text border-bottom">
+        <div style={{ fontSize: "6.5pt", padding: "2px 4px" }} className="border-bottom">
           Jenis Layanan - {serviceName}. Kode Rute - {routingCode}
         </div>
 
-        {/* Reference Number, Quantity, Weight */}
-        <table className="ref-table border-bottom">
+        <table style={{ fontSize: "6pt" }} className="border-bottom">
           <tr>
             <td style={{ width: "50%" }} className="border-right">
               <strong>Reference Number</strong>
@@ -238,25 +203,24 @@ export default function ShippingLabel({
           </tr>
         </table>
 
-        {/* Address Section */}
         <table className="border-bottom">
           <tr>
-            <td style={{ width: "50%" }} className="border-right address-box">
-              <div className="address-header">Alamat Penerima:</div>
-              <div className="address-name">{recipientName}</div>
+            <td style={{ width: "50%", verticalAlign: "top", padding: "3px" }} className="border-right">
+              <div style={{ fontWeight: "bold", fontSize: "6pt", marginBottom: "1px" }}>Alamat Penerima:</div>
+              <div style={{ fontWeight: "bold", fontSize: "6.5pt" }}>{recipientName}</div>
               <div>{recipientPhone}</div>
               <div>
                 {recipientAddress}, {recipientCity}, {recipientPostal}
               </div>
               {insuranceAmount > 0 && (
                 <div style={{ marginTop: "2px" }}>
-                  <strong>Asuransi: {formatRupiah(insuranceAmount)}</strong>
+                  <strong>Asuransi: Rp. {insuranceAmount.toLocaleString("id-ID")}</strong>
                 </div>
               )}
             </td>
-            <td style={{ width: "50%" }} className="address-box">
-              <div className="address-header">Alamat Pengirim:</div>
-              <div className="address-name">{senderName}</div>
+            <td style={{ width: "50%", verticalAlign: "top", padding: "3px" }}>
+              <div style={{ fontWeight: "bold", fontSize: "6pt", marginBottom: "1px" }}>Alamat Pengirim:</div>
+              <div style={{ fontWeight: "bold", fontSize: "6.5pt" }}>{senderName}</div>
               <div>{senderPhone}</div>
               <div>
                 {senderAddress}, {senderCity}, {senderPostal}
@@ -265,39 +229,39 @@ export default function ShippingLabel({
           </tr>
         </table>
 
-        {/* Jenis Barang */}
-        <div className="item-box border-bottom">
+        <div style={{ fontSize: "5.8pt", padding: "2px 4px", lineHeight: 1.15 }} className="border-bottom">
           <strong>Jenis Barang:</strong> {items}
         </div>
 
-        {/* Catatan */}
-        {notes && (
-          <div className="item-box border-bottom">
+        {notes ? (
+          <div style={{ fontSize: "5.8pt", padding: "2px 4px", lineHeight: 1.15 }} className="border-bottom">
             <strong>Catatan:</strong> {notes}
           </div>
-        )}
+        ) : null}
 
-        {/* Footer */}
-        <div className="footer">
+        <div style={{ textAlign: "center", fontSize: "5.2pt", color: "#222", padding: "2px 1px", lineHeight: 1.1 }}>
           Pengiriman melalui platform BJS RACING
           <br />
           <strong>bjs-racing.com</strong>
         </div>
+      </div>
 
-        {/* Print Button */}
-        <div className="no-print" style={{ textAlign: "center", padding: "8px 4px 10px 4px" }}>
-          <button
-            onClick={() => window.print()}
-            style={{
-              padding: "6px 12px",
-              fontSize: "10pt",
-              fontWeight: "bold",
-              cursor: "pointer",
-            }}
-          >
-            Print Label
-          </button>
-        </div>
+      <div className="no-print" style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
+        <button
+          type="button"
+          onClick={handlePrint}
+          style={{ padding: "6px 12px", fontSize: "10pt", fontWeight: "bold", cursor: "pointer" }}
+        >
+          Print Label
+        </button>
+        <button
+          type="button"
+          onClick={handleDownloadPng}
+          style={{ padding: "6px 12px", fontSize: "10pt", fontWeight: "bold", cursor: "pointer" }}
+        >
+          Download PNG
+        </button>
+      </div>
     </div>
   );
 }

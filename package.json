@@ -20,7 +20,9 @@
     "astro": "^7.1.3",
     "astro-i18next": "^1.0.0-beta.21",
     "browser-image-compression": "^2.0.2",
+    "bwip-js": "^4.11.2",
     "colorthief": "^2.6.0",
+    "html-to-image": "^1.11.13",
     "i18next": "^25.3.2",
     "leaflet": "^1.9.4",
     "nanostores": "^1.0.1",
@@ -31,6 +33,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
+    "@types/bwip-js": "^3.2.3",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
