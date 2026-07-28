@@ -1,9 +1,9 @@
-// File: /src/pages/api/shipping/check-local-availability.ts
 import type { APIRoute } from "astro";
 import { supabaseAdmin } from "@/lib/supabaseServer.ts";
 
 export const GET: APIRoute = async ({ url }) => {
   const destinationId = url.searchParams.get("destination_id");
+  const gojekCostParam = url.searchParams.get("gojek_cost");
 
   if (!destinationId) {
     return new Response(
@@ -13,30 +13,38 @@ export const GET: APIRoute = async ({ url }) => {
   }
 
   try {
-    const { data: zone, error } = await supabaseAdmin
-      .from("internal_shipping_zones")
-      .select("shipping_cost, zone_name")
+    const { data: area, error } = await supabaseAdmin
+      .from("bjs_express_areas")
+      .select("id")
       .eq("subdistrict_id", destinationId)
-      .eq("is_active", true) // Hanya cari zona yang aktif
-      .single();
+      .eq("is_active", true)
+      .maybeSingle();
 
-    if (error || !zone) {
-      // Jika tidak ditemukan, itu bukan error. Cukup kembalikan 'available: false'.
+    if (error || !area) {
       return new Response(JSON.stringify({ available: false }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    // Jika zona ditemukan, kembalikan detailnya.
+    const gojekCost = gojekCostParam ? Number(gojekCostParam) : null;
+    if (!gojekCost || gojekCost < 1000) {
+      return new Response(JSON.stringify({ available: false }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const bjsCost = gojekCost - 1000;
+
     const responsePayload = {
       available: true,
-      name: "BJS Express",
+      name: "BJS RACING",
       code: "internal",
-      cost: zone.shipping_cost,
+      cost: bjsCost,
       service: "BJS Express",
       description: "",
-      etd: "0 hari (sameday)",
+      etd: "6 - 8 Hours",
     };
 
     return new Response(JSON.stringify(responsePayload), {

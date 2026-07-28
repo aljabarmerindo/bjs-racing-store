@@ -159,6 +159,7 @@ export default function CheckoutView() {
     if (code === "jne") return `JNE: ${s}`;
     if (code === "jnt") return `J&T: ${s}`;
     if (code === "jntcargo") return `J&T Cargo: ${s}`;
+    if (code === "internal") return `BJS Express: ${s}`;
     return s;
   };
 
@@ -263,22 +264,6 @@ export default function CheckoutView() {
     try {
       const services: any[] = [];
 
-      const checkInternalResponse = await fetch(
-        `/api/shipping/check-local-availability?destination_id=${selectedAddress.destination}`,
-      );
-      const checkInternalResult = await checkInternalResponse.json();
-
-      if (checkInternalResult.available) {
-        services.push({
-          service: checkInternalResult.service,
-          code: checkInternalResult.code,
-          name: checkInternalResult.name,
-          cost: checkInternalResult.cost,
-          etd: checkInternalResult.etd,
-          description: checkInternalResult.description,
-        });
-      }
-
       const hasCoordinates =
         !!selectedAddress.latitude && !!selectedAddress.longitude;
       const hasPostalCode = !!selectedAddress.postal_code;
@@ -328,11 +313,47 @@ export default function CheckoutView() {
         services.push(...mapped);
       }
 
-      if (services.length === 0) {
+      const gojekService = services.find(
+        (s) => s.code === "gojek" && s.service.toLowerCase().includes("same day")
+      );
+      const gojekCost = gojekService?.cost;
+
+      if (gojekCost && selectedAddress.destination) {
+        const checkInternalResponse = await fetch(
+          `/api/shipping/check-local-availability?destination_id=${selectedAddress.destination}&gojek_cost=${gojekCost}`,
+        );
+        const checkInternalResult = await checkInternalResponse.json();
+
+        if (checkInternalResult.available) {
+          services.push({
+            service: checkInternalResult.service,
+            code: checkInternalResult.code,
+            name: checkInternalResult.name,
+            cost: checkInternalResult.cost,
+            etd: checkInternalResult.etd,
+            description: checkInternalResult.description,
+          });
+        }
+      }
+
+      const now = new Date();
+      const jakartaHour = now.getUTCHours() + 7;
+      const jakartaMinutes = now.getUTCMinutes();
+      const jakartaTime = jakartaHour * 60 + jakartaMinutes;
+      const gojekCutoff = 18 * 60;
+      const bjsCutoff = 15 * 60;
+
+      const filtered = services.filter((s) => {
+        if (s.code === "gojek" && jakartaTime >= gojekCutoff) return false;
+        if (s.code === "internal" && jakartaTime >= bjsCutoff) return false;
+        return true;
+      });
+
+      if (filtered.length === 0) {
         throw new Error("Tidak ada layanan pengiriman tersedia.");
       }
 
-      services.sort((a, b) => {
+      filtered.sort((a, b) => {
         const parseEtd = (etd?: string) => {
           if (!etd) return Number.POSITIVE_INFINITY;
           const match = etd.match(/(\d+)/);
@@ -344,13 +365,13 @@ export default function CheckoutView() {
         return (a.cost || 0) - (b.cost || 0);
       });
 
-      setShippingServices(services);
+      setShippingServices(filtered);
       setSelectedShipping({
-        service: services[0].service,
-        cost: services[0].cost,
-        etd: services[0].etd,
+        service: filtered[0].service,
+        cost: filtered[0].cost,
+        etd: filtered[0].etd,
       });
-      shippingCacheRef.current = { key: cacheKey, services, selected: services[0] };
+      shippingCacheRef.current = { key: cacheKey, services: filtered, selected: filtered[0] };
     } catch (err) {
       setError(err instanceof Error ? err.message : "Terjadi kesalahan.");
       setShippingServices([]);
@@ -361,6 +382,7 @@ export default function CheckoutView() {
     selectedAddressId,
     totalWeight,
     addresses,
+    subtotal,
   ]);
 
   useEffect(() => {
