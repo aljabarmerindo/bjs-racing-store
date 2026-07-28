@@ -42,33 +42,35 @@ export async function getBiteshipRates(params: {
   destination: { latitude?: number; longitude?: number; postal_code?: string };
   weight: number;
   couriers?: string;
+  value?: number;
 }): Promise<BiteshipRateOption[]> {
   const couriers = params.couriers || "gojek,pos";
-  const origin: any = { latitude: ORIGIN_LAT, longitude: ORIGIN_LNG };
-  const destination: any = {};
-  if (params.destination.latitude && params.destination.longitude) {
-    destination.latitude = params.destination.latitude;
-    destination.longitude = params.destination.longitude;
-  }
-  if (params.destination.postal_code) {
-    destination.postal_code = params.destination.postal_code;
-  }
-
-  const json = await biteshipRequest("POST", "/v1/rates/couriers", {
-    origin,
-    destination,
+  const body: any = {
+    origin_latitude: ORIGIN_LAT,
+    origin_longitude: ORIGIN_LNG,
     couriers,
     items: [
       {
         name: "Pesanan BJS Racing",
         description: "Pakaian & sparepart motor",
+        value: Math.max(0, Math.round(params.value || 0)),
+        quantity: 1,
+        weight: Math.max(1, Math.round(params.weight)),
         length: 10,
         width: 10,
         height: 10,
-        weight: Math.max(1, Math.round(params.weight)),
       },
     ],
-  });
+  };
+
+  if (params.destination.latitude && params.destination.longitude) {
+    body.destination_latitude = params.destination.latitude;
+    body.destination_longitude = params.destination.longitude;
+  } else if (params.destination.postal_code) {
+    body.destination_postal_code = params.destination.postal_code;
+  }
+
+  const json = await biteshipRequest("POST", "/v1/rates/couriers", body);
 
   const pricing = (json.pricing || []) as any[];
   return pricing.map((p) => ({

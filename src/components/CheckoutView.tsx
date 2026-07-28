@@ -311,6 +311,7 @@ export default function CheckoutView() {
             },
             weight: totalWeight,
             couriers: couriers.join(","),
+            value: subtotal,
           }),
         },
       );
