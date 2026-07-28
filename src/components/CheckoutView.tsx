@@ -159,6 +159,7 @@ export default function CheckoutView() {
     if (code === "sicepat") return `SiCepat: ${s}`;
     if (code === "jne") return `JNE: ${s}`;
     if (code === "jnt") return `J&T: ${s}`;
+    if (code === "jnt-cargo") return `J&T Cargo: ${s}`;
     if (code === "gojek") return `GOJEK: ${s}`;
     return s;
   };
@@ -296,7 +297,7 @@ export default function CheckoutView() {
 
       const couriers: string[] = [];
       if (hasCoordinates) couriers.push("gojek");
-      if (hasPostalCode) couriers.push("pos", "jne", "jnt", "sicepat");
+      if (hasPostalCode) couriers.push("pos", "jne", "jnt", "jnt-cargo");
 
       const biteshipResponse = await fetch(
         "/api/shipping/biteship/rates",
@@ -320,7 +321,7 @@ export default function CheckoutView() {
       if (biteshipResponse.ok && Array.isArray(biteshipResult)) {
         const mapped = biteshipResult.map((o: any) => ({
           service: o.courier_service_name || o.service,
-          code: o.courier_name || o.code,
+          code: o.courier_code || o.company || o.code,
           name: o.courier_name || o.name,
           cost: o.price || o.cost,
           etd: o.duration || o.etd,
@@ -488,7 +489,7 @@ export default function CheckoutView() {
         return;
       }
 
-      const biteshipCodes = new Set(["gojek", "pos", "jne", "jnt", "sicepat"]);
+      const biteshipCodes = new Set(["gojek", "pos", "jne", "jnt", "jnt-cargo"]);
       const isBiteshipCourier =
         courierDetails?.code && biteshipCodes.has(String(courierDetails.code).toLowerCase());
 
@@ -682,8 +683,8 @@ export default function CheckoutView() {
                         <div className="flex items-center gap-3">
                           {service.code === "internal" && (
                             <img
-                              src="/icons/bjs-racing.png"
-                              alt="BJS RACING"
+                              src="/icons/bjs-express.png"
+                              alt="BJS Express"
                               className="h-8 w-auto object-contain"
                             />
                           )}
@@ -708,15 +709,15 @@ export default function CheckoutView() {
                           )}
                           {service.code === "jnt" && (
                             <img
-                              src="/icons/j&t.jpg"
+                              src="/icons/j&t.png"
                               alt="J&T Express"
                               className="h-8 w-auto object-contain"
                             />
                           )}
-                          {service.code === "sicepat" && (
+                          {service.code === "jnt-cargo" && (
                             <img
-                              src="/icons/sicepat.png"
-                              alt="SiCepat Express"
+                              src="/icons/j&tcargo.png"
+                              alt="J&T Cargo"
                               className="h-8 w-auto object-contain"
                             />
                           )}
