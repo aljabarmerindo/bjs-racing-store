@@ -67,7 +67,7 @@ export const POST: APIRoute = async (context) => {
     const cacheKey = getCacheKey(destination, weight, body?.couriers || "", value);
     const cached = getCachedRates(cacheKey);
     if (cached) {
-      console.log("[Rates API] cache hit:", cacheKey);
+      // console.log("[Rates API] cache hit:", cacheKey);
       return new Response(JSON.stringify(cached), {
         status: 200,
         headers: { "Content-Type": "application/json" },
@@ -86,7 +86,7 @@ export const POST: APIRoute = async (context) => {
     const calls: Promise<any[]>[] = [];
 
     if (hasCoords && hasPostal) {
-      console.log("[Rates API] combined call coords+postal:", normalizedCouriers);
+      // console.log("[Rates API] combined call coords+postal:", normalizedCouriers);
       calls.push(
         getBiteshipRates({
           destination: {
@@ -98,12 +98,12 @@ export const POST: APIRoute = async (context) => {
           couriers: normalizedCouriers || ALL_COURIERS.join(","),
           value,
         }).catch((err) => {
-          console.error("[Rates API] combined call failed:", err);
+          // console.error("[Rates API] combined call failed:", err);
           return [];
         }),
       );
     } else if (hasCoords) {
-      console.log("[Rates API] coords only:", normalizedCouriers);
+      // console.log("[Rates API] coords only:", normalizedCouriers);
       calls.push(
         getBiteshipRates({
           destination: {
@@ -114,12 +114,12 @@ export const POST: APIRoute = async (context) => {
           couriers: normalizedCouriers || ALL_COURIERS.join(","),
           value,
         }).catch((err) => {
-          console.error("[Rates API] coords call failed:", err);
+          // console.error("[Rates API] coords call failed:", err);
           return [];
         }),
       );
     } else if (hasPostal) {
-      console.log("[Rates API] postal only:", normalizedCouriers);
+      // console.log("[Rates API] postal only:", normalizedCouriers);
       calls.push(
         getBiteshipRates({
           destination: {
@@ -129,7 +129,7 @@ export const POST: APIRoute = async (context) => {
           couriers: normalizedCouriers || ALL_COURIERS.join(","),
           value,
         }).catch((err) => {
-          console.error("[Rates API] postal call failed:", err);
+          // console.error("[Rates API] postal call failed:", err);
           return [];
         }),
       );
@@ -138,7 +138,7 @@ export const POST: APIRoute = async (context) => {
     const results = await Promise.all(calls);
     const allRates = results.flat();
 
-    console.log("[Rates API] result count:", allRates.length, "rates:", allRates);
+    // console.log("[Rates API] result count:", allRates.length, "rates:", allRates);
 
     if (allRates.length > 0) {
       setCachedRates(cacheKey, allRates);
@@ -149,7 +149,7 @@ export const POST: APIRoute = async (context) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("[Rates API] unexpected error:", error);
+    // console.error("[Rates API] unexpected error:", error);
     const message = error instanceof Error ? error.message : "Gagal mengambil tarif pengiriman.";
     return new Response(JSON.stringify({ message }), {
       status: 500,

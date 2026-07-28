@@ -127,12 +127,9 @@ export default function CheckoutView() {
     order_id: string;
   } | null>(null);
   const [isPolling, setIsPolling] = useState(false);
-  const [shippingCache, setShippingCache] = useState<{ key: string; services: any[]; selected: any; cachedAt: number } | null>(null);
   const [isRateCheckCooldown, setIsRateCheckCooldown] = useState(false);
-  const [isRateCheckPermanentlyDisabled, setIsRateCheckPermanentlyDisabled] = useState(false);
-  const [rapidClickCount, setRapidClickCount] = useState(0);
   const [rateCheckCount, setRateCheckCount] = useState(0);
-  const [lastRateCheckTime, setLastRateCheckTime] = useState(0);
+  const [lastCheckedAt, setLastCheckedAt] = useState<number | null>(null);
   const [courierConfig, setCourierConfig] = useState<CourierConfig>(DEFAULT_COURIER_CONFIG);
   const [courierConfigLoaded, setCourierConfigLoaded] = useState(false);
 
@@ -214,7 +211,7 @@ export default function CheckoutView() {
     const open = toMinutes(schedule.open_time);
     const close = toMinutes(schedule.cutoff_time);
     const result = currentMinutes >= open && currentMinutes < close;
-    console.log("[Checkout] schedule check:", code, "current:", currentMinutes, "open:", open, "close:", close, "result:", result);
+    // console.log("[Checkout] schedule check:", code, "current:", currentMinutes, "open:", open, "close:", close, "result:", result);
     return result;
   };
 
@@ -308,33 +305,12 @@ export default function CheckoutView() {
   }, [addresses, selectedAddressId]);
 
   useEffect(() => {
-    const saved = sessionStorage.getItem("shipping_cache");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed.cachedAt && Date.now() - parsed.cachedAt < 15 * 60 * 1000) {
-          setShippingCache(parsed);
-        }
-      } catch {}
-    }
-  }, []);
-
-  useEffect(() => {
-    if (shippingCache) {
-      sessionStorage.setItem("shipping_cache", JSON.stringify(shippingCache));
-    }
-  }, [shippingCache]);
-
-  useEffect(() => {
     const saved = sessionStorage.getItem("rate_check_count");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (parsed.date === new Date().toDateString()) {
           setRateCheckCount(parsed.count || 0);
-          setLastRateCheckTime(parsed.lastTime || 0);
-        } else {
-          sessionStorage.removeItem("rate_check_count");
         }
       } catch {}
     }
@@ -367,8 +343,8 @@ export default function CheckoutView() {
 
   const fetchShippingCosts = useCallback(async () => {
     const cacheKey = `${selectedAddressId}-${totalWeight}`;
-    const cached = shippingCache;
-    if (cached && cached.key === cacheKey && Date.now() - cached.cachedAt < 15 * 60 * 1000) {
+    const cached = shippingCacheRef.current;
+    if (cached && cached.key === cacheKey) {
       setShippingServices(cached.services);
       setSelectedShipping(cached.selected);
       return;
@@ -426,7 +402,7 @@ export default function CheckoutView() {
       );
 
       const biteshipResult = await biteshipResponse.json();
-      console.log("[Checkout] Biteship rates raw response:", biteshipResult);
+      // console.log("[Checkout] Biteship rates raw response:", biteshipResult);
       if (biteshipResponse.ok && Array.isArray(biteshipResult)) {
         const mapped = biteshipResult.map((o: any) => ({
           service: o.courier_service_name || o.service,
@@ -437,9 +413,9 @@ export default function CheckoutView() {
           description: o.description || "",
         }));
         services.push(...mapped);
-        console.log("[Checkout] mapped services:", mapped);
+        // console.log("[Checkout] mapped services:", mapped);
       } else {
-        console.error("[Checkout] Biteship rates failed:", biteshipResponse.status, biteshipResult);
+        // console.error("[Checkout] Biteship rates failed:", biteshipResponse.status, biteshipResult);
       }
 
       const gojekService = services.find(
@@ -470,7 +446,7 @@ export default function CheckoutView() {
         const internalOk = !(s.code === "internal" && !isWithinSchedule("internal"));
         const keep = gojekOk && internalOk;
         if (!keep) {
-          console.log("[Checkout] filtered out:", s.code, "gojekOk:", gojekOk, "internalOk:", internalOk);
+          // console.log("[Checkout] filtered out:", s.code, "gojekOk:", gojekOk, "internalOk:", internalOk);
         }
         return keep;
       });
@@ -515,8 +491,8 @@ export default function CheckoutView() {
         cost: filtered[0].cost,
         etd: filtered[0].etd,
       });
-      const newCache = { key: cacheKey, services: filtered, selected: filtered[0], cachedAt: Date.now() };
-      setShippingCache(newCache);
+      const newCache = { key: cacheKey, services: filtered, selected: filtered[0] };
+      shippingCacheRef.current = newCache;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Terjadi kesalahan.");
       setShippingServices([]);
@@ -533,9 +509,8 @@ export default function CheckoutView() {
   ]);
 
   useEffect(() => {
-    if (shippingCache) return;
     fetchShippingCosts();
-  }, [fetchShippingCosts, shippingCache]);
+  }, [fetchShippingCosts]);
 
   const handleApplyVoucher = async (codeToApply: string) => {
     if (!codeToApply) return;
@@ -1078,6 +1053,14 @@ export default function CheckoutView() {
                   {distanceInfo.fallback ? (
                     <span className="text-orange-600 ml-1">(garis lurus)</span>
                   ) : null}
+                </p>
+              </div>
+            )}
+            {lastCheckedAt && (
+              <div className="flex justify-between text-xs text-slate-500">
+                <p>Terakhir cek tarif</p>
+                <p className="font-medium">
+                  {new Date(lastCheckedAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })} WIB
                 </p>
               </div>
             )}
