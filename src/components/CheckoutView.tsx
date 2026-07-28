@@ -403,9 +403,7 @@ export default function CheckoutView() {
         return;
       }
 
-      const couriers: string[] = [];
-      if (hasCoordinates) couriers.push("gojek");
-      if (hasPostalCode) couriers.push("pos", "jne", "jnt", "jntcargo");
+      const couriers = ["gojek", "pos", "jne", "jnt", "jntcargo"];
 
       const biteshipResponse = await fetch(
         "/api/shipping/biteship/rates",

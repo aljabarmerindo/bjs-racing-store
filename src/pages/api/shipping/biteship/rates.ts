@@ -1,11 +1,10 @@
 // File: src/pages/api/shipping/biteship/rates.ts
 // Endpoint ongkir Biteship untuk checkout STORE.
-// Split 2 panggilan: gojek via koordinat, reguler via kode pos.
+// Optimized: combine all couriers into 1 call when both coords and postal code exist.
 import type { APIRoute } from "astro";
 import { getBiteshipRates } from "@/lib/biteship";
 
-const INSTANT_COURIERS = ["gojek"];
-const REGULAR_COURIERS = ["pos", "jne", "jnt", "jntcargo"];
+const ALL_COURIERS = ["gojek", "pos", "jne", "jnt", "jntcargo"];
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 menit
 
 interface CacheEntry {
@@ -76,10 +75,29 @@ export const POST: APIRoute = async (context) => {
 
     const hasCoords = !!(destination.latitude && destination.longitude);
     const hasPostal = !!destination.postal_code;
+    const couriers = String(body?.couriers || ALL_COURIERS.join(","));
+    const normalizedCouriers = couriers
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean)
+      .join(",");
 
     const calls: Promise<any[]>[] = [];
 
-    if (hasCoords) {
+    if (hasCoords && hasPostal) {
+      calls.push(
+        getBiteshipRates({
+          destination: {
+            latitude: Number(destination.latitude),
+            longitude: Number(destination.longitude),
+            postal_code: String(destination.postal_code),
+          },
+          weight,
+          couriers: normalizedCouriers || ALL_COURIERS.join(","),
+          value,
+        }).catch(() => []),
+      );
+    } else if (hasCoords) {
       calls.push(
         getBiteshipRates({
           destination: {
@@ -87,20 +105,18 @@ export const POST: APIRoute = async (context) => {
             longitude: Number(destination.longitude),
           },
           weight,
-          couriers: INSTANT_COURIERS.join(","),
+          couriers: normalizedCouriers || ALL_COURIERS.join(","),
           value,
         }).catch(() => []),
       );
-    }
-
-    if (hasPostal) {
+    } else if (hasPostal) {
       calls.push(
         getBiteshipRates({
           destination: {
             postal_code: String(destination.postal_code),
           },
           weight,
-          couriers: REGULAR_COURIERS.join(","),
+          couriers: normalizedCouriers || ALL_COURIERS.join(","),
           value,
         }).catch(() => []),
       );
