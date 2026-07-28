@@ -1,7 +1,7 @@
 // File: src/components/AddressForm.tsx
 // Form alamat: Biteship area search + peta Leaflet GPS.
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useAppStore } from "@/lib/store";
 import type { Address, FormDataState } from "@/lib/store";
 import type { BiteshipAreaResult } from "@/lib/biteship";
@@ -39,7 +39,6 @@ export default function AddressForm({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<BiteshipAreaResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMapEditing, setIsMapEditing] = useState(false);
   const [gpsMessage, setGpsMessage] = useState("");
   const [locateKey, setLocateKey] = useState(0);
@@ -72,7 +71,6 @@ export default function AddressForm({
       }
       setErrorMessage("");
       setSearchResults([]);
-      setIsDropdownOpen(false);
       setIsMapEditing(false);
       setGpsMessage("");
       setLocateKey(0);
@@ -97,37 +95,25 @@ export default function AddressForm({
     return dest.trim();
   }
 
-  const performSearch = useCallback(async (query: string) => {
-    if (query.length < 3) {
+  useEffect(() => {
+    if (!searchQuery || searchQuery.length < 3 || searchQuery === formData.destination_text) {
       setSearchResults([]);
-      setIsDropdownOpen(false);
       return;
     }
     setIsSearching(true);
-    try {
-      const response = await fetch(
-        `/api/shipping/biteship/search-area?q=${encodeURIComponent(query)}`,
-      );
-      if (!response.ok) throw new Error("Gagal mencari area.");
-      const results: BiteshipAreaResult[] = await response.json();
-      setSearchResults(results);
-      setIsDropdownOpen(true);
-    } catch (error) {
-      console.error("Biteship Maps search error:", error);
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const debounceTimer = setTimeout(() => {
-      if (searchQuery && searchQuery !== formData.destination_text) {
-        performSearch(searchQuery);
-      }
-    }, 300);
-    return () => clearTimeout(debounceTimer);
-  }, [searchQuery, formData.destination_text, performSearch]);
+    fetch(`/api/shipping/biteship/search-area?q=${encodeURIComponent(searchQuery)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Gagal mencari area.");
+        return res.json();
+      })
+      .then((results: BiteshipAreaResult[]) => {
+        setSearchResults(results);
+      })
+      .catch(() => {
+        setSearchResults([]);
+      })
+      .finally(() => setIsSearching(false));
+  }, [searchQuery, formData.destination_text]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -168,11 +154,6 @@ export default function AddressForm({
       longitude: area.longitude || prev.longitude,
     }));
     setSearchQuery(fullText || area.name);
-    setIsDropdownOpen(false);
-  };
-
-  const handleInputBlur = () => {
-    setTimeout(() => setIsDropdownOpen(false), 150);
   };
 
   const handleMapSelect = (result: { lat: number; lng: number }) => {
@@ -370,12 +351,9 @@ export default function AddressForm({
                 placeholder="Contoh: Pesanggrahan, Jakarta Selatan"
                 value={searchQuery}
                 onChange={handleSearchInputChange}
-                onFocus={() => setIsDropdownOpen(true)}
-                onBlur={handleInputBlur}
                 className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
               />
-              {isDropdownOpen &&
-                (searchResults.length > 0 || isSearching) && (
+              {(searchResults.length > 0 || isSearching) && (
                   <div className="absolute z-[60] mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-base shadow-xl ring-1 ring-black/5">
                     {isSearching && (
                       <div className="p-3 text-gray-500 text-sm">
