@@ -48,9 +48,20 @@ function describeTargetLabel(v: any): string | null {
   return null;
 }
 
-const COURIER_OPEN_TIMES: Record<string, { open: number; close: number; label: string }> = {
-  internal: { open: 8 * 60, close: 15 * 60, label: "BJS Express hanya tersedia 08:00 - 15:00 WIB" },
-  gojek: { open: 8 * 60, close: 18 * 60, label: "Gojek hanya tersedia 08:00 - 18:00 WIB" },
+interface CourierSchedule {
+  open_time: string;
+  cutoff_time: string;
+  enabled: boolean;
+}
+
+interface CourierConfig {
+  gojek: CourierSchedule;
+  bjs_express: CourierSchedule;
+}
+
+const DEFAULT_COURIER_CONFIG: CourierConfig = {
+  gojek: { open_time: "08:00:00", cutoff_time: "18:00:00", enabled: true },
+  bjs_express: { open_time: "08:00:00", cutoff_time: "15:00:00", enabled: true },
 };
 
 export default function CheckoutView() {
@@ -106,6 +117,7 @@ export default function CheckoutView() {
   const [isRateCheckCooldown, setIsRateCheckCooldown] = useState(false);
   const [isRateCheckPermanentlyDisabled, setIsRateCheckPermanentlyDisabled] = useState(false);
   const [rapidClickCount, setRapidClickCount] = useState(0);
+  const [courierConfig, setCourierConfig] = useState<CourierConfig>(DEFAULT_COURIER_CONFIG);
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<
     "qris" | "dana" | "ovo" | "gopay" | "shopeepay" | "transfer_bank" | "virtual_account" | null
@@ -170,6 +182,31 @@ export default function CheckoutView() {
   const formatEtd = (etd?: string) => {
     if (!etd) return "";
     return String(etd).replace(/\bday\b/g, "hari");
+  };
+
+  const toMinutes = (time: string) => {
+    const [hours, minutes] = time.split(":").map(Number);
+    return (hours || 0) * 60 + (minutes || 0);
+  };
+
+  const isWithinSchedule = (code: string) => {
+    if (!courierConfig) return true;
+    const schedule = code === "internal" ? courierConfig.bjs_express : courierConfig.gojek;
+    if (!schedule.enabled) return false;
+    const now = new Date();
+    const jakartaHour = (now.getUTCHours() + 7) % 24;
+    const jakartaMinutes = now.getUTCMinutes();
+    const currentMinutes = jakartaHour * 60 + jakartaMinutes;
+    const open = toMinutes(schedule.open_time);
+    const close = toMinutes(schedule.cutoff_time);
+    return currentMinutes >= open && currentMinutes < close;
+  };
+
+  const getScheduleLabel = (code: string) => {
+    if (!courierConfig) return "";
+    const schedule = code === "internal" ? courierConfig.bjs_express : courierConfig.gojek;
+    if (!schedule.enabled) return "";
+    return `${schedule.open_time.slice(0, 5)} - ${schedule.cutoff_time.slice(0, 5)} WIB`;
   };
 
   useEffect(() => {
@@ -241,6 +278,29 @@ export default function CheckoutView() {
       if (primaryAddress) setSelectedAddressId(primaryAddress.id);
     }
   }, [addresses, selectedAddressId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadConfig = async () => {
+      try {
+        const response = await fetch("/api/shipping/courier-config");
+        if (!response.ok) throw new Error("Gagal memuat konfigurasi kurir.");
+        const data = await response.json();
+        if (!cancelled) {
+          setCourierConfig(data);
+        }
+      } catch (err) {
+        console.error("Gagal memuat konfigurasi kurir:", err);
+        if (!cancelled) {
+          setCourierConfig(DEFAULT_COURIER_CONFIG);
+        }
+      }
+    };
+    loadConfig();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const fetchShippingCosts = useCallback(async () => {
     const cacheKey = `${selectedAddressId}-${totalWeight}`;
@@ -340,22 +400,19 @@ export default function CheckoutView() {
         }
       }
 
-      const now = new Date();
-      const jakartaHour = (now.getUTCHours() + 7) % 24;
-      const jakartaMinutes = now.getUTCMinutes();
-      const jakartaTime = jakartaHour * 60 + jakartaMinutes;
-
       const filtered = services.filter((s) => {
-        const schedule = COURIER_OPEN_TIMES[s.code];
-        if (!schedule) return true;
-        if (jakartaTime < schedule.open) return false;
-        if (jakartaTime >= schedule.close) return false;
+        if (s.code === "gojek" && !isWithinSchedule("gojek")) return false;
+        if (s.code === "internal" && !isWithinSchedule("internal")) return false;
         return true;
       });
 
       const unavailableNotes = services
         .filter((s) => !filtered.find((f) => f.code === s.code))
-        .map((s) => COURIER_OPEN_TIMES[s.code]?.label)
+        .map((s) => {
+          if (s.code === "gojek") return `Gojek hanya tersedia ${getScheduleLabel("gojek")}`;
+          if (s.code === "internal") return `BJS Express hanya tersedia ${getScheduleLabel("internal")}`;
+          return null;
+        })
         .filter(Boolean);
 
       if (filtered.length === 0) {
@@ -395,6 +452,7 @@ export default function CheckoutView() {
     totalWeight,
     addresses,
     subtotal,
+    courierConfig,
   ]);
 
   useEffect(() => {
@@ -449,7 +507,7 @@ export default function CheckoutView() {
             clearInterval(interval);
             setIsPolling(false);
             clearCart();
-            window.location.href = `/akun/pesanan/${order_id}?status=success`;
+            window.location.href = `/akun/pesanan/${orderId}?status=success`;
           }
         }
       } catch {
@@ -761,6 +819,9 @@ export default function CheckoutView() {
                             Estimasi {formatEtd(service.etd)}
                           </p>
                         )}
+                        <p className="text-xs text-gray-500">
+                          {getScheduleLabel(service.code)}
+                        </p>
                       </div>
                     </div>
                     <p className="font-bold whitespace-nowrap text-orange-600">
