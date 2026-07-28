@@ -1,7 +1,8 @@
 // File: src/components/AddressForm.tsx
 // Form alamat: Biteship area search + peta Leaflet GPS.
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useAppStore } from "@/lib/store";
 import type { Address, FormDataState } from "@/lib/store";
 import type { BiteshipAreaResult } from "@/lib/biteship";
@@ -42,6 +43,10 @@ export default function AddressForm({
   const [isMapEditing, setIsMapEditing] = useState(false);
   const [gpsMessage, setGpsMessage] = useState("");
   const [locateKey, setLocateKey] = useState(0);
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const addAddress = useAppStore((state) => state.addAddress);
   const updateAddress = useAppStore((state) => state.updateAddress);
@@ -96,6 +101,7 @@ export default function AddressForm({
   }
 
   useEffect(() => {
+    if (!isOpen) return;
     if (!searchQuery || searchQuery.length < 3 || searchQuery === formData.destination_text) {
       setSearchResults([]);
       return;
@@ -109,11 +115,34 @@ export default function AddressForm({
       .then((results: BiteshipAreaResult[]) => {
         setSearchResults(results);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.warn("Biteship search gagal:", err);
         setSearchResults([]);
       })
       .finally(() => setIsSearching(false));
-  }, [searchQuery, formData.destination_text]);
+  }, [searchQuery, formData.destination_text, isOpen]);
+
+  useEffect(() => {
+    if (searchResults.length > 0 && searchInputRef.current) {
+      const rect = searchInputRef.current.getBoundingClientRect();
+      setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+    } else if (searchResults.length === 0 && !isSearching) {
+      setDropdownPos(null);
+    }
+  }, [searchResults, isSearching]);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !dropdownPos) return;
+    const handleScroll = () => {
+      if (searchInputRef.current) {
+        const rect = searchInputRef.current.getBoundingClientRect();
+        setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+      }
+    };
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [dropdownPos]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -276,7 +305,7 @@ export default function AddressForm({
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5 space-y-4 sm:px-6 sm:space-y-5">
+          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overscroll-contain px-5 py-5 space-y-4 sm:px-6 sm:space-y-5">
             {errorMessage && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
                 {errorMessage}
@@ -337,7 +366,7 @@ export default function AddressForm({
               />
             </div>
 
-            <div className="relative">
+            <div>
               <label
                 htmlFor="area-search"
                 className="block text-sm font-medium text-slate-700 mb-1.5"
@@ -347,47 +376,66 @@ export default function AddressForm({
               <input
                 type="text"
                 id="area-search"
+                ref={searchInputRef}
                 autoComplete="off"
                 placeholder="Contoh: Pesanggrahan, Jakarta Selatan"
                 value={searchQuery}
                 onChange={handleSearchInputChange}
+                onFocus={() => {
+                  if (searchResults.length > 0 && searchInputRef.current) {
+                    const rect = searchInputRef.current.getBoundingClientRect();
+                    setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+                  }
+                }}
+                onBlur={() => {
+                  setTimeout(() => setDropdownPos(null), 200);
+                }}
                 className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
               />
-              {(searchResults.length > 0 || isSearching) && (
-                  <div className="absolute z-[60] mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-base shadow-xl ring-1 ring-black/5">
-                    {isSearching && (
-                      <div className="p-3 text-gray-500 text-sm">
-                        Mencari...
+              {isSearching && (
+                <p className="text-xs text-gray-500 mt-1">Mencari...</p>
+              )}
+              {searchResults.length > 0 && dropdownPos && createPortal(
+                <div
+                  className="z-[9999] rounded-lg bg-white shadow-xl ring-1 ring-black/5 overflow-y-auto"
+                  style={{
+                    position: "fixed",
+                    top: dropdownPos.top,
+                    left: dropdownPos.left,
+                    width: dropdownPos.width,
+                    maxHeight: 240,
+                  }}
+                  onMouseDown={(e) => e.preventDefault()}
+                >
+                  {searchResults.map((area) => (
+                    <div
+                      key={area.id}
+                      onMouseDown={() => handleAreaSelect(area)}
+                      className="cursor-pointer p-3 hover:bg-orange-50 transition-colors border-b border-gray-100 last:border-b-0"
+                    >
+                      <div className="font-semibold text-gray-800 text-sm">
+                        {area.name}
                       </div>
-                    )}
-                    {searchResults.map((area) => (
-                      <div
-                        key={area.id}
-                        onMouseDown={() => handleAreaSelect(area)}
-                        className="cursor-pointer p-3 hover:bg-orange-50 transition-colors border-b border-gray-100 last:border-b-0"
-                      >
-                        <div className="font-semibold text-gray-800 text-sm">
-                          {area.name}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-0.5">
-                          {[
-                            area.administrativeLevel4,
-                            area.administrativeLevel3,
-                            area.administrativeLevel2,
-                            area.administrativeLevel1,
-                          ]
-                            .filter(Boolean)
-                            .join(", ") || area.type}
-                        </div>
-                        {area.postalCode && (
-                          <div className="text-xs text-gray-400 mt-0.5">
-                            Kode pos: {area.postalCode}
-                          </div>
-                        )}
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        {[
+                          area.administrativeLevel4,
+                          area.administrativeLevel3,
+                          area.administrativeLevel2,
+                          area.administrativeLevel1,
+                        ]
+                          .filter(Boolean)
+                          .join(", ") || area.type}
                       </div>
-                    ))}
-                  </div>
-                )}
+                      {area.postalCode && (
+                        <div className="text-xs text-gray-400 mt-0.5">
+                          Kode pos: {area.postalCode}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>,
+                document.body
+              )}
             </div>
 
             <div>
