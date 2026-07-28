@@ -156,11 +156,9 @@ export default function CheckoutView() {
   const formatServiceName = (service: string, code?: string) => {
     const s = String(service || "").trim();
     if (code === "pos") return `POS Indonesia: ${s}`;
-    if (code === "sicepat") return `SiCepat: ${s}`;
     if (code === "jne") return `JNE: ${s}`;
     if (code === "jnt") return `J&T: ${s}`;
     if (code === "jnt-cargo") return `J&T Cargo: ${s}`;
-    if (code === "gojek") return `GOJEK: ${s}`;
     return s;
   };
 
