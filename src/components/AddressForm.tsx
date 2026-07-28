@@ -1,10 +1,9 @@
 // File: src/components/AddressForm.tsx
-// Deskripsi: Versi lengkap dengan Biteship Maps Search Area untuk autocomplete alamat.
+// Form alamat: Biteship area search + GPS koordinat.
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useAppStore } from "@/lib/store";
 import type { Address, FormDataState } from "@/lib/store";
-import MapPicker, { type MapPickerResult } from "./MapPicker";
 import type { BiteshipAreaResult } from "@/lib/biteship";
 
 interface AddressFormProps {
@@ -33,13 +32,14 @@ export default function AddressForm({
   addressToEdit,
 }: AddressFormProps) {
   const [formData, setFormData] = useState<FormDataState>(initialFormState);
+  const [detailAddress, setDetailAddress] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<BiteshipAreaResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [isGpsLoading, setIsGpsLoading] = useState(false);
 
   const addAddress = useAppStore((state) => state.addAddress);
   const updateAddress = useAppStore((state) => state.updateAddress);
@@ -61,15 +61,55 @@ export default function AddressForm({
           longitude: addressToEdit.longitude || "",
         });
         setSearchQuery(addressToEdit.destination_text || "");
+        setDetailAddress(extractDetailAddress(addressToEdit.full_address || ""));
       } else {
         setFormData(initialFormState);
+        setDetailAddress("");
         setSearchQuery("");
+        requestGps();
       }
       setErrorMessage("");
       setSearchResults([]);
       setIsDropdownOpen(false);
     }
   }, [addressToEdit, isOpen]);
+
+  useEffect(() => {
+    const parts: string[] = [];
+    if (detailAddress.trim()) parts.push(detailAddress.trim());
+    if (formData.destination_text) parts.push(formData.destination_text);
+    else if (formData.postal_code) parts.push(`Kode Pos: ${formData.postal_code}`);
+    const composed = parts.join(", ");
+    setFormData((prev) => {
+      if (prev.full_address === composed) return prev;
+      return { ...prev, full_address: composed };
+    });
+  }, [detailAddress, formData.destination_text, formData.postal_code]);
+
+  function extractDetailAddress(fullAddress: string): string {
+    if (!fullAddress) return "";
+    const dest = fullAddress.split(",")[0] || "";
+    return dest.trim();
+  }
+
+  function requestGps() {
+    if (!navigator.geolocation) return;
+    setIsGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setFormData((prev) => ({
+          ...prev,
+          latitude: String(pos.coords.latitude),
+          longitude: String(pos.coords.longitude),
+        }));
+        setIsGpsLoading(false);
+      },
+      () => {
+        setIsGpsLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+    );
+  }
 
   const performSearch = useCallback(async (query: string) => {
     if (query.length < 3) {
@@ -107,7 +147,11 @@ export default function AddressForm({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "detail_address") {
+      setDetailAddress(value);
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,11 +164,12 @@ export default function AddressForm({
 
   const handleAreaSelect = (area: BiteshipAreaResult) => {
     const fullText = [
-      area.administrativeLevel4,
       area.administrativeLevel3,
       area.administrativeLevel2,
       area.administrativeLevel1,
-    ].filter(Boolean).join(", ");
+    ]
+      .filter(Boolean)
+      .join(", ");
 
     setFormData((prev) => ({
       ...prev,
@@ -133,8 +178,6 @@ export default function AddressForm({
       postal_code: area.postalCode || prev.postal_code,
       city_id: area.administrativeLevel2 || "",
       province_id: area.administrativeLevel1 || "",
-      latitude: area.latitude || prev.latitude,
-      longitude: area.longitude || prev.longitude,
     }));
     setSearchQuery(fullText || area.name);
     setIsDropdownOpen(false);
@@ -144,46 +187,6 @@ export default function AddressForm({
     setTimeout(() => setIsDropdownOpen(false), 150);
   };
 
-  const handleGeocode = async () => {
-    const q = `${formData.full_address}, ${formData.postal_code}`.trim();
-    if (!q || !formData.postal_code) {
-      setErrorMessage("Isi alamat lengkap & kode pos dulu sebelum cari koordinat.");
-      return;
-    }
-    setIsGeocoding(true);
-    try {
-      const res = await fetch(
-        `/api/shipping/biteship/geocode?q=${encodeURIComponent(q)}`,
-      );
-      const data = await res.json();
-      if (data.latitude && data.longitude) {
-        setFormData((prev) => ({
-          ...prev,
-          latitude: String(data.latitude),
-          longitude: String(data.longitude),
-        }));
-      } else {
-        setErrorMessage(
-          "Koordinat otomatis tidak ditemukan. Isi manual latitude/longitude atau pilih di map.",
-        );
-      }
-    } catch {
-      setErrorMessage("Gagal mengambil koordinat otomatis.");
-    } finally {
-      setIsGeocoding(false);
-    }
-  };
-
-  const handleMapSelect = (result: MapPickerResult) => {
-    setFormData((prev) => ({
-      ...prev,
-      latitude: String(result.lat),
-      longitude: String(result.lng),
-      full_address: result.full_address || prev.full_address,
-      destination_text: prev.destination_text || result.full_address,
-    }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -191,19 +194,29 @@ export default function AddressForm({
 
     if (!formData.destination) {
       setErrorMessage(
-        "Alamat/Area harus dipilih dari hasil pencarian dropdown.",
+        "Area/Kecamatan harus dipilih dari hasil pencarian.",
       );
       setIsLoading(false);
       return;
     }
 
-    if (
-      !formData.recipient_name ||
-      !formData.recipient_phone ||
-      !formData.full_address
-    ) {
+    if (!formData.recipient_name || !formData.recipient_phone) {
+      setErrorMessage("Nama Penerima dan Nomor Telepon wajib diisi.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!detailAddress.trim()) {
       setErrorMessage(
-        "Nama Penerima, Nomor Telepon, dan Alamat Lengkap wajib diisi.",
+        "Detail alamat wajib diisi (Jalan, No. Rumah, RT/RW, Desa/Kelurahan).",
+      );
+      setIsLoading(false);
+      return;
+    }
+
+    if (!formData.latitude || !formData.longitude) {
+      setErrorMessage(
+        "Koordinat lokasi belum terisi. Aktifkan GPS atau tekan tombol Ambil Lokasi.",
       );
       setIsLoading(false);
       return;
@@ -230,12 +243,18 @@ export default function AddressForm({
   return (
     <div
       className="fixed inset-0 z-50"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div className="absolute inset-0 bg-black/50 sm:bg-black/60 sm:backdrop-blur-sm" />
 
       <div className="relative z-10 flex flex-col h-full w-full bg-white sm:max-w-lg sm:mx-auto sm:my-8 sm:rounded-xl sm:shadow-2xl">
-        <form onSubmit={handleSubmit} noValidate className="flex flex-col h-full">
+        <form
+          onSubmit={handleSubmit}
+          noValidate
+          className="flex flex-col h-full"
+        >
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 flex-shrink-0 sm:px-6">
             <h3 className="text-lg font-bold text-slate-800 sm:text-xl">
               {addressToEdit ? "Ubah Alamat" : "Tambah Alamat Baru"}
@@ -245,8 +264,19 @@ export default function AddressForm({
               onClick={onClose}
               className="p-1 -mr-1 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -259,7 +289,10 @@ export default function AddressForm({
             )}
 
             <div>
-              <label htmlFor="label" className="block text-sm font-medium text-slate-700 mb-1.5">
+              <label
+                htmlFor="label"
+                className="block text-sm font-medium text-slate-700 mb-1.5"
+              >
                 Label Alamat
               </label>
               <input
@@ -274,7 +307,10 @@ export default function AddressForm({
             </div>
 
             <div>
-              <label htmlFor="recipient_name" className="block text-sm font-medium text-slate-700 mb-1.5">
+              <label
+                htmlFor="recipient_name"
+                className="block text-sm font-medium text-slate-700 mb-1.5"
+              >
                 Nama Penerima <span className="text-red-500">*</span>
               </label>
               <input
@@ -289,7 +325,10 @@ export default function AddressForm({
             </div>
 
             <div>
-              <label htmlFor="recipient_phone" className="block text-sm font-medium text-slate-700 mb-1.5">
+              <label
+                htmlFor="recipient_phone"
+                className="block text-sm font-medium text-slate-700 mb-1.5"
+              >
                 Nomor Telepon <span className="text-red-500">*</span>
               </label>
               <input
@@ -304,14 +343,17 @@ export default function AddressForm({
             </div>
 
             <div className="relative">
-              <label htmlFor="area-search" className="block text-sm font-medium text-slate-700 mb-1.5">
-                Cari Alamat / Area
+              <label
+                htmlFor="area-search"
+                className="block text-sm font-medium text-slate-700 mb-1.5"
+              >
+                Cari Area / Kecamatan <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 id="area-search"
                 autoComplete="off"
-                placeholder="Ketik alamat atau nama area..."
+                placeholder="Contoh: Pesanggrahan, Jakarta Selatan"
                 value={searchQuery}
                 onChange={handleSearchInputChange}
                 onFocus={() => setIsDropdownOpen(true)}
@@ -322,7 +364,9 @@ export default function AddressForm({
                 (searchResults.length > 0 || isSearching) && (
                   <div className="absolute z-[60] mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-base shadow-xl ring-1 ring-black/5">
                     {isSearching && (
-                      <div className="p-3 text-gray-500 text-sm">Mencari...</div>
+                      <div className="p-3 text-gray-500 text-sm">
+                        Mencari...
+                      </div>
                     )}
                     {searchResults.map((area) => (
                       <div
@@ -330,7 +374,9 @@ export default function AddressForm({
                         onMouseDown={() => handleAreaSelect(area)}
                         className="cursor-pointer p-3 hover:bg-orange-50 transition-colors border-b border-gray-100 last:border-b-0"
                       >
-                        <div className="font-semibold text-gray-800 text-sm">{area.name}</div>
+                        <div className="font-semibold text-gray-800 text-sm">
+                          {area.name}
+                        </div>
                         <div className="text-xs text-gray-500 mt-0.5">
                           {[
                             area.administrativeLevel4,
@@ -342,7 +388,9 @@ export default function AddressForm({
                             .join(", ") || area.type}
                         </div>
                         {area.postalCode && (
-                          <div className="text-xs text-gray-400 mt-0.5">Kode pos: {area.postalCode}</div>
+                          <div className="text-xs text-gray-400 mt-0.5">
+                            Kode pos: {area.postalCode}
+                          </div>
                         )}
                       </div>
                     ))}
@@ -351,106 +399,109 @@ export default function AddressForm({
             </div>
 
             <div>
-              <label htmlFor="full_address" className="block text-sm font-medium text-slate-700 mb-1.5">
-                Alamat Lengkap <span className="text-red-500">*</span>
+              <label
+                htmlFor="detail_address"
+                className="block text-sm font-medium text-slate-700 mb-1.5"
+              >
+                Detail Alamat <span className="text-red-500">*</span>
               </label>
               <textarea
-                id="full_address"
-                name="full_address"
-                value={formData.full_address}
+                id="detail_address"
+                name="detail_address"
+                value={detailAddress}
                 onChange={handleChange}
                 rows={3}
                 required
-                placeholder="Nama jalan, nomor rumah, RT/RW"
+                placeholder="Contoh: Jl. Merdeka No. 10, RT 01/RW 02, Desa Pesanggrahan"
                 className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors resize-none"
-              ></textarea>
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Jalan, nomor rumah, RT/RW, dan Desa/Kelurahan
+              </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              <div>
-                <label htmlFor="postal_code" className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Kode Pos
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                Alamat Lengkap
+              </label>
+              <textarea
+                value={formData.full_address}
+                readOnly
+                rows={3}
+                className="w-full border border-gray-200 rounded-lg p-3 text-sm bg-gray-50 text-gray-600 cursor-not-allowed resize-none"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Otomatis terisi dari detail alamat + area yang dipilih
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                Kode Pos
+              </label>
+              <input
+                type="text"
+                value={formData.postal_code}
+                readOnly
+                className="w-full border border-gray-200 rounded-lg p-3 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm font-medium text-slate-700">
+                  Koordinat Lokasi <span className="text-red-500">*</span>
                 </label>
+                <button
+                  type="button"
+                  onClick={requestGps}
+                  disabled={isGpsLoading}
+                  className="text-xs text-orange-600 hover:text-orange-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                  {isGpsLoading ? "Mencari lokasi..." : "Ambil Lokasi Saya"}
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <input
                   type="text"
-                  id="postal_code"
-                  name="postal_code"
-                  value={formData.postal_code}
-                  onChange={handleChange}
+                  value={formData.latitude}
                   readOnly
+                  placeholder="Latitude"
+                  className="w-full border border-gray-200 rounded-lg p-3 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+                />
+                <input
+                  type="text"
+                  value={formData.longitude}
+                  readOnly
+                  placeholder="Longitude"
                   className="w-full border border-gray-200 rounded-lg p-3 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
                 />
               </div>
-              <div>
-                <label htmlFor="recipient_phone_dup" className="block text-sm font-medium text-slate-700 mb-1.5">
-                  No Telepon
-                </label>
-                <input
-                  type="tel"
-                  id="recipient_phone_dup"
-                  name="recipient_phone"
-                  value={formData.recipient_phone}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              <div>
-                <label htmlFor="latitude" className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Latitude
-                </label>
-                <input
-                  type="text"
-                  id="latitude"
-                  name="latitude"
-                  value={formData.latitude}
-                  onChange={handleChange}
-                  placeholder="-6.2..."
-                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label htmlFor="longitude" className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Longitude
-                </label>
-                <input
-                  type="text"
-                  id="longitude"
-                  name="longitude"
-                  value={formData.longitude}
-                  onChange={handleChange}
-                  placeholder="106.8..."
-                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                />
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleGeocode}
-              disabled={isGeocoding}
-              className="text-sm text-orange-600 hover:text-orange-700 underline disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isGeocoding ? "Mencari..." : "Cari Koordinat Otomatis (GoSend)"}
-            </button>
-          </div>
-
-          <div className="flex-shrink-0 border-t border-gray-200 px-5 pt-3 pb-1 sm:px-6">
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Pilih Lokasi di Map
-            </label>
-            <p className="text-xs text-gray-500 mb-2">
-              Klik atau seret marker untuk menentukan koordinat alamat.
-            </p>
-            <div className="relative rounded-lg overflow-hidden border border-gray-200 max-h-60 sm:max-h-72">
-              <MapPicker
-                latitude={formData.latitude}
-                longitude={formData.longitude}
-                onSelect={handleMapSelect}
-                height={240}
-              />
+              {!formData.latitude && !formData.longitude && (
+                <p className="text-xs text-amber-600 mt-1">
+                  GPS belum aktif. Tekan "Ambil Lokasi Saya" atau aktifkan
+                  izin lokasi di browser.
+                </p>
+              )}
             </div>
           </div>
 
