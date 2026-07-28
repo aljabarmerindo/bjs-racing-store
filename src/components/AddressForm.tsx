@@ -1,10 +1,11 @@
 // File: src/components/AddressForm.tsx
-// Form alamat: Biteship area search + GPS koordinat.
+// Form alamat: Biteship area search + peta Leaflet GPS.
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useAppStore } from "@/lib/store";
 import type { Address, FormDataState } from "@/lib/store";
 import type { BiteshipAreaResult } from "@/lib/biteship";
+import MapPicker from "@/components/MapPicker";
 
 interface AddressFormProps {
   isOpen: boolean;
@@ -39,7 +40,9 @@ export default function AddressForm({
   const [searchResults, setSearchResults] = useState<BiteshipAreaResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isGpsLoading, setIsGpsLoading] = useState(false);
+  const [isMapEditing, setIsMapEditing] = useState(false);
+  const [gpsMessage, setGpsMessage] = useState("");
+  const [locateKey, setLocateKey] = useState(0);
 
   const addAddress = useAppStore((state) => state.addAddress);
   const updateAddress = useAppStore((state) => state.updateAddress);
@@ -66,11 +69,13 @@ export default function AddressForm({
         setFormData(initialFormState);
         setDetailAddress("");
         setSearchQuery("");
-        requestGps();
       }
       setErrorMessage("");
       setSearchResults([]);
       setIsDropdownOpen(false);
+      setIsMapEditing(false);
+      setGpsMessage("");
+      setLocateKey(0);
     }
   }, [addressToEdit, isOpen]);
 
@@ -90,25 +95,6 @@ export default function AddressForm({
     if (!fullAddress) return "";
     const dest = fullAddress.split(",")[0] || "";
     return dest.trim();
-  }
-
-  function requestGps() {
-    if (!navigator.geolocation) return;
-    setIsGpsLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setFormData((prev) => ({
-          ...prev,
-          latitude: String(pos.coords.latitude),
-          longitude: String(pos.coords.longitude),
-        }));
-        setIsGpsLoading(false);
-      },
-      () => {
-        setIsGpsLoading(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
-    );
   }
 
   const performSearch = useCallback(async (query: string) => {
@@ -187,6 +173,32 @@ export default function AddressForm({
     setTimeout(() => setIsDropdownOpen(false), 150);
   };
 
+  const handleMapSelect = (result: { lat: number; lng: number }) => {
+    setFormData((prev) => ({
+      ...prev,
+      latitude: String(result.lat),
+      longitude: String(result.lng),
+    }));
+  };
+
+  const handleLocationFound = (lat: number, lng: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      latitude: String(lat),
+      longitude: String(lng),
+    }));
+    setGpsMessage("");
+  };
+
+  const handleLocationError = (msg: string) => {
+    setGpsMessage(msg);
+  };
+
+  const handleRetryGps = () => {
+    setLocateKey((k) => k + 1);
+    setGpsMessage("");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -216,7 +228,7 @@ export default function AddressForm({
 
     if (!formData.latitude || !formData.longitude) {
       setErrorMessage(
-        "Koordinat lokasi belum terisi. Aktifkan GPS atau tekan tombol Ambil Lokasi.",
+        "Koordinat lokasi belum terisi. Aktifkan GPS atau tandai lokasi di peta.",
       );
       setIsLoading(false);
       return;
@@ -249,7 +261,7 @@ export default function AddressForm({
     >
       <div className="absolute inset-0 bg-black/50 sm:bg-black/60 sm:backdrop-blur-sm" />
 
-      <div className="relative z-10 flex flex-col h-full w-full bg-white sm:max-w-lg sm:mx-auto sm:my-8 sm:rounded-xl sm:shadow-2xl">
+      <div className="relative z-10 flex flex-col h-full bg-white sm:max-w-lg sm:mx-auto sm:my-8 sm:rounded-xl sm:shadow-2xl">
         <form
           onSubmit={handleSubmit}
           noValidate
@@ -452,35 +464,24 @@ export default function AddressForm({
                 <label className="block text-sm font-medium text-slate-700">
                   Koordinat Lokasi <span className="text-red-500">*</span>
                 </label>
-                <button
-                  type="button"
-                  onClick={requestGps}
-                  disabled={isGpsLoading}
-                  className="text-xs text-orange-600 hover:text-orange-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-3.5 w-3.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-                  {isGpsLoading ? "Mencari lokasi..." : "Ambil Lokasi Saya"}
-                </button>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+
+              <div className="rounded-xl overflow-hidden border border-gray-200 mb-3">
+                <MapPicker
+                  latitude={formData.latitude}
+                  longitude={formData.longitude}
+                  onSelect={handleMapSelect}
+                  onLocationFound={handleLocationFound}
+                  onLocationError={handleLocationError}
+                  height={200}
+                  interactive={isMapEditing}
+                  autoLocate={!addressToEdit && !formData.latitude}
+                  showStore={true}
+                  locateKey={locateKey}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mb-3">
                 <input
                   type="text"
                   value={formData.latitude}
@@ -496,10 +497,46 @@ export default function AddressForm({
                   className="w-full border border-gray-200 rounded-lg p-3 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
                 />
               </div>
-              {!formData.latitude && !formData.longitude && (
-                <p className="text-xs text-amber-600 mt-1">
-                  GPS belum aktif. Tekan "Ambil Lokasi Saya" atau aktifkan
-                  izin lokasi di browser.
+
+              <div className="flex gap-2 mb-2">
+                {!addressToEdit && !formData.latitude && (
+                  <button
+                    type="button"
+                    onClick={handleRetryGps}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-orange-700 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Ulangi GPS
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsMapEditing((v) => !v)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium border rounded-lg transition-colors ${
+                    isMapEditing
+                      ? "text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100"
+                      : "text-slate-600 bg-slate-50 border-slate-200 hover:bg-slate-100"
+                  }`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  {isMapEditing ? "Selesai" : "Koreksi Lokasi"}
+                </button>
+              </div>
+
+              {gpsMessage && (
+                <p className="text-xs text-amber-600">
+                  {gpsMessage} Gunakan tombol "Koreksi Lokasi" untuk menandai
+                  posisi secara manual.
+                </p>
+              )}
+              {!formData.latitude && !formData.longitude && !gpsMessage && (
+                <p className="text-xs text-amber-600">
+                  GPS belum aktif. Menunggu deteksi lokasi...
                 </p>
               )}
             </div>
