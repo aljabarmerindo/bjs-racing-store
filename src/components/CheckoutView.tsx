@@ -130,6 +130,7 @@ export default function CheckoutView() {
   const [isRateCheckCooldown, setIsRateCheckCooldown] = useState(false);
   const [rateCheckCount, setRateCheckCount] = useState(0);
   const [lastCheckedAt, setLastCheckedAt] = useState<number | null>(null);
+  const shippingCacheRef = useRef<{ key: string; services: any[]; selected: any } | null>(null);
   const [courierConfig, setCourierConfig] = useState<CourierConfig>(DEFAULT_COURIER_CONFIG);
   const [courierConfigLoaded, setCourierConfigLoaded] = useState(false);
 
@@ -505,7 +506,6 @@ export default function CheckoutView() {
     addresses,
     subtotal,
     courierConfig,
-    shippingCache,
   ]);
 
   useEffect(() => {
@@ -762,34 +762,56 @@ export default function CheckoutView() {
                 const storageKey = "rate_check_clicks";
                 const clicks = JSON.parse(sessionStorage.getItem(storageKey) || "[]");
 
-                if (isRateCheckPermanentlyDisabled) {
+                if (rateCheckCount >= 50) {
                   return;
                 }
 
                 const now = Date.now();
-                clicks.push(now);
-                sessionStorage.setItem(storageKey, JSON.stringify(clicks));
-                setRapidClickCount(clicks.length);
+                const today = new Date().toDateString();
+                const saved = sessionStorage.getItem("rate_check_count");
+                let count = 0;
+                let lastDate = "";
 
-                const recentClicks = clicks.filter((t: number) => now - t < 30000);
-                if (recentClicks.length >= 3) {
+                if (saved) {
+                  const parsed = JSON.parse(saved);
+                  count = parsed.count || 0;
+                  lastDate = parsed.date || "";
+                }
+
+                if (lastDate !== today) {
+                  count = 0;
+                }
+
+                if (count >= 50) {
                   setIsRateCheckPermanentlyDisabled(true);
-                  setIsRateCheckCooldown(true);
                   return;
                 }
+
+                const newCount = count + 1;
+                setRateCheckCount(newCount);
+                setLastCheckedAt(now);
+                sessionStorage.setItem("rate_check_count", JSON.stringify({
+                  date: today,
+                  count: newCount,
+                }));
 
                 shippingCacheRef.current = null;
                 setIsRateCheckCooldown(true);
                 setTimeout(() => setIsRateCheckCooldown(false), 120000);
               }}
               className="text-sm font-medium text-blue-600 hover:text-blue-800 disabled:text-gray-400"
-              disabled={isLoadingCosts || isRateCheckCooldown || isRateCheckPermanentlyDisabled}
+              disabled={isLoadingCosts || isRateCheckCooldown || rateCheckCount >= 50}
             >
-              {isRateCheckPermanentlyDisabled
-                ? "Cek Tarif Diperlukan Menunggu"
+              {rateCheckCount >= 50
+                ? "Batas Harian Tercapai"
                 : isLoadingCosts
                 ? "Memuat..."
                 : "Cek Ulang Tarif"}
+              {rateCheckCount > 0 && rateCheckCount < 50 && (
+                <span className="ml-2 text-xs text-gray-500">
+                  ({50 - rateCheckCount} sisa)
+                </span>
+              )}
             </button>
           </div>
           {isLoadingCosts && (
