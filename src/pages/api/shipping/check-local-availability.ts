@@ -13,15 +13,27 @@ export const GET: APIRoute = async ({ url }) => {
   }
 
   try {
-    const { data: area, error } = await supabaseAdmin
+    let { data: area, error } = await supabaseAdmin
       .from("bjs_express_areas")
-      .select("id")
+      .select("id, subdistrict_id, postal_code, district_name, city_name, province_name")
       .eq("subdistrict_id", destinationId)
       .eq("is_active", true)
       .maybeSingle();
 
-    if (error || !area) {
-      return new Response(JSON.stringify({ available: false }), {
+    if (!area && error) {
+      console.error("Supabase error:", error);
+    }
+
+    if (!area) {
+      const gojekCost = gojekCostParam ? Number(gojekCostParam) : null;
+      if (!gojekCost || gojekCost < 1000) {
+        return new Response(JSON.stringify({ available: false }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({ available: false, reason: "outside_service_area" }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });

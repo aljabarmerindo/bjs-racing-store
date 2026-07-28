@@ -404,7 +404,7 @@ export default function CheckoutView() {
       }
 
       const gojekService = services.find(
-        (s) => s.code === "gojek" && s.service.toLowerCase().includes("same day")
+        (s) => s.code === "gojek"
       );
       const gojekCost = gojekService?.cost;
 
