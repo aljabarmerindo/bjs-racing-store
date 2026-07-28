@@ -213,7 +213,9 @@ export default function CheckoutView() {
     const currentMinutes = getJakartaMinutes();
     const open = toMinutes(schedule.open_time);
     const close = toMinutes(schedule.cutoff_time);
-    return currentMinutes >= open && currentMinutes < close;
+    const result = currentMinutes >= open && currentMinutes < close;
+    console.log("[Checkout] schedule check:", code, "current:", currentMinutes, "open:", open, "close:", close, "result:", result);
+    return result;
   };
 
   const getScheduleLabel = (code: string) => {
@@ -424,6 +426,7 @@ export default function CheckoutView() {
       );
 
       const biteshipResult = await biteshipResponse.json();
+      console.log("[Checkout] Biteship rates raw response:", biteshipResult);
       if (biteshipResponse.ok && Array.isArray(biteshipResult)) {
         const mapped = biteshipResult.map((o: any) => ({
           service: o.courier_service_name || o.service,
@@ -434,6 +437,9 @@ export default function CheckoutView() {
           description: o.description || "",
         }));
         services.push(...mapped);
+        console.log("[Checkout] mapped services:", mapped);
+      } else {
+        console.error("[Checkout] Biteship rates failed:", biteshipResponse.status, biteshipResult);
       }
 
       const gojekService = services.find(
@@ -460,9 +466,13 @@ export default function CheckoutView() {
       }
 
       const filtered = services.filter((s) => {
-        if (s.code === "gojek" && !isWithinSchedule("gojek")) return false;
-        if (s.code === "internal" && !isWithinSchedule("internal")) return false;
-        return true;
+        const gojekOk = !(s.code === "gojek" && !isWithinSchedule("gojek"));
+        const internalOk = !(s.code === "internal" && !isWithinSchedule("internal"));
+        const keep = gojekOk && internalOk;
+        if (!keep) {
+          console.log("[Checkout] filtered out:", s.code, "gojekOk:", gojekOk, "internalOk:", internalOk);
+        }
+        return keep;
       });
 
       const unavailableNotes = services
