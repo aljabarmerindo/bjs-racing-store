@@ -203,6 +203,22 @@ export default function AddressForm({
       longitude: String(lng),
     }));
     setGpsMessage("");
+
+    fetch(`/api/maps/reverse-geocode?lat=${lat}&lng=${lng}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.postal_code) {
+          setFormData((prev) => ({
+            ...prev,
+            postal_code: data.postal_code,
+            destination_text:
+              data.full_address || data.display_name || prev.destination_text,
+            city_id: data.city || prev.city_id,
+            province_id: data.province || prev.province_id,
+          }));
+        }
+      })
+      .catch(() => {});
   };
 
   const handleLocationError = (msg: string) => {
