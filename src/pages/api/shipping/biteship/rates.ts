@@ -24,17 +24,44 @@ export const POST: APIRoute = async (context) => {
       );
     }
 
-    const rates = await getBiteshipRates({
-      destination: {
-        latitude: destination.latitude ? Number(destination.latitude) : undefined,
-        longitude: destination.longitude ? Number(destination.longitude) : undefined,
-        postal_code: destination.postal_code ? String(destination.postal_code) : undefined,
-      },
-      weight,
-      couriers,
-    });
+    const hasCoords = !!(destination.latitude && destination.longitude);
+    const hasPostal = !!destination.postal_code;
+    const courierList = couriers.split(",").map((c) => c.trim()).filter(Boolean);
 
-    return new Response(JSON.stringify(rates), {
+    const gojekCouriers = courierList.filter((c) => c === "gojek");
+    const regularCouriers = courierList.filter((c) => c !== "gojek");
+
+    const calls: Promise<any>[] = [];
+
+    if (gojekCouriers.length > 0 && hasCoords) {
+      calls.push(
+        getBiteshipRates({
+          destination: {
+            latitude: Number(destination.latitude),
+            longitude: Number(destination.longitude),
+          },
+          weight,
+          couriers: gojekCouriers.join(","),
+        }).catch(() => []),
+      );
+    }
+
+    if (regularCouriers.length > 0 && hasPostal) {
+      calls.push(
+        getBiteshipRates({
+          destination: {
+            postal_code: String(destination.postal_code),
+          },
+          weight,
+          couriers: regularCouriers.join(","),
+        }).catch(() => []),
+      );
+    }
+
+    const results = await Promise.all(calls);
+    const allRates = results.flat();
+
+    return new Response(JSON.stringify(allRates), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });

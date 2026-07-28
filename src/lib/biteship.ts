@@ -49,7 +49,8 @@ export async function getBiteshipRates(params: {
   if (params.destination.latitude && params.destination.longitude) {
     destination.latitude = params.destination.latitude;
     destination.longitude = params.destination.longitude;
-  } else if (params.destination.postal_code) {
+  }
+  if (params.destination.postal_code) {
     destination.postal_code = params.destination.postal_code;
   }
 

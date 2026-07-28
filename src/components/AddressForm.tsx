@@ -179,7 +179,7 @@ export default function AddressForm({
       ...prev,
       destination: area.id,
       destination_text: fullText || area.name,
-      postal_code: area.postalCode || prev.postal_code,
+      postal_code: area.postalCode || "",
       city_id: area.administrativeLevel2 || "",
       province_id: area.administrativeLevel1 || "",
       latitude: area.latitude || prev.latitude,
