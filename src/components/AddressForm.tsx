@@ -108,8 +108,11 @@ export default function AddressForm({
     }
     setIsSearching(true);
     fetch(`/api/shipping/biteship/search-area?q=${encodeURIComponent(searchQuery)}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Gagal mencari area.");
+      .then(async (res) => {
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          throw new Error(errBody.message || `HTTP ${res.status}`);
+        }
         return res.json();
       })
       .then((results: BiteshipAreaResult[]) => {

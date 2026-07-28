@@ -150,11 +150,12 @@ const MapPicker = ({
 
       map.setView([lat, lng], 16);
 
+      const safeRadius = Number.isFinite(accuracy) && accuracy > 0 ? accuracy : 100;
       if (circleRef.current) {
-        circleRef.current.setLatLng([lat, lng]).setRadius(accuracy);
+        circleRef.current.setLatLng([lat, lng]).setRadius(safeRadius);
       } else {
         circleRef.current = L.circle([lat, lng], {
-          radius: accuracy,
+          radius: safeRadius,
           color: "#3b82f6",
           fillColor: "#93c5fd",
           fillOpacity: 0.15,
