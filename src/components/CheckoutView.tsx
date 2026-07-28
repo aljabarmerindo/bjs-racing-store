@@ -127,10 +127,12 @@ export default function CheckoutView() {
     order_id: string;
   } | null>(null);
   const [isPolling, setIsPolling] = useState(false);
-  const shippingCacheRef = useRef<{ key: string; services: any[]; selected: any } | null>(null);
+  const [shippingCache, setShippingCache] = useState<{ key: string; services: any[]; selected: any; cachedAt: number } | null>(null);
   const [isRateCheckCooldown, setIsRateCheckCooldown] = useState(false);
   const [isRateCheckPermanentlyDisabled, setIsRateCheckPermanentlyDisabled] = useState(false);
   const [rapidClickCount, setRapidClickCount] = useState(0);
+  const [rateCheckCount, setRateCheckCount] = useState(0);
+  const [lastRateCheckTime, setLastRateCheckTime] = useState(0);
   const [courierConfig, setCourierConfig] = useState<CourierConfig>(DEFAULT_COURIER_CONFIG);
   const [courierConfigLoaded, setCourierConfigLoaded] = useState(false);
 
@@ -304,6 +306,39 @@ export default function CheckoutView() {
   }, [addresses, selectedAddressId]);
 
   useEffect(() => {
+    const saved = sessionStorage.getItem("shipping_cache");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.cachedAt && Date.now() - parsed.cachedAt < 15 * 60 * 1000) {
+          setShippingCache(parsed);
+        }
+      } catch {}
+    }
+  }, []);
+
+  useEffect(() => {
+    if (shippingCache) {
+      sessionStorage.setItem("shipping_cache", JSON.stringify(shippingCache));
+    }
+  }, [shippingCache]);
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem("rate_check_count");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.date === new Date().toDateString()) {
+          setRateCheckCount(parsed.count || 0);
+          setLastRateCheckTime(parsed.lastTime || 0);
+        } else {
+          sessionStorage.removeItem("rate_check_count");
+        }
+      } catch {}
+    }
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
     const loadConfig = async () => {
       try {
@@ -330,8 +365,8 @@ export default function CheckoutView() {
 
   const fetchShippingCosts = useCallback(async () => {
     const cacheKey = `${selectedAddressId}-${totalWeight}`;
-    const cached = shippingCacheRef.current;
-    if (cached && cached.key === cacheKey) {
+    const cached = shippingCache;
+    if (cached && cached.key === cacheKey && Date.now() - cached.cachedAt < 15 * 60 * 1000) {
       setShippingServices(cached.services);
       setSelectedShipping(cached.selected);
       return;
@@ -472,7 +507,8 @@ export default function CheckoutView() {
         cost: filtered[0].cost,
         etd: filtered[0].etd,
       });
-      shippingCacheRef.current = { key: cacheKey, services: filtered, selected: filtered[0] };
+      const newCache = { key: cacheKey, services: filtered, selected: filtered[0], cachedAt: Date.now() };
+      setShippingCache(newCache);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Terjadi kesalahan.");
       setShippingServices([]);
@@ -485,11 +521,13 @@ export default function CheckoutView() {
     addresses,
     subtotal,
     courierConfig,
+    shippingCache,
   ]);
 
   useEffect(() => {
+    if (shippingCache) return;
     fetchShippingCosts();
-  }, [fetchShippingCosts]);
+  }, [fetchShippingCosts, shippingCache]);
 
   const handleApplyVoucher = async (codeToApply: string) => {
     if (!codeToApply) return;

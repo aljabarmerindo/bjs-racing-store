@@ -6,6 +6,43 @@ import { getBiteshipRates } from "@/lib/biteship";
 
 const INSTANT_COURIERS = ["gojek"];
 const REGULAR_COURIERS = ["pos", "jne", "jnt", "jntcargo"];
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 menit
+
+interface CacheEntry {
+  data: any;
+  expiresAt: number;
+}
+
+const ratesCache = new Map<string, CacheEntry>();
+
+function getCacheKey(destination: any, weight: number, couriers: string, value: number) {
+  const parts = [
+    destination.latitude || "",
+    destination.longitude || "",
+    destination.postal_code || "",
+    String(weight),
+    couriers,
+    String(value),
+  ];
+  return parts.join("|");
+}
+
+function getCachedRates(key: string) {
+  const entry = ratesCache.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    ratesCache.delete(key);
+    return null;
+  }
+  return entry.data;
+}
+
+function setCachedRates(key: string, data: any) {
+  ratesCache.set(key, {
+    data,
+    expiresAt: Date.now() + CACHE_TTL_MS,
+  });
+}
 
 export const POST: APIRoute = async (context) => {
   const { session } = context.locals;
@@ -26,6 +63,15 @@ export const POST: APIRoute = async (context) => {
         JSON.stringify({ message: "Berat barang tidak valid." }),
         { status: 400 },
       );
+    }
+
+    const cacheKey = getCacheKey(destination, weight, body?.couriers || "", value);
+    const cached = getCachedRates(cacheKey);
+    if (cached) {
+      return new Response(JSON.stringify(cached), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     const hasCoords = !!(destination.latitude && destination.longitude);
@@ -62,6 +108,8 @@ export const POST: APIRoute = async (context) => {
 
     const results = await Promise.all(calls);
     const allRates = results.flat();
+
+    setCachedRates(cacheKey, allRates);
 
     return new Response(JSON.stringify(allRates), {
       status: 200,
