@@ -452,7 +452,13 @@ export default function CheckoutView() {
         const parseEtd = (etd?: string) => {
           if (!etd) return Number.POSITIVE_INFINITY;
           const match = etd.match(/(\d+)/);
-          return match ? Number(match[1]) : Number.POSITIVE_INFINITY;
+          if (!match) return Number.POSITIVE_INFINITY;
+          const value = Number(match[1]);
+          const lower = etd.toLowerCase();
+          if (lower.includes("day")) return value * 24 * 60;
+          if (lower.includes("hour")) return value * 60;
+          if (lower.includes("min")) return value;
+          return value;
         };
         const aEtd = parseEtd(a.etd);
         const bEtd = parseEtd(b.etd);
