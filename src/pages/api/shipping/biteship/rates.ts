@@ -1,7 +1,11 @@
 // File: src/pages/api/shipping/biteship/rates.ts
 // Endpoint ongkir Biteship untuk checkout STORE.
+// Split 2 panggilan: gojek via koordinat, reguler via kode pos.
 import type { APIRoute } from "astro";
 import { getBiteshipRates } from "@/lib/biteship";
+
+const INSTANT_COURIERS = ["gojek"];
+const REGULAR_COURIERS = ["pos", "jne", "jnt", "sicepat"];
 
 export const POST: APIRoute = async (context) => {
   const { session } = context.locals;
@@ -15,7 +19,7 @@ export const POST: APIRoute = async (context) => {
     const body = await context.request.json().catch(() => ({}));
     const destination = body?.destination || {};
     const weight = Number(body?.weight || 0);
-    const couriers = String(body?.couriers || "gojek,pos,jne,jnt,sicepat").replace(/\s+/g, "");
+    const value = body.value ? Number(body.value) : 0;
 
     if (!weight || weight <= 0) {
       return new Response(
@@ -24,18 +28,42 @@ export const POST: APIRoute = async (context) => {
       );
     }
 
-    const rates = await getBiteshipRates({
-      destination: {
-        latitude: destination.latitude ? Number(destination.latitude) : undefined,
-        longitude: destination.longitude ? Number(destination.longitude) : undefined,
-        postal_code: destination.postal_code ? String(destination.postal_code) : undefined,
-      },
-      weight,
-      couriers,
-      value: body.value ? Number(body.value) : 0,
-    });
+    const hasCoords = !!(destination.latitude && destination.longitude);
+    const hasPostal = !!destination.postal_code;
 
-    return new Response(JSON.stringify(rates), {
+    const calls: Promise<any[]>[] = [];
+
+    if (hasCoords) {
+      calls.push(
+        getBiteshipRates({
+          destination: {
+            latitude: Number(destination.latitude),
+            longitude: Number(destination.longitude),
+          },
+          weight,
+          couriers: INSTANT_COURIERS.join(","),
+          value,
+        }).catch(() => []),
+      );
+    }
+
+    if (hasPostal) {
+      calls.push(
+        getBiteshipRates({
+          destination: {
+            postal_code: String(destination.postal_code),
+          },
+          weight,
+          couriers: REGULAR_COURIERS.join(","),
+          value,
+        }).catch(() => []),
+      );
+    }
+
+    const results = await Promise.all(calls);
+    const allRates = results.flat();
+
+    return new Response(JSON.stringify(allRates), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });

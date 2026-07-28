@@ -6,6 +6,7 @@ const BITESHIP_BASE = "https://api.biteship.com";
 const API_KEY = import.meta.env.BITESHIP_API_KEY || "";
 const ORIGIN_LAT = Number(import.meta.env.BITESHIP_ORIGIN_LAT || 0);
 const ORIGIN_LNG = Number(import.meta.env.BITESHIP_ORIGIN_LNG || 0);
+const ORIGIN_POSTAL = import.meta.env.BITESHIP_ORIGIN_POSTAL || "";
 const WEBHOOK_KEY = import.meta.env.BITESHIP_WEBHOOK_KEY || "X-Biteship-Signature";
 const WEBHOOK_SECRET = import.meta.env.BITESHIP_WEBHOOK_SECRET || "";
 
@@ -62,6 +63,10 @@ export async function getBiteshipRates(params: {
       },
     ],
   };
+
+  if (ORIGIN_POSTAL) {
+    body.origin_postal_code = Number(ORIGIN_POSTAL);
+  }
 
   if (params.destination.latitude && params.destination.longitude) {
     body.destination_latitude = params.destination.latitude;
