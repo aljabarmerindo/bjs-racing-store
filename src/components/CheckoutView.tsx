@@ -21,7 +21,6 @@ interface ShippingService {
   available?: boolean;
 }
 
-// PERBAIKAN 1: Tipe data baru untuk Voucher
 interface Voucher {
   id: number;
   code: string;
@@ -48,6 +47,11 @@ function describeTargetLabel(v: any): string | null {
   if (v.target_type === "specific_product") return `Khusus produk tertentu`;
   return null;
 }
+
+const COURIER_OPEN_TIMES: Record<string, { open: number; close: number; label: string }> = {
+  internal: { open: 8 * 60, close: 15 * 60, label: "BJS Express hanya tersedia 08:00 - 15:00 WIB" },
+  gojek: { open: 8 * 60, close: 18 * 60, label: "Gojek hanya tersedia 08:00 - 18:00 WIB" },
+};
 
 export default function CheckoutView() {
   const {
@@ -112,7 +116,7 @@ export default function CheckoutView() {
     { value: "dana", label: "DANA", description: "E-Wallet DANA" },
     { value: "ovo", label: "OVO", description: "E-Wallet OVO" },
     { value: "gopay", label: "GoPay", description: "E-Wallet GoPay" },
-    { value: "shopeepay", label: "ShopeePay", description: "ShopeePay" },
+    { value: "shopeepay", label: "ShopeePay", description: "E-Wallet ShopeePay" },
     { value: "transfer_bank", label: "Transfer Bank", description: "TF Bank" },
     { value: "virtual_account", label: "Virtual Account", description: "VA" },
   ];
@@ -337,20 +341,28 @@ export default function CheckoutView() {
       }
 
       const now = new Date();
-      const jakartaHour = now.getUTCHours() + 7;
+      const jakartaHour = (now.getUTCHours() + 7) % 24;
       const jakartaMinutes = now.getUTCMinutes();
       const jakartaTime = jakartaHour * 60 + jakartaMinutes;
-      const gojekCutoff = 18 * 60;
-      const bjsCutoff = 15 * 60;
 
       const filtered = services.filter((s) => {
-        if (s.code === "gojek" && jakartaTime >= gojekCutoff) return false;
-        if (s.code === "internal" && jakartaTime >= bjsCutoff) return false;
+        const schedule = COURIER_OPEN_TIMES[s.code];
+        if (!schedule) return true;
+        if (jakartaTime < schedule.open) return false;
+        if (jakartaTime >= schedule.close) return false;
         return true;
       });
 
+      const unavailableNotes = services
+        .filter((s) => !filtered.find((f) => f.code === s.code))
+        .map((s) => COURIER_OPEN_TIMES[s.code]?.label)
+        .filter(Boolean);
+
       if (filtered.length === 0) {
-        throw new Error("Tidak ada layanan pengiriman tersedia.");
+        const message = unavailableNotes.length
+          ? `Tidak ada layanan pengiriman tersedia saat ini. ${unavailableNotes.join("; ")}.`
+          : "Tidak ada layanan pengiriman tersedia.";
+        throw new Error(message);
       }
 
       filtered.sort((a, b) => {
@@ -437,7 +449,7 @@ export default function CheckoutView() {
             clearInterval(interval);
             setIsPolling(false);
             clearCart();
-            window.location.href = `/akun/pesanan/${orderId}?status=success`;
+            window.location.href = `/akun/pesanan/${order_id}?status=success`;
           }
         }
       } catch {
@@ -590,9 +602,7 @@ export default function CheckoutView() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* Kolom Kiri: Alamat, Pengiriman, dan Voucher */}
       <div className="lg:col-span-2 space-y-6">
-        {/* --- Blok Alamat Pengiriman (Tidak Berubah) --- */}
         <div className="bg-white p-6 rounded-xl shadow-md">
           <h2 className="text-xl font-bold mb-4">Alamat Pengiriman</h2>
           <div className="space-y-3">
@@ -632,55 +642,54 @@ export default function CheckoutView() {
           </div>
         </div>
 
-         {/* --- Blok Metode Pengiriman (Tidak Berubah) --- */}
-          <div className="bg-white p-6 rounded-xl shadow-md">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">Metode Pengiriman</h2>
-               <button
-                 type="button"
-                 onClick={() => {
-                   const storageKey = "rate_check_clicks";
-                   const clicks = JSON.parse(sessionStorage.getItem(storageKey) || "[]");
-                   
-                   if (isRateCheckPermanentlyDisabled) {
-                     return;
-                   }
-                   
-                   const now = Date.now();
-                   clicks.push(now);
-                   sessionStorage.setItem(storageKey, JSON.stringify(clicks));
-                   setRapidClickCount(clicks.length);
-                   
-                   const recentClicks = clicks.filter((t: number) => now - t < 30000);
-                   if (recentClicks.length >= 3) {
-                     setIsRateCheckPermanentlyDisabled(true);
-                     setIsRateCheckCooldown(true);
-                     return;
-                   }
-                   
-                    shippingCacheRef.current = null;
-                    setIsRateCheckCooldown(true);
-                   setTimeout(() => setIsRateCheckCooldown(false), 120000);
-                 }}
-                 className="text-sm font-medium text-blue-600 hover:text-blue-800 disabled:text-gray-400"
-                 disabled={isLoadingCosts || isRateCheckCooldown || isRateCheckPermanentlyDisabled}
-               >
-                 {isRateCheckPermanentlyDisabled
-                   ? "Cek Tarif Diperlukan Menunggu"
-                   : isLoadingCosts
-                   ? "Memuat..."
-                   : "Cek Ulang Tarif"}
-               </button>
-            </div>
-            {isLoadingCosts && (
-             <p className="text-sm text-gray-500 mt-4 animate-pulse">
-               Menghitung ongkos kirim...
-             </p>
-           )}
-           {error && <p className="text-sm text-red-500 mt-4">{error}</p>}
-           {shippingServices.length > 0 && (
-             <div className="mt-4 space-y-2">
-               <p className="text-sm font-medium">Pilih Layanan Pengiriman:</p>
+        <div className="bg-white p-6 rounded-xl shadow-md">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">Metode Pengiriman</h2>
+            <button
+              type="button"
+              onClick={() => {
+                const storageKey = "rate_check_clicks";
+                const clicks = JSON.parse(sessionStorage.getItem(storageKey) || "[]");
+
+                if (isRateCheckPermanentlyDisabled) {
+                  return;
+                }
+
+                const now = Date.now();
+                clicks.push(now);
+                sessionStorage.setItem(storageKey, JSON.stringify(clicks));
+                setRapidClickCount(clicks.length);
+
+                const recentClicks = clicks.filter((t: number) => now - t < 30000);
+                if (recentClicks.length >= 3) {
+                  setIsRateCheckPermanentlyDisabled(true);
+                  setIsRateCheckCooldown(true);
+                  return;
+                }
+
+                shippingCacheRef.current = null;
+                setIsRateCheckCooldown(true);
+                setTimeout(() => setIsRateCheckCooldown(false), 120000);
+              }}
+              className="text-sm font-medium text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+              disabled={isLoadingCosts || isRateCheckCooldown || isRateCheckPermanentlyDisabled}
+            >
+              {isRateCheckPermanentlyDisabled
+                ? "Cek Tarif Diperlukan Menunggu"
+                : isLoadingCosts
+                ? "Memuat..."
+                : "Cek Ulang Tarif"}
+            </button>
+          </div>
+          {isLoadingCosts && (
+            <p className="text-sm text-gray-500 mt-4 animate-pulse">
+              Menghitung ongkos kirim...
+            </p>
+          )}
+          {error && <p className="text-sm text-red-500 mt-4">{error}</p>}
+          {shippingServices.length > 0 && (
+            <div className="mt-4 space-y-2">
+              <p className="text-sm font-medium">Pilih Layanan Pengiriman:</p>
               {shippingServices.map((service) => (
                 <label
                   key={service.service}
@@ -699,72 +708,71 @@ export default function CheckoutView() {
                     }}
                     className="flex-shrink-0"
                   />
-                    <div className="ml-3 flex-grow flex justify-between w-full text-sm flex-wrap gap-2">
-                        <div className="flex items-center gap-3">
-                          {service.code === "internal" && (
-                            <img
-                              src="/icons/bjs-express.png"
-                              alt="BJS Express"
-                              className="h-8 w-auto object-contain"
-                            />
-                          )}
-                          {service.code === "gojek" && (
-                            <img
-                              src="/icons/gojek.png"
-                              alt="Gojek"
-                              className="h-8 w-auto object-contain"
-                            />
-                          )}
-                          {service.code === "pos" && (
-                            <img
-                              src="/icons/pos-indonesia.png"
-                              alt="POS Indonesia"
-                              className="h-8 w-auto object-contain"
-                            />
-                          )}
-                           {service.code === "jne" && (
-                            <img
-                              src="/icons/jne.png"
-                              alt="JNE Express"
-                              className="h-8 w-auto object-contain"
-                            />
-                          )}
-                          {service.code === "jnt" && (
-                            <img
-                              src="/icons/j&t.png"
-                              alt="J&T Express"
-                              className="h-8 w-auto object-contain"
-                            />
-                          )}
-                          {service.code === "jntcargo" && (
-                            <img
-                              src="/icons/j&tcargo.png"
-                              alt="J&T Cargo"
-                              className="h-8 w-auto object-contain"
-                            />
-                          )}
-                            <div>
-                            <p className="font-semibold">
-                              {formatServiceName(service.service, service.code)}
-                            </p>
-                             {formatEtd(service.etd) && (
-                               <p className="text-blue-600">
-                                 Estimasi {formatEtd(service.etd)}
-                               </p>
-                             )}
-                          </div>
+                  <div className="ml-3 flex-grow flex justify-between w-full text-sm flex-wrap gap-2">
+                    <div className="flex items-center gap-3">
+                      {service.code === "internal" && (
+                        <img
+                          src="/icons/bjs-express.png"
+                          alt="BJS Express"
+                          className="h-8 w-auto object-contain"
+                        />
+                      )}
+                      {service.code === "gojek" && (
+                        <img
+                          src="/icons/gojek.png"
+                          alt="Gojek"
+                          className="h-8 w-auto object-contain"
+                        />
+                      )}
+                      {service.code === "pos" && (
+                        <img
+                          src="/icons/pos-indonesia.png"
+                          alt="POS Indonesia"
+                          className="h-8 w-auto object-contain"
+                        />
+                      )}
+                      {service.code === "jne" && (
+                        <img
+                          src="/icons/jne.png"
+                          alt="JNE Express"
+                          className="h-8 w-auto object-contain"
+                        />
+                      )}
+                      {service.code === "jnt" && (
+                        <img
+                          src="/icons/j&t.png"
+                          alt="J&T Express"
+                          className="h-8 w-auto object-contain"
+                        />
+                      )}
+                      {service.code === "jntcargo" && (
+                        <img
+                          src="/icons/j&tcargo.png"
+                          alt="J&T Cargo"
+                          className="h-8 w-auto object-contain"
+                        />
+                      )}
+                      <div>
+                        <p className="font-semibold">
+                          {formatServiceName(service.service, service.code)}
+                        </p>
+                        {formatEtd(service.etd) && (
+                          <p className="text-blue-600">
+                            Estimasi {formatEtd(service.etd)}
+                          </p>
+                        )}
                       </div>
-                      <p className="font-bold whitespace-nowrap text-orange-600">
-                        {formatRupiah(service.cost)}
-                      </p>
-                   </div>
+                    </div>
+                    <p className="font-bold whitespace-nowrap text-orange-600">
+                      {formatRupiah(service.cost)}
+                    </p>
+                  </div>
                 </label>
               ))}
             </div>
           )}
-         </div>
+        </div>
 
-        {/* --- BLOK METODE PEMBAYARAN --- */}
         <div className="bg-white p-6 rounded-xl shadow-md">
           <h2 className="text-xl font-bold mb-4">Metode Pembayaran</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -802,89 +810,87 @@ export default function CheckoutView() {
           </div>
         </div>
 
-          {/* --- BLOK VOUCHER BARU --- */}
-          <div className="bg-white p-6 rounded-xl shadow-md">
-            <h2 className="text-xl font-bold mb-4">Voucher & Diskon</h2>
-           <div className="flex gap-2 items-start">
-             <div className="flex-grow">
-               <input
-                 type="text"
-                 placeholder="Masukkan Kode Voucher"
-                 value={voucherCode}
-                 onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                 className="w-full p-3 border rounded-md bg-gray-50 text-sm"
-               />
-               {voucherError && (
-                 <p className="text-xs text-red-500 mt-1">{voucherError}</p>
-               )}
-               {appliedVoucher && (
-                 <p className="text-xs text-green-600 mt-1">
-                   Kode {appliedVoucher.code} diterapkan.
-                   {appliedVoucher.target_label
-                     ? ` (${appliedVoucher.target_label})`
-                     : ""}
-                 </p>
-               )}
-             </div>
-             <button
-               onClick={() => handleApplyVoucher(voucherCode)}
-               disabled={isApplyingVoucher || !voucherCode}
-               className="px-4 py-3 bg-orange-500 text-white font-semibold rounded-md text-sm disabled:bg-gray-400"
-             >
-               {isApplyingVoucher ? "..." : "Terapkan"}
-             </button>
-           </div>
-           {myVouchers.length > 0 && (
-      <div className="mt-4">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-sm font-medium text-slate-700">Voucher Saya:</p>
-          <button
-            type="button"
-            onClick={fetchMyVouchers}
-            className="text-xs font-medium text-blue-600 hover:text-blue-800"
-          >
-            Muat ulang
-          </button>
+        <div className="bg-white p-6 rounded-xl shadow-md">
+          <h2 className="text-xl font-bold mb-4">Voucher & Diskon</h2>
+          <div className="flex gap-2 items-start">
+            <div className="flex-grow">
+              <input
+                type="text"
+                placeholder="Masukkan Kode Voucher"
+                value={voucherCode}
+                onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                className="w-full p-3 border rounded-md bg-gray-50 text-sm"
+              />
+              {voucherError && (
+                <p className="text-xs text-red-500 mt-1">{voucherError}</p>
+              )}
+              {appliedVoucher && (
+                <p className="text-xs text-green-600 mt-1">
+                  Kode {appliedVoucher.code} diterapkan.
+                  {appliedVoucher.target_label
+                    ? ` (${appliedVoucher.target_label})`
+                    : ""}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={() => handleApplyVoucher(voucherCode)}
+              disabled={isApplyingVoucher || !voucherCode}
+              className="px-4 py-3 bg-orange-500 text-white font-semibold rounded-md text-sm disabled:bg-gray-400"
+            >
+              {isApplyingVoucher ? "..." : "Terapkan"}
+            </button>
+          </div>
+          {myVouchers.length > 0 && (
+            <div className="mt-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-slate-700">Voucher Saya:</p>
+                <button
+                  type="button"
+                  onClick={fetchMyVouchers}
+                  className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                >
+                  Muat ulang
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {myVouchers.map((voucher) => {
+                  const isEligible = subtotal >= (voucher.min_purchase || 0);
+                  const statusLabel = isEligible ? "Dapat Digunakan" : `Min. belanja ${formatRupiah(voucher.min_purchase || 0)}`;
+                  const statusColor = isEligible ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700";
+                  return (
+                    <button
+                      key={voucher.id}
+                      type="button"
+                      disabled={!isEligible}
+                      onClick={() => handleApplyVoucher(voucher.code)}
+                      className={`text-left border rounded-lg p-3 transition-colors ${
+                        isEligible
+                          ? "border-blue-200 bg-blue-50 hover:bg-blue-100 cursor-pointer"
+                          : "border-gray-200 bg-gray-50 opacity-75 cursor-not-allowed"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-bold text-orange-600 text-sm">{voucher.code}</p>
+                        <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${statusColor}`}>
+                          {statusLabel}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 mt-1">{voucher.description}</p>
+                      {describeTargetLabel(voucher) && (
+                        <p className="text-[11px] text-blue-600 mt-1">
+                          {describeTargetLabel(voucher)}
+                        </p>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                 {myVouchers.map((voucher) => {
-                   const isEligible = subtotal >= (voucher.min_purchase || 0);
-                   const statusLabel = isEligible ? "Dapat Digunakan" : `Min. belanja ${formatRupiah(voucher.min_purchase || 0)}`;
-                   const statusColor = isEligible ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700";
-                   return (
-                     <button
-                       key={voucher.id}
-                       type="button"
-                       disabled={!isEligible}
-                        onClick={() => handleApplyVoucher(voucher.code)}
-                       className={`text-left border rounded-lg p-3 transition-colors ${
-                         isEligible
-                           ? "border-blue-200 bg-blue-50 hover:bg-blue-100 cursor-pointer"
-                           : "border-gray-200 bg-gray-50 opacity-75 cursor-not-allowed"
-                       }`}
-                     >
-                       <div className="flex items-center justify-between gap-2">
-                         <p className="font-bold text-orange-600 text-sm">{voucher.code}</p>
-                         <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${statusColor}`}>
-                           {statusLabel}
-                         </span>
-                       </div>
-                       <p className="text-xs text-slate-600 mt-1">{voucher.description}</p>
-                       {describeTargetLabel(voucher) && (
-                         <p className="text-[11px] text-blue-600 mt-1">
-                           {describeTargetLabel(voucher)}
-                         </p>
-                       )}
-                     </button>
-                   );
-                 })}
-               </div>
-             </div>
-           )}
-         </div>
       </div>
 
-      {/* Kolom Kanan: Ringkasan Pesanan */}
       <div className="lg:col-span-1">
         <div className="bg-white p-6 rounded-xl shadow-md sticky top-8">
           <h2 className="text-xl font-bold mb-4">Ringkasan Pesanan</h2>
@@ -932,7 +938,6 @@ export default function CheckoutView() {
                 {selectedPaymentMethod ? formatRupiah(paymentFee) : "Pilih metode pembayaran"}
               </p>
             </div>
-            {/* --- BARIS DISKON BARU --- */}
             {appliedVoucher && (
               <div className="flex justify-between text-green-600">
                 <p>Diskon ({appliedVoucher.code})</p>
@@ -958,7 +963,6 @@ export default function CheckoutView() {
         </div>
       </div>
 
-      {/* --- MODAL QRIS BRI --- */}
       {showQr && qrData && (
         <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 text-center">
