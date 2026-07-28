@@ -158,7 +158,7 @@ export default function CheckoutView() {
     if (code === "pos") return `POS Indonesia: ${s}`;
     if (code === "jne") return `JNE: ${s}`;
     if (code === "jnt") return `J&T: ${s}`;
-    if (code === "jnt-cargo") return `J&T Cargo: ${s}`;
+    if (code === "jntcargo") return `J&T Cargo: ${s}`;
     return s;
   };
 
@@ -295,7 +295,7 @@ export default function CheckoutView() {
 
       const couriers: string[] = [];
       if (hasCoordinates) couriers.push("gojek");
-      if (hasPostalCode) couriers.push("pos", "jne", "jnt", "jnt-cargo");
+      if (hasPostalCode) couriers.push("pos", "jne", "jnt", "jntcargo");
 
       const biteshipResponse = await fetch(
         "/api/shipping/biteship/rates",
@@ -487,7 +487,7 @@ export default function CheckoutView() {
         return;
       }
 
-      const biteshipCodes = new Set(["gojek", "pos", "jne", "jnt", "jnt-cargo"]);
+      const biteshipCodes = new Set(["gojek", "pos", "jne", "jnt", "jntcargo"]);
       const isBiteshipCourier =
         courierDetails?.code && biteshipCodes.has(String(courierDetails.code).toLowerCase());
 
@@ -687,9 +687,11 @@ export default function CheckoutView() {
                             />
                           )}
                           {service.code === "gojek" && (
-                            <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-green-100 text-green-700 font-bold text-xs">
-                              GOJEK
-                            </span>
+                            <img
+                              src="/icons/gojek.png"
+                              alt="Gojek"
+                              className="h-8 w-auto object-contain"
+                            />
                           )}
                           {service.code === "pos" && (
                             <img
@@ -712,7 +714,7 @@ export default function CheckoutView() {
                               className="h-8 w-auto object-contain"
                             />
                           )}
-                          {service.code === "jnt-cargo" && (
+                          {service.code === "jntcargo" && (
                             <img
                               src="/icons/j&tcargo.png"
                               alt="J&T Cargo"

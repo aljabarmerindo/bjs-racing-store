@@ -5,7 +5,7 @@ import type { APIRoute } from "astro";
 import { getBiteshipRates } from "@/lib/biteship";
 
 const INSTANT_COURIERS = ["gojek"];
-const REGULAR_COURIERS = ["pos", "jne", "jnt", "jnt-cargo"];
+const REGULAR_COURIERS = ["pos", "jne", "jnt", "jntcargo"];
 
 export const POST: APIRoute = async (context) => {
   const { session } = context.locals;

@@ -37,7 +37,7 @@ const COURIER_LOGOS: Record<string, string> = {
   jnt: "/icons/j&t.png",
   "j&t": "/icons/j&t.png",
   "j&t cargo": "/icons/j&tcargo.png",
-  "jnt-cargo": "/icons/j&tcargo.png",
+  "jntcargo": "/icons/j&tcargo.png",
   pos: "/icons/pos-indonesia.png",
   internal: "/icons/bjs-express.png",
 };
