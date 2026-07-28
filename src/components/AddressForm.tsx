@@ -164,6 +164,8 @@ export default function AddressForm({
       postal_code: area.postalCode || prev.postal_code,
       city_id: area.administrativeLevel2 || "",
       province_id: area.administrativeLevel1 || "",
+      latitude: area.latitude || prev.latitude,
+      longitude: area.longitude || prev.longitude,
     }));
     setSearchQuery(fullText || area.name);
     setIsDropdownOpen(false);

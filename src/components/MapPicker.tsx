@@ -1,6 +1,6 @@
 // File: src/components/MapPicker.tsx
 // Peta Leaflet dengan GPS auto-locate, marker toko, dan mode interaktif.
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 
 const DEFAULT_CENTER: [number, number] = [-6.5244682, 110.7674915];
 
@@ -46,6 +46,8 @@ const MapPicker = ({
   const markerRef = useRef<any>(null);
   const circleRef = useRef<any>(null);
   const LRef = useRef<any>(null);
+  const clickHandlerRef = useRef<any>(null);
+  const dragendHandlerRef = useRef<any>(null);
 
   const getLat = () => {
     const v = typeof latitude === "string" ? parseFloat(latitude) : latitude;
@@ -56,6 +58,21 @@ const MapPicker = ({
     const v = typeof longitude === "string" ? parseFloat(longitude) : longitude;
     return typeof v === "number" && Number.isFinite(v) ? v : null;
   };
+
+  const handleMapClick = useCallback(
+    (e: any) => {
+      if (!markerRef.current) return;
+      markerRef.current.setLatLng(e.latlng);
+      onSelect?.({ lat: e.latlng.lat, lng: e.latlng.lng });
+    },
+    [onSelect],
+  );
+
+  const handleMarkerDrag = useCallback(() => {
+    if (!markerRef.current) return;
+    const pos = markerRef.current.getLatLng();
+    onSelect?.({ lat: pos.lat, lng: pos.lng });
+  }, [onSelect]);
 
   const initMap = useCallback(async () => {
     if (!containerRef.current || mapRef.current) return;
@@ -71,10 +88,10 @@ const MapPicker = ({
       const map = L.map(containerRef.current, {
         zoomControl: true,
         attributionControl: false,
-        dragging: interactive,
-        doubleClickZoom: interactive,
-        touchZoom: interactive,
-        scrollWheelZoom: interactive,
+        dragging: true,
+        doubleClickZoom: false,
+        touchZoom: false,
+        scrollWheelZoom: false,
       }).setView([lat, lng], 15);
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -102,19 +119,11 @@ const MapPicker = ({
           iconSize: [22, 22],
           iconAnchor: [11, 11],
         }),
-        draggable: interactive,
+        draggable: true,
       }).addTo(map);
 
-      if (interactive) {
-        map.on("click", (e: any) => {
-          customerMarker.setLatLng(e.latlng);
-          onSelect?.({ lat: e.latlng.lat, lng: e.latlng.lng });
-        });
-        customerMarker.on("dragend", () => {
-          const pos = customerMarker.getLatLng();
-          onSelect?.({ lat: pos.lat, lng: pos.lng });
-        });
-      }
+      clickHandlerRef.current = handleMapClick;
+      dragendHandlerRef.current = handleMarkerDrag;
 
       markerRef.current = customerMarker;
       mapRef.current = map;
@@ -123,7 +132,7 @@ const MapPicker = ({
     } catch (error) {
       console.error("Failed to initialize map:", error);
     }
-  }, [interactive, showStore]);
+  }, [showStore, getLat, getLng]);
 
   const doLocate = useCallback(() => {
     const map = mapRef.current;
@@ -137,29 +146,6 @@ const MapPicker = ({
 
       if (markerRef.current) {
         markerRef.current.setLatLng([lat, lng]);
-      } else {
-        const marker = L.marker([lat, lng], {
-          icon: L.divIcon({
-            html: customerIconHtml,
-            className: "",
-            iconSize: [22, 22],
-            iconAnchor: [11, 11],
-          }),
-          draggable: interactive,
-        }).addTo(map);
-
-        if (interactive) {
-          map.on("click", (ev: any) => {
-            marker.setLatLng(ev.latlng);
-            onSelect?.({ lat: ev.latlng.lat, lng: ev.latlng.lng });
-          });
-          marker.on("dragend", () => {
-            const pos = marker.getLatLng();
-            onSelect?.({ lat: pos.lat, lng: pos.lng });
-          });
-        }
-
-        markerRef.current = marker;
       }
 
       map.setView([lat, lng], 16);
@@ -189,7 +175,33 @@ const MapPicker = ({
 
     map.on("locationfound", onFound);
     map.on("locationerror", onErr);
-  }, [interactive, onLocationFound, onLocationError, onSelect]);
+  }, [onLocationFound, onLocationError]);
+
+  const updateInteractive = useCallback(() => {
+    const map = mapRef.current;
+    const marker = markerRef.current;
+    if (!map) return;
+
+    if (interactive) {
+      map.dragging.enable();
+      map.doubleClickZoom.enable();
+      map.touchZoom.enable();
+      map.scrollWheelZoom.enable();
+    } else {
+      map.dragging.disable();
+      map.doubleClickZoom.disable();
+      map.touchZoom.disable();
+      map.scrollWheelZoom.disable();
+    }
+
+    if (marker) {
+      if (interactive) {
+        marker.dragging?.enable();
+      } else {
+        marker.dragging?.disable();
+      }
+    }
+  }, [interactive]);
 
   useEffect(() => {
     initMap();
@@ -218,19 +230,22 @@ const MapPicker = ({
   }, [latitude, longitude]);
 
   useEffect(() => {
-    if (!mapRef.current) return;
-    mapRef.current.dragging.enable(interactive);
-    if (interactive) {
-      mapRef.current.doubleClickZoom.enable();
-      mapRef.current.touchZoom.enable();
-      mapRef.current.scrollWheelZoom.enable();
-    } else {
-      mapRef.current.doubleClickZoom.disable();
-      mapRef.current.touchZoom.disable();
-      mapRef.current.scrollWheelZoom.disable();
-    }
-    if (markerRef.current) markerRef.current.dragging(interactive);
+    updateInteractive();
   }, [interactive]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const marker = markerRef.current;
+    if (!map || !marker) return;
+
+    if (interactive) {
+      map.on("click", handleMapClick);
+      marker.on("dragend", handleMarkerDrag);
+    } else {
+      map.off("click", handleMapClick);
+      marker.off("dragend", handleMarkerDrag);
+    }
+  }, [interactive, handleMapClick, handleMarkerDrag]);
 
   return (
     <div className="relative" style={{ zIndex: 0 }}>
@@ -242,7 +257,6 @@ const MapPicker = ({
           borderRadius: 12,
           zIndex: 0,
           position: "relative",
-          touchAction: "pan-y",
         }}
       />
     </div>
