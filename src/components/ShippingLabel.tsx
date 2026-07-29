@@ -36,8 +36,8 @@ const COURIER_LOGOS: Record<string, string> = {
   jne: "/icons/jne.png",
   jnt: "/icons/j&t.png",
   "j&t": "/icons/j&t.png",
-  "j&t cargo": "/icons/j&tcargo.png",
-  "jntcargo": "/icons/j&tcargo.png",
+  "j&t cargo": "/icons/jtcargo.png",
+  "jntcargo": "/icons/jtcargo.png",
   pos: "/icons/pos-indonesia.png",
   internal: "/icons/bjs-express.png",
 };
@@ -136,10 +136,9 @@ export default function ShippingLabel({
   const barcodeSrc = generateBarcode(waybillId);
 
   return (
-    <div className="space-y-3">
+    <div style={{ display: "flex", flexDirection: "column", gap: "12px", alignItems: "center" }}>
       <div
         ref={labelRef}
-        className="label-container"
         style={{
           width: "80mm",
           maxWidth: "80mm",
@@ -246,7 +245,7 @@ export default function ShippingLabel({
         </div>
       </div>
 
-      <div className="no-print" style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
         <button
           type="button"
           onClick={handlePrint}

@@ -560,7 +560,7 @@ export default function CheckoutView() {
             clearInterval(interval);
             setIsPolling(false);
             clearCart();
-            window.location.href = `/akun/pesanan/${order_id}?status=success`;
+            window.location.href = `/akun/pesanan/${orderId}?status=success`;
           }
         }
       } catch {
@@ -783,7 +783,7 @@ export default function CheckoutView() {
                 }
 
                 if (count >= 50) {
-                  setIsRateCheckPermanentlyDisabled(true);
+                  setRateCheckCount(50);
                   return;
                 }
 
