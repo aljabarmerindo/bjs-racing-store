@@ -42,9 +42,11 @@ export const GET: APIRoute = async (context) => {
       shipping = order.courier_details || {};
     }
 
+    const isInternal = shipping?.code === "internal";
     const labelData = {
       courierName: shipping?.courier_company || shipping?.code || "Biteship",
-      routingCode: shipping?.courier_service_code || "-",
+      isInternal,
+      routingCode: shipping?.routing_code || "-",
       waybillId: waybillId || shipping?.waybill_id || shipping?.tracking_id || "-",
       shippingCost: order?.shipping_cost || 0,
       serviceName: shipping?.service || shipping?.courier_service_name || "-",
@@ -224,7 +226,9 @@ export const GET: APIRoute = async (context) => {
     </table>
 
     <div class="barcode-section border-bottom">
-      <div class="resi-text">Nomor Resi - ${labelData.waybillId}</div>
+      ${labelData.isInternal
+        ? `<div class="resi-text">Nomor Referensi - ${labelData.referenceId}</div>`
+        : `<div class="resi-text">Nomor Resi - ${labelData.waybillId}</div>`}
     </div>
 
     <div class="info-text border-bottom">
@@ -243,7 +247,8 @@ export const GET: APIRoute = async (context) => {
         </td>
         <td style="width: 50%;">
           Quantity: <strong>${labelData.quantity} Pcs</strong><br />
-          Weight: <strong>${labelData.weight >= 1000 ? (labelData.weight / 1000).toFixed(2) + " Kg" : labelData.weight + " gram"}</strong>
+          Weight: <strong>${(labelData.weight / 1000).toFixed(2)} Kg</strong><br />
+          Dimensi: <strong>${labelData.dimensions}</strong>
         </td>
       </tr>
     </table>

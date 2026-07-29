@@ -36,11 +36,14 @@ const COURIER_LOGOS: Record<string, string> = {
   jne: "/icons/jne.png",
   jnt: "/icons/j&t.png",
   "j&t": "/icons/j&t.png",
-  "j&t cargo": "/icons/jtcargo.png",
-  "jntcargo": "/icons/jtcargo.png",
+  "j&t cargo": "/icons/j&tcargo.png",
+  "jntcargo": "/icons/j&tcargo.png",
   pos: "/icons/pos-indonesia.png",
   internal: "/icons/bjs-express.png",
 };
+
+const BORDER_BOTTOM = "0.8pt solid #000";
+const BORDER_RIGHT = "0.8pt solid #000";
 
 export default function ShippingLabel({
   courierCode = "",
@@ -69,7 +72,8 @@ export default function ShippingLabel({
   insuranceAmount = 0,
 }: ShippingLabelProps) {
   const labelRef = useRef<HTMLDivElement>(null);
-  const weightText = weight >= 1000 ? `${(weight / 1000).toFixed(2)} Kg` : `${weight} gram`;
+  const weightText = `${(weight / 1000).toFixed(2)} Kg`;
+  const isInternal = courierCode === "internal";
   const logoPath = COURIER_LOGOS[(courierCode || "").toLowerCase()] || "";
 
   const generateBarcode = (text: string) => {
@@ -150,9 +154,9 @@ export default function ShippingLabel({
           lineHeight: 1.15,
         }}
       >
-        <table style={{ height: "32px" }} className="border-bottom">
+        <table style={{ height: "32px", borderBottom: BORDER_BOTTOM }}>
           <tr>
-            <td style={{ width: "45%" }} className="border-right">
+            <td style={{ width: "45%", borderRight: BORDER_RIGHT }}>
               <div style={{ textAlign: "center" }}>
                 {logoPath ? (
                   <img src={logoPath} alt={courierName} style={{ height: "22px", objectFit: "contain" }} />
@@ -174,22 +178,28 @@ export default function ShippingLabel({
           </tr>
         </table>
 
-        <div style={{ textAlign: "center", padding: "3px 2px 2px 2px" }} className="border-bottom">
-          {barcodeSrc && <img src={barcodeSrc} alt="barcode" style={{ height: "18px" }} />}
-          <div style={{ fontSize: "7.5pt", fontWeight: "bold", marginTop: "1px" }}>Nomor Resi - {waybillId}</div>
+        <div style={{ textAlign: "center", padding: "3px 2px 2px 2px", borderBottom: BORDER_BOTTOM }}>
+          {isInternal ? (
+            <div style={{ fontSize: "7.5pt", fontWeight: "bold", marginTop: "4px" }}>Nomor Referensi - {referenceId}</div>
+          ) : (
+            <>
+              {barcodeSrc && <img src={barcodeSrc} alt="barcode" style={{ height: "18px" }} />}
+              <div style={{ fontSize: "7.5pt", fontWeight: "bold", marginTop: "1px" }}>Nomor Resi - {waybillId}</div>
+            </>
+          )}
         </div>
 
-        <div style={{ fontSize: "6.5pt", padding: "2px 4px" }} className="border-bottom">
+        <div style={{ fontSize: "6.5pt", padding: "2px 4px", borderBottom: BORDER_BOTTOM }}>
           Ongkos Kirim: Rp. {shippingCost.toLocaleString("id-ID")}
         </div>
 
-        <div style={{ fontSize: "6.5pt", padding: "2px 4px" }} className="border-bottom">
+        <div style={{ fontSize: "6.5pt", padding: "2px 4px", borderBottom: BORDER_BOTTOM }}>
           Jenis Layanan - {serviceName}. Kode Rute - {routingCode}
         </div>
 
-        <table style={{ fontSize: "6pt" }} className="border-bottom">
+        <table style={{ fontSize: "6pt", borderBottom: BORDER_BOTTOM }}>
           <tr>
-            <td style={{ width: "50%" }} className="border-right">
+            <td style={{ width: "50%", borderRight: BORDER_RIGHT }}>
               <strong>Reference Number</strong>
               <br />
               {referenceId}
@@ -198,13 +208,15 @@ export default function ShippingLabel({
               Quantity: <strong>{quantity} Pcs</strong>
               <br />
               Weight: <strong>{weightText}</strong>
+              <br />
+              Dimensi: <strong>{dimensions}</strong>
             </td>
           </tr>
         </table>
 
-        <table className="border-bottom">
+        <table style={{ borderBottom: BORDER_BOTTOM }}>
           <tr>
-            <td style={{ width: "50%", verticalAlign: "top", padding: "3px" }} className="border-right">
+            <td style={{ width: "50%", verticalAlign: "top", padding: "3px", borderRight: BORDER_RIGHT }}>
               <div style={{ fontWeight: "bold", fontSize: "6pt", marginBottom: "1px" }}>Alamat Penerima:</div>
               <div style={{ fontWeight: "bold", fontSize: "6.5pt" }}>{recipientName}</div>
               <div>{recipientPhone}</div>
@@ -228,12 +240,12 @@ export default function ShippingLabel({
           </tr>
         </table>
 
-        <div style={{ fontSize: "5.8pt", padding: "2px 4px", lineHeight: 1.15 }} className="border-bottom">
+        <div style={{ fontSize: "5.8pt", padding: "2px 4px", lineHeight: 1.15, borderBottom: BORDER_BOTTOM }}>
           <strong>Jenis Barang:</strong> {items}
         </div>
 
         {notes ? (
-          <div style={{ fontSize: "5.8pt", padding: "2px 4px", lineHeight: 1.15 }} className="border-bottom">
+          <div style={{ fontSize: "5.8pt", padding: "2px 4px", lineHeight: 1.15, borderBottom: BORDER_BOTTOM }}>
             <strong>Catatan:</strong> {notes}
           </div>
         ) : null}

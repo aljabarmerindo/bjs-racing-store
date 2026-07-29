@@ -116,6 +116,7 @@ export interface BiteshipOrderResult {
   id: string;
   waybillId: string;
   trackingId: string;
+  routingCode: string;
   status: string;
   price: number;
 }
@@ -160,6 +161,7 @@ export async function createBiteshipOrder(
     id: json.id,
     waybillId: json.courier?.waybill_id || "",
     trackingId: json.courier?.tracking_id || "",
+    routingCode: json.courier?.routing_code || "",
     status: json.status,
     price: json.price,
   };

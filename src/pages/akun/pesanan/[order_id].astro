@@ -174,7 +174,7 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
                 <ShippingLabel
                   courierCode={order.courier_details.code || order.courier_details.courier_company || ''}
                   courierName={order.courier_details.name || order.courier_details.courier_company || 'Biteship'}
-                  routingCode={order.courier_details.courier_service_code || order.courier_details.service || '-'}
+                  routingCode={order.courier_details.routing_code || '-'}
                   waybillId={order.courier_details.waybill_id || order.courier_details.tracking_id || order.shipping_receipt_number || '-'}
                   shippingCost={order.shipping_cost || 0}
                   serviceName={order.courier_details.service || order.courier_details.courier_service_name || '-'}

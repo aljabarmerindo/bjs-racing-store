@@ -104,6 +104,7 @@ export async function processGojekAutoBooking(orderId: string): Promise<{ booked
           biteship_order_id: result.id,
           waybill_id: result.waybillId,
           tracking_id: result.trackingId,
+          routing_code: result.routingCode,
           shipping_status: result.status,
         },
       })

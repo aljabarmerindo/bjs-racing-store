@@ -106,6 +106,7 @@ export const POST: APIRoute = async (context) => {
           biteship_order_id: result.id,
           waybill_id: result.waybillId,
           tracking_id: result.trackingId,
+          routing_code: result.routingCode,
           shipping_status: result.status,
           courier_company: courier_company,
           courier_service_code: courier_service_code,
