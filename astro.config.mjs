@@ -18,7 +18,7 @@ export default defineConfig({
     plugins: [
       VitePWA({
         // --- PERBAIKAN UTAMA DI SINI ---
-        registerType: 'prompt', // Ubah dari 'autoUpdate' menjadi 'prompt'
+        registerType: 'autoUpdate', // SW update otomatis; customer selalu dapat versi terbaru
         // -----------------------------
         injectRegister: false,
         workbox: {
