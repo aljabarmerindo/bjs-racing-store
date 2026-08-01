@@ -115,7 +115,7 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
               <span class="font-semibold text-slate-800">{formatRupiah(order.shipping_cost || 0)}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-slate-600">Fee Transaksi</span>
+              <span class="text-slate-600">Biaya Layanan Pembayaran</span>
               <span class="font-semibold text-slate-800">{formatRupiah(order.payment_gateway_fee || 0)}</span>
             </div>
             {(order.discount_amount || 0) > 0 && (

@@ -305,7 +305,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
                 id: "PAYMENT_GATEWAY_FEE",
                 price: formatAmount(finalPaymentGatewayFee),
                 quantity: 1,
-                name: truncateName("Biaya Transaksi"),
+                name: truncateName("Biaya Layanan Pembayaran"),
             });
         }
 
