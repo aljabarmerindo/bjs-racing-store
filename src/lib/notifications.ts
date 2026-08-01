@@ -245,7 +245,7 @@ async function sendFonnte(payload: NotificationPayload): Promise<NotificationRes
   };
 
   const template = EVENT_TEMPLATES[payload.event].whatsapp(payload.data);
-  const response = await fetch("https://api.fonnte.com/api/send-message", {
+  const response = await fetch("https://api.fonnte.com/send", {
     method: "POST",
     headers: {
       Authorization: apiKey,
