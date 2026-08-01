@@ -315,6 +315,12 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
       delivered: { label: 'Tiba di tujuan', dot: 'bg-emerald-500', ring: 'ring-emerald-100', text: 'text-emerald-600', icon: 'packageCheck' },
       failed: { label: 'Pengiriman gagal', dot: 'bg-red-500', ring: 'ring-red-100', text: 'text-red-600', icon: 'alert' },
       cancelled: { label: 'Dibatalkan', dot: 'bg-red-500', ring: 'ring-red-100', text: 'text-red-600', icon: 'alert' },
+      on_hold: { label: 'Ditahan sementara', dot: 'bg-amber-500', ring: 'ring-amber-100', text: 'text-amber-600', icon: 'clock' },
+      return_in_transit: { label: 'Dalam perjalanan kembali', dot: 'bg-amber-500', ring: 'ring-amber-100', text: 'text-amber-600', icon: 'truck' },
+      returned: { label: 'Dikembalikan ke pengirim', dot: 'bg-amber-500', ring: 'ring-amber-100', text: 'text-amber-600', icon: 'package' },
+      rejected: { label: 'Ditolak', dot: 'bg-red-500', ring: 'ring-red-100', text: 'text-red-600', icon: 'alert' },
+      disposed: { label: 'Paket dimusnahkan', dot: 'bg-red-500', ring: 'ring-red-100', text: 'text-red-600', icon: 'alert' },
+      courier_not_found: { label: 'Kurir tidak ditemukan', dot: 'bg-red-500', ring: 'ring-red-100', text: 'text-red-600', icon: 'alert' },
     };
 
     const PHASE = ['Konfirmasi', 'Penjemputan', 'Pengiriman', 'Selesai'];
@@ -341,27 +347,78 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
     };
 
     const NOTE_TRANSLATIONS = [
-      [/courier order is confirmed/i, 'Pesanan kurir telah dikonfirmasi'],
       [/\bbiteship\b/gi, 'Biteship'],
       [/\b(gojek|jne|jnt|tiki|wahana|pos|lion)\b/gi, (m) => COURIER_NAMES[m.toLowerCase()] || m],
-      [/has been notified to pick up/i, 'telah diberitahu untuk mengambil paket'],
-      [/pickup number:\s*/i, 'Nomor penjemputan: '],
-      [/courier has picked up (?:your )?package/i, 'Kurir telah mengambil paket Anda'],
-      [/package (?:is )?(?:now )?in transit/i, 'Paket sedang dalam perjalanan'],
-      [/package (?:is )?out for delivery/i, 'Paket sedang diantar ke tujuan'],
-      [/package (?:has been )?delivered/i, 'Paket telah tiba di tujuan'],
-      [/package.*?(?:has been )?dropped off/i, 'Paket telah diantar'],
-      [/package scheduled/i, 'Paket telah dijadwalkan'],
-      [/package.*?(?:has been )?allocated/i, 'Kurir telah dialokasikan untuk paket'],
-      [/order.*?created/i, 'Pesanan pengiriman telah dibuat'],
-      [/failed to (?:deliver|pick up)/i, 'Gagal'],
+      [/pickup number:\s*/gi, 'Nomor penjemputan: '],
+      [/order number:\s*/gi, 'Nomor pesanan: '],
+      [/\bdelivery delayed due to (?:bad )?weather\b/i, 'Pengiriman tertunda karena cuaca buruk'],
+      [/\bdelivery delayed\b/i, 'Pengiriman tertunda'],
+      [/delayed due to (?:bad )?weather/i, 'tertunda karena cuaca buruk'],
+      [/\bbecause\b/i, 'karena'],
+      [/recipient (?:was|is) not available/i, 'penerima tidak ada di tempat'],
+      [/rescheduled(?: for (?:the )?next day)?/i, 'dijadwalkan ulang'],
+      [/address (?:is )?not complete|incomplete address/i, 'alamat tidak lengkap'],
+      [/attempted (?:to )?deliver/i, 'pernah mencoba mengantar'],
+      [/failed to (?:deliver|pick up)/i, 'Pengiriman gagal'],
       [/\bcanceled|cancelled\b/i, 'Dibatalkan'],
     ];
 
-    const translateNote = (note) => {
+    // Teks kanonik per status Biteship (berlaku untuk semua kurir karena status key distandarisasi).
+    const STATUS_NOTE_ID = {
+      confirmed: 'Pesanan telah dikonfirmasi. Mencari kurir terdekat untuk menjemput paket.',
+      scheduled: 'Pesanan telah dijadwalkan untuk pengiriman.',
+      allocated: 'Kurir telah dialokasikan dan siap menjemput paket.',
+      picking_up: 'Kurir sedang menuju lokasi penjemputan.',
+      picked: 'Paket telah diambil oleh kurir.',
+      in_transit: 'Paket sedang dalam perjalanan menuju tujuan.',
+      dropping_off: 'Kurir sedang mengantar paket ke tujuan.',
+      delivered: 'Pesanan telah tiba di tujuan.',
+      failed: 'Pengiriman gagal.',
+      cancelled: 'Pesanan telah dibatalkan.',
+      on_hold: 'Paket sedang ditahan sementara karena suatu alasan.',
+      return_in_transit: 'Paket sedang dalam perjalanan kembali ke pengirim.',
+      returned: 'Paket telah dikembalikan ke pengirim.',
+      rejected: 'Pesanan telah ditolak.',
+      disposed: 'Paket telah dimusnahkan/dibuang.',
+      courier_not_found: 'Tidak dapat menemukan kurir untuk pesanan ini.',
+    };
+
+    // Penanda kalimat Inggris standar Biteship untuk deteksi note yang perlu diganti kanonik.
+    const ENGLISH_MARKER = /\b(courier|item|package|order|driver|destination|pick ?up|deliver|transit|allocat|confirm|notified|shipped)\b/i;
+
+    // Pola template standar per status — hanya note yang cocok dengan pola ini yang diganti kanonik.
+    // Catatan khusus kurir (mis. "Delivery Delayed Due to Weather") tidak cocok, jadi tetap dipertahankan.
+    const STATUS_NOTE_PATTERN = {
+      confirmed: /(order|shipment|awb).{0,50}confirm|confirm.{0,50}(order|shipment)/i,
+      scheduled: /scheduled/i,
+      allocated: /allocated/i,
+      picking_up: /(?:pick ?up|on the way)/i,
+      picked: /\bpicked\b/i,
+      in_transit: /in transit|on the way to (?:the )?destination/i,
+      dropping_off: /dropping|out for delivery|on the way to customer/i,
+      delivered: /\bdelivered\b/i,
+      failed: /fail/i,
+      cancelled: /cancel/i,
+      on_hold: /hold/i,
+      return_in_transit: /return/i,
+      returned: /returned/i,
+      rejected: /reject/i,
+      disposed: /dispos/i,
+      courier_not_found: /courier not found|not found/i,
+    };
+
+    const translateNote = (note, statusKey) => {
       if (!note) return '';
       let t = String(note);
+      const pickup = (t.match(/pickup number:\s*([A-Za-z0-9-]+)/i) || [])[1] || '';
       for (const [re, rep] of NOTE_TRANSLATIONS) t = t.replace(re, rep);
+      const key = String(statusKey || '').toLowerCase();
+      const pattern = STATUS_NOTE_PATTERN[key];
+      if (pattern && pattern.test(t) && ENGLISH_MARKER.test(t) && STATUS_NOTE_ID[key]) {
+        t = STATUS_NOTE_ID[key];
+        if (pickup) t += ' Nomor penjemputan: ' + pickup;
+      }
+      t = t.charAt(0).toUpperCase() + t.slice(1);
       return t;
     };
 
@@ -454,7 +511,7 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
             ${isLast ? '' : '<span class="absolute left-[19px] top-10 bottom-0 w-0.5 bg-slate-200"></span>'}
             <span class="absolute left-0 top-0 w-10 h-10 rounded-full text-white flex items-center justify-center ${meta.dot} ${isLatest ? 'ring-4 ring-offset-2 ' + meta.ring : ''} ${pulse}">${ICONS[meta.icon]}</span>
             <p class="font-bold ${meta.text}">${meta.label}</p>
-            ${h.note ? `<p class="text-sm text-slate-600 mt-1">${escapeHtml(translateNote(h.note))}</p>` : ''}
+            ${h.note ? `<p class="text-sm text-slate-600 mt-1">${escapeHtml(translateNote(h.note, h.status))}</p>` : ''}
             <p class="text-xs text-slate-400 mt-1.5 flex items-center gap-1.5 flex-wrap">
               ${time ? `<span class="inline-flex items-center gap-1">${ICONS.clock}${time}</span>` : ''}
               ${time && h.location ? '<span class="text-slate-300">•</span>' : ''}
