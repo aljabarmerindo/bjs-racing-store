@@ -268,11 +268,54 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
 <script>
   (function() {
     const trackingId = '{order.courier_details.tracking_id || ""}';
+    const shippingStatus = '{order.courier_details.shipping_status || ""}';
     if (!trackingId) return;
+
+    const STATUS_LABELS = {
+      pending: 'Menunggu',
+      confirmed: 'Dikonfirmasi',
+      scheduled: 'Dijadwalkan',
+      allocated: 'Kurir dialokasikan',
+      picking_up: 'Kurir menuju lokasi penjemputan',
+      picked: 'Barang diambil kurir',
+      in_transit: 'Dalam perjalanan',
+      dropping_off: 'Sedang diantar',
+      delivered: 'Tiba di tujuan',
+      failed: 'Gagal',
+      cancelled: 'Dibatalkan',
+    };
+
+    const statusLabel = (s) => STATUS_LABELS[String(s || '').toLowerCase()] || s;
 
     const refreshBtn = document.getElementById('refresh-tracking');
     const statusEl = document.getElementById('tracking-status');
     const timelineEl = document.getElementById('tracking-timeline');
+
+    function renderTimeline(history) {
+      timelineEl.classList.remove('hidden');
+      const items = (history || []).map((h) => `
+        <div class="border-l-2 border-blue-500 pl-4">
+          <p class="text-sm font-semibold text-slate-800">${statusLabel(h.status)}</p>
+          <p class="text-xs text-slate-500">${h.note || ''}</p>
+          <p class="text-xs text-slate-400">${h.timestamp ? new Date(h.timestamp).toLocaleString('id-ID') : ''}</p>
+        </div>
+      `);
+
+      const lastStatus = (history && history.length > 0)
+        ? String((history[history.length - 1]?.status || '').toLowerCase())
+        : '';
+      if (shippingStatus && shippingStatus.toLowerCase() !== lastStatus) {
+        items.push(`
+          <div class="border-l-2 border-green-500 pl-4">
+            <p class="text-sm font-semibold text-slate-800">${statusLabel(shippingStatus)}</p>
+            <p class="text-xs text-slate-500">Update status pengiriman</p>
+            <p class="text-xs text-slate-400">-</p>
+          </div>
+        `);
+      }
+
+      timelineEl.innerHTML = items.join('');
+    }
 
     async function loadTracking() {
       if (!statusEl || !timelineEl) return;
@@ -284,20 +327,17 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
         if (!res.ok) throw new Error('Gagal memuat tracking');
         const data = await res.json();
 
-        statusEl.textContent = data.status ? `Status: ${data.status}` : 'Status tidak tersedia.';
-
-        if (data.history && data.history.length > 0) {
-          timelineEl.classList.remove('hidden');
-          timelineEl.innerHTML = data.history.map((h: any) => `
-            <div class="border-l-2 border-blue-500 pl-4">
-              <p class="text-sm font-semibold text-slate-800">${h.status}</p>
-              <p class="text-xs text-slate-500">${h.note || ''}</p>
-              <p class="text-xs text-slate-400">${h.timestamp ? new Date(h.timestamp).toLocaleString('id-ID') : ''}</p>
-            </div>
-          `).join('');
-        }
+        statusEl.textContent = shippingStatus
+          ? `Status: ${statusLabel(shippingStatus)}`
+          : (data.status ? `Status: ${statusLabel(data.status)}` : 'Status tidak tersedia.');
+        renderTimeline(data.history);
       } catch (err) {
-        statusEl.textContent = err instanceof Error ? err.message : 'Gagal memuat tracking.';
+        if (shippingStatus) {
+          statusEl.textContent = `Status: ${statusLabel(shippingStatus)}`;
+          renderTimeline([]);
+        } else {
+          statusEl.textContent = err instanceof Error ? err.message : 'Gagal memuat tracking.';
+        }
       }
     }
 

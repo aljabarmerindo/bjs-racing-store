@@ -236,16 +236,30 @@ export function verifyBiteshipWebhook(
   const signature = headers.get(WEBHOOK_KEY);
   if (!signature) return false;
 
-  const expected = crypto
-    .createHmac("sha256", WEBHOOK_SECRET)
-    .update(rawBody)
-    .digest("hex");
+  const constantTimeEqual = (a: string, b: string) => {
+    if (a.length !== b.length) return false;
+    let result = 0;
+    for (let i = 0; i < a.length; i++) {
+      result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+    return result === 0;
+  };
 
-  if (signature.length !== expected.length) return false;
-
-  let result = 0;
-  for (let i = 0; i < signature.length; i++) {
-    result |= signature.charCodeAt(i) ^ expected.charCodeAt(i);
+  // Skema utama: Biteship mengirim nilai secret apa adanya sebagai header.
+  if (constantTimeEqual(signature, WEBHOOK_SECRET)) {
+    return true;
   }
-  return result === 0;
+
+  // Fallback: HMAC-SHA256 hex dari raw body (skema lama, jika dashboard dikonfigurasi berbeda).
+  if (signature.length === 64) {
+    const expected = crypto
+      .createHmac("sha256", WEBHOOK_SECRET)
+      .update(rawBody)
+      .digest("hex");
+    if (constantTimeEqual(signature, expected)) {
+      return true;
+    }
+  }
+
+  return false;
 }
