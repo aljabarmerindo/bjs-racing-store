@@ -15,6 +15,7 @@ interface ShippingService {
   name: string;
   code: string;
   service: string;
+  courier_service_code: string;
   description: string;
   cost: number;
   etd: string;
@@ -409,6 +410,7 @@ export default function CheckoutView() {
           service: o.courier_service_name || o.service,
           code: o.courier_code || o.company || o.code,
           name: o.courier_name || o.name,
+          courier_service_code: o.courier_service_code || "",
           cost: o.price || o.cost,
           etd: o.duration || o.etd,
           description: o.description || "",
@@ -435,6 +437,7 @@ export default function CheckoutView() {
             service: checkInternalResult.service,
             code: checkInternalResult.code,
             name: checkInternalResult.name,
+            courier_service_code: "",
             cost: checkInternalResult.cost,
             etd: checkInternalResult.etd,
             description: checkInternalResult.description,
@@ -603,6 +606,7 @@ export default function CheckoutView() {
         code: courierDetails?.code,
         name: courierDetails?.name,
         service: selectedShipping.service,
+        courier_service_code: courierDetails?.courier_service_code || "",
         etd: selectedShipping.etd,
       },
       cart_items: items.map((item: CartItem) => ({
@@ -644,8 +648,8 @@ export default function CheckoutView() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 order_id: result.order_id,
-                courier_company: courierDetails?.name || "biteship",
-                courier_service_code: courierDetails?.code || "",
+                courier_company: courierDetails?.code || "biteship",
+                courier_service_code: courierDetails?.courier_service_code || "",
               }),
             });
           } catch (bookingError) {
