@@ -12,6 +12,7 @@ const navLinks = [
     { name: "Scan Warna", path: "/scan-warna" },
     { name: "Onderdil", path: "/onderdil" },
     { name: "Voucher", path: "/voucher" },
+    { name: "Lacak Pesanan", path: "/lacak-pesanan" },
 ];
 
 const MobileMenu = () => {
