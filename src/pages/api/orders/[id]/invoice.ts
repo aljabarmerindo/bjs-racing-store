@@ -121,7 +121,6 @@ export const GET: APIRoute = async ({ locals, params }) => {
           <h3>Pelanggan</h3>
           <p>${escapeHtml(order.shipping_address?.recipient_name || customer.nama_pelanggan)}</p>
           <p>${escapeHtml(order.shipping_address?.full_address || "")}</p>
-          <p>${escapeHtml(order.shipping_address?.destination_text || "")}</p>
           <p>${escapeHtml(order.shipping_address?.recipient_phone || "")}</p>
         </div>
 

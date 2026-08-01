@@ -741,7 +741,6 @@ export default function CheckoutView() {
                     </p>
                     <p className="text-gray-600">{address.recipient_phone}</p>
                     <p className="text-gray-600">{address.full_address}</p>
-                    <p className="text-gray-500">{address.destination_text}</p>
                   </div>
                 </label>
               ))

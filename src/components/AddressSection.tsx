@@ -38,9 +38,9 @@ function AddressCard({
           <p className="font-medium text-slate-700">{address.recipient_name}</p>
           <p>{address.recipient_phone}</p>
           <p className="leading-relaxed">{address.full_address}</p>
-          <p className="text-sm text-slate-500">
-            {address.destination_text} {address.postal_code}
-          </p>
+          {address.postal_code && (
+            <p className="text-sm text-slate-500">Kode Pos: {address.postal_code}</p>
+          )}
         </div>
       </div>
       <div className="flex justify-end items-center space-x-2 p-4 border-t border-gray-100 bg-gray-50 rounded-b-xl">

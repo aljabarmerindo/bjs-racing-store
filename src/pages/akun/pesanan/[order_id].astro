@@ -137,7 +137,6 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
                 <p class="font-semibold">{order.shipping_address.recipient_name || '-'}</p>
                 <p>{order.shipping_address.recipient_phone || '-'}</p>
                 <p>{order.shipping_address.full_address || '-'}</p>
-                <p>{order.shipping_address.destination_text || '-'}</p>
               </>
             ) : (
               <p class="text-slate-400">Alamat tidak tersedia</p>
