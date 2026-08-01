@@ -238,6 +238,12 @@ async function sendFonnte(payload: NotificationPayload): Promise<NotificationRes
     return { success: false, message: "FONNTE credentials tidak dikonfigurasi.", provider: "fonnte" };
   }
 
+  const normalizePhone = (num: string) => {
+    let clean = String(num || "").replace(/[^0-9]/g, "");
+    if (clean.startsWith("0")) clean = "62" + clean.slice(1);
+    return clean;
+  };
+
   const template = EVENT_TEMPLATES[payload.event].whatsapp(payload.data);
   const response = await fetch("https://api.fonnte.com/api/send-message", {
     method: "POST",
@@ -246,7 +252,7 @@ async function sendFonnte(payload: NotificationPayload): Promise<NotificationRes
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      target: payload.to,
+      target: normalizePhone(payload.to),
       message: template,
       sender,
       countryCode: "62",

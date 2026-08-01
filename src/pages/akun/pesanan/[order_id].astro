@@ -212,7 +212,12 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
            {hasCourier && order.courier_details.tracking_id && (
              <div class="mt-6">
                <h3 class="font-bold text-lg mb-2">Lacak Pengiriman</h3>
-               <div id="tracking-container" class="bg-slate-50 rounded-lg p-4">
+                <div
+                  id="tracking-container"
+                  class="bg-slate-50 rounded-lg p-4"
+                  data-tracking-id="{order.courier_details.tracking_id || ''}"
+                  data-shipping-status="{order.courier_details.shipping_status || ''}"
+                >
                  <p class="text-sm text-slate-500 mb-2">No. Resi: <span id="tracking-id" class="font-mono font-semibold text-slate-700">{order.courier_details.tracking_id}</span></p>
                  <button id="refresh-tracking" class="mb-4 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700">
                    Refresh Status
@@ -267,11 +272,12 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
 
 <script>
   (function() {
-    const trackingId = '{order.courier_details.tracking_id || ""}';
-    const shippingStatus = '{order.courier_details.shipping_status || ""}';
+    const container = document.getElementById('tracking-container');
+    const trackingId = container?.getAttribute('data-tracking-id') || '';
+    const shippingStatus = container?.getAttribute('data-shipping-status') || '';
     if (!trackingId) return;
 
-    const STATUS_LABELS = {
+    const STATUS_LABELS: Record<string, string> = {
       pending: 'Menunggu',
       confirmed: 'Dikonfirmasi',
       scheduled: 'Dijadwalkan',
@@ -285,15 +291,16 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
       cancelled: 'Dibatalkan',
     };
 
-    const statusLabel = (s) => STATUS_LABELS[String(s || '').toLowerCase()] || s;
+    const statusLabel = (s: string) => STATUS_LABELS[String(s || '').toLowerCase()] || s;
 
     const refreshBtn = document.getElementById('refresh-tracking');
     const statusEl = document.getElementById('tracking-status');
     const timelineEl = document.getElementById('tracking-timeline');
 
-    function renderTimeline(history) {
+    function renderTimeline(history: any[]) {
+      if (!timelineEl) return;
       timelineEl.classList.remove('hidden');
-      const items = (history || []).map((h) => `
+      const items = (history || []).map((h: any) => `
         <div class="border-l-2 border-blue-500 pl-4">
           <p class="text-sm font-semibold text-slate-800">${statusLabel(h.status)}</p>
           <p class="text-xs text-slate-500">${h.note || ''}</p>
