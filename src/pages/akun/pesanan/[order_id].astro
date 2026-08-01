@@ -214,16 +214,23 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
                <h3 class="font-bold text-lg mb-2">Lacak Pengiriman</h3>
                 <div
                   id="tracking-container"
-                  class="bg-slate-50 rounded-lg p-4"
                   data-tracking-id={order.courier_details.tracking_id || ''}
                   data-shipping-status={order.courier_details.shipping_status || ''}
+                  class="space-y-4"
                 >
-                 <p class="text-sm text-slate-500 mb-2">No. Resi: <span id="tracking-id" class="font-mono font-semibold text-slate-700">{order.courier_details.tracking_id}</span></p>
-                 <button id="refresh-tracking" class="mb-4 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700">
-                   Refresh Status
-                 </button>
-                 <div id="tracking-status" class="text-sm text-slate-600">Klik tombol di atas untuk melihat status terbaru.</div>
-                 <div id="tracking-timeline" class="mt-4 space-y-3 hidden"></div>
+                 <div id="tracking-card" class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-6">
+                   <div class="flex items-center gap-4">
+                     <div class="w-12 h-12 rounded-xl bg-slate-100 animate-pulse shrink-0"></div>
+                     <div class="flex-1 space-y-2">
+                       <div class="h-3 w-24 bg-slate-100 rounded animate-pulse"></div>
+                       <div class="h-5 w-56 max-w-full bg-slate-100 rounded animate-pulse"></div>
+                     </div>
+                   </div>
+                   <div class="mt-5 h-4 w-40 bg-slate-100 rounded animate-pulse"></div>
+                   <div class="mt-5 h-9 bg-slate-100 rounded-lg animate-pulse"></div>
+                 </div>
+                 <div id="tracking-stepper"></div>
+                 <div id="tracking-timeline"></div>
                </div>
              </div>
            )}
@@ -270,86 +277,231 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
   </div>
 </MainLayout>
 
-<script>
+<script is:inline>
   (function() {
     const container = document.getElementById('tracking-container');
     const trackingId = container?.getAttribute('data-tracking-id') || '';
-    const shippingStatus = container?.getAttribute('data-shipping-status') || '';
+    const localStatus = container?.getAttribute('data-shipping-status') || '';
     if (!trackingId) return;
 
-    const STATUS_LABELS: Record<string, string> = {
-      pending: 'Menunggu',
-      confirmed: 'Dikonfirmasi',
-      scheduled: 'Dijadwalkan',
-      allocated: 'Kurir dialokasikan',
-      picking_up: 'Kurir menuju lokasi penjemputan',
-      picked: 'Barang diambil kurir',
-      in_transit: 'Dalam perjalanan',
-      dropping_off: 'Sedang diantar',
-      delivered: 'Tiba di tujuan',
-      failed: 'Gagal',
-      cancelled: 'Dibatalkan',
+    const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const S = (inner, cls = 'w-5 h-5') =>
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${cls}">${inner}</svg>`;
+
+    const ICONS = {
+      package: S('<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>'),
+      packageCheck: S('<path d="m16 16 2 2 4-4"/><path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"/><path d="M3.29 7 12 12l8.71-5"/><path d="M12 22V12"/>'),
+      truck: S('<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>'),
+      pin: S('<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>'),
+      checkCircle: S('<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>'),
+      alert: S('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'),
+      refresh: S('<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>', 'w-4 h-4'),
+      copy: S('<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>', 'w-4 h-4'),
+      clock: S('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', 'w-3.5 h-3.5'),
+      check: S('<polyline points="20 6 9 17 4 12"/>', 'w-4 h-4'),
     };
 
-    const statusLabel = (s: string) => STATUS_LABELS[String(s || '').toLowerCase()] || s;
+    const STATUS_META = {
+      pending: { label: 'Menunggu', dot: 'bg-slate-400', ring: 'ring-slate-100', text: 'text-slate-600', icon: 'clock' },
+      confirmed: { label: 'Dikonfirmasi', dot: 'bg-slate-400', ring: 'ring-slate-100', text: 'text-slate-600', icon: 'checkCircle' },
+      scheduled: { label: 'Dijadwalkan', dot: 'bg-slate-400', ring: 'ring-slate-100', text: 'text-slate-600', icon: 'clock' },
+      allocated: { label: 'Kurir dialokasikan', dot: 'bg-slate-400', ring: 'ring-slate-100', text: 'text-slate-600', icon: 'package' },
+      picking_up: { label: 'Kurir menuju lokasi penjemputan', dot: 'bg-orange-500', ring: 'ring-orange-100', text: 'text-orange-600', icon: 'pin' },
+      picked: { label: 'Barang diambil kurir', dot: 'bg-blue-500', ring: 'ring-blue-100', text: 'text-blue-600', icon: 'package' },
+      in_transit: { label: 'Dalam perjalanan', dot: 'bg-blue-500', ring: 'ring-blue-100', text: 'text-blue-600', icon: 'truck' },
+      dropping_off: { label: 'Sedang diantar', dot: 'bg-blue-500', ring: 'ring-blue-100', text: 'text-blue-600', icon: 'truck' },
+      delivered: { label: 'Tiba di tujuan', dot: 'bg-emerald-500', ring: 'ring-emerald-100', text: 'text-emerald-600', icon: 'packageCheck' },
+      failed: { label: 'Pengiriman gagal', dot: 'bg-red-500', ring: 'ring-red-100', text: 'text-red-600', icon: 'alert' },
+      cancelled: { label: 'Dibatalkan', dot: 'bg-red-500', ring: 'ring-red-100', text: 'text-red-600', icon: 'alert' },
+    };
 
-    const refreshBtn = document.getElementById('refresh-tracking');
-    const statusEl = document.getElementById('tracking-status');
-    const timelineEl = document.getElementById('tracking-timeline');
+    const PHASE = ['Konfirmasi', 'Penjemputan', 'Pengiriman', 'Selesai'];
+    const PHASE_OF = {
+      pending: 0, confirmed: 0, scheduled: 0, allocated: 0,
+      picking_up: 1, picked: 1,
+      in_transit: 2, dropping_off: 2,
+      delivered: 3,
+      failed: 1, cancelled: 1,
+    };
+    const FINAL_STATUSES = ['delivered', 'failed', 'cancelled'];
 
-    function renderTimeline(history: any[]) {
-      if (!timelineEl) return;
-      timelineEl.classList.remove('hidden');
-      const items = (history || []).map((h: any) => `
-        <div class="border-l-2 border-blue-500 pl-4">
-          <p class="text-sm font-semibold text-slate-800">${statusLabel(h.status)}</p>
-          <p class="text-xs text-slate-500">${h.note || ''}</p>
-          <p class="text-xs text-slate-400">${h.timestamp ? new Date(h.timestamp).toLocaleString('id-ID') : ''}</p>
-        </div>
-      `);
+    const escapeHtml = (s) =>
+      String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-      const lastStatus = (history && history.length > 0)
-        ? String((history[history.length - 1]?.status || '').toLowerCase())
-        : '';
-      if (shippingStatus && shippingStatus.toLowerCase() !== lastStatus) {
-        items.push(`
-          <div class="border-l-2 border-green-500 pl-4">
-            <p class="text-sm font-semibold text-slate-800">${statusLabel(shippingStatus)}</p>
-            <p class="text-xs text-slate-500">Update status pengiriman</p>
-            <p class="text-xs text-slate-400">-</p>
+    const formatDateTime = (ts) => {
+      const d = new Date(ts);
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' WIB';
+    };
+
+    function renderHeader(statusKey) {
+      const el = document.getElementById('tracking-card');
+      if (!el) return;
+      const meta = STATUS_META[String(statusKey || '').toLowerCase()] || STATUS_META.pending;
+      el.className = 'bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-6 animate-fade-in-up';
+      el.innerHTML = `
+        <div class="flex items-start justify-between gap-4 flex-wrap">
+          <div class="flex items-center gap-3.5">
+            <span class="w-12 h-12 rounded-xl text-white flex items-center justify-center shrink-0 ${meta.dot}">${ICONS[meta.icon]}</span>
+            <div>
+              <p class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Status Pengiriman</p>
+              <p class="text-base sm:text-lg font-bold leading-snug ${meta.text}">${meta.label}</p>
+            </div>
           </div>
-        `);
-      }
+          <button id="refresh-tracking" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-700 active:scale-95 disabled:opacity-60 transition-colors duration-200 cursor-pointer">
+            <span class="refresh-icon inline-flex">${ICONS.refresh}</span>
+            Refresh Status
+          </button>
+        </div>
+        <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between gap-3 flex-wrap">
+          <div class="flex items-center gap-2 text-sm">
+            <span class="font-medium text-slate-500">No. Resi:</span>
+            <span class="font-mono font-semibold text-slate-800">${trackingId}</span>
+            <button id="copy-resi" title="Salin nomor resi" class="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:scale-95 transition-colors duration-200 cursor-pointer">${ICONS.copy}</button>
+          </div>
+          <p id="last-updated" class="text-xs text-slate-400 inline-flex items-center gap-1">${ICONS.clock}<span>Pembaruan terakhir: ${new Date().toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB</span></p>
+        </div>`;
+      wireActions();
+    }
 
-      timelineEl.innerHTML = items.join('');
+    function renderStepper(statusKey) {
+      const el = document.getElementById('tracking-stepper');
+      if (!el) return;
+      const key = String(statusKey || '').toLowerCase();
+      const current = PHASE_OF[key] ?? 0;
+      const isTerminal = key === 'failed' || key === 'cancelled';
+      const steps = PHASE.map((label, i) => {
+        const done = i < current;
+        const active = i === current;
+        const nodeCls = done ? 'bg-emerald-500' : active ? (isTerminal ? 'bg-red-500' : 'bg-orange-500') : 'bg-slate-200 text-slate-500';
+        const ring = active && !isTerminal ? 'ring-4 ring-orange-100' : '';
+        const pulse = active && !isTerminal && !isReducedMotion ? 'animate-pulse' : '';
+        const nodeIcon = done ? ICONS.check : active ? (isTerminal ? ICONS.alert : ICONS.pin) : `<span class="text-sm font-bold">${i + 1}</span>`;
+        const labelCls = done ? 'text-emerald-600' : active ? 'text-slate-900' : 'text-slate-400';
+        return `
+          <div class="flex flex-col items-center gap-1.5 w-16 sm:w-24 shrink-0">
+            <span class="w-8 h-8 rounded-full text-white flex items-center justify-center ${nodeCls} ${ring} ${pulse}">${nodeIcon}</span>
+            <span class="text-[10px] sm:text-xs font-semibold text-center leading-tight ${labelCls}">${label}</span>
+          </div>`;
+      }).join('<div class="h-0.5 flex-1 mx-1 sm:mx-2 mt-4 min-w-4"></div>');
+      el.className = 'bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-4 sm:px-6 sm:py-5 animate-fade-in-up';
+      el.innerHTML = `<div class="flex items-start">${steps}</div>`;
+    }
+
+    function renderTimeline(history) {
+      const el = document.getElementById('tracking-timeline');
+      if (!el) return;
+      const merged = Array.isArray(history) ? [...history] : [];
+      if (localStatus) {
+        const lastKey = merged.length ? String(merged[merged.length - 1].status || '').toLowerCase() : '';
+        if (lastKey !== localStatus.toLowerCase()) {
+          merged.push({ status: localStatus, note: 'Update status pengiriman', timestamp: '', location: '' });
+        }
+      }
+      if (merged.length === 0) {
+        el.className = 'bg-white rounded-xl border border-slate-200 shadow-sm p-10 text-center animate-fade-in-up';
+        el.innerHTML = `
+          <div class="mx-auto w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">${ICONS.package}</div>
+          <p class="font-semibold text-slate-700">Belum ada riwayat pengiriman</p>
+          <p class="text-sm text-slate-400 mt-1">Riwayat akan muncul setelah kurir memproses pesanan Anda.</p>`;
+        return;
+      }
+      const items = [...merged].reverse().map((h, i) => {
+        const meta = STATUS_META[String(h.status || '').toLowerCase()] || STATUS_META.pending;
+        const isLatest = i === 0;
+        const isLast = i === merged.length - 1;
+        const pulse = isLatest && !isReducedMotion ? 'animate-pulse' : '';
+        const time = h.timestamp ? formatDateTime(h.timestamp) : '';
+        return `
+          <li class="relative pl-14 pb-8 last:pb-0">
+            ${isLast ? '' : '<span class="absolute left-[19px] top-10 bottom-0 w-0.5 bg-slate-200"></span>'}
+            <span class="absolute left-0 top-0 w-10 h-10 rounded-full text-white flex items-center justify-center ${meta.dot} ${isLatest ? 'ring-4 ring-offset-2 ' + meta.ring : ''} ${pulse}">${ICONS[meta.icon]}</span>
+            <p class="font-bold ${meta.text}">${meta.label}</p>
+            ${h.note ? `<p class="text-sm text-slate-600 mt-1">${escapeHtml(h.note)}</p>` : ''}
+            <p class="text-xs text-slate-400 mt-1.5 flex items-center gap-1.5 flex-wrap">
+              ${time ? `<span class="inline-flex items-center gap-1">${ICONS.clock}${time}</span>` : ''}
+              ${time && h.location ? '<span class="text-slate-300">•</span>' : ''}
+              ${h.location ? `<span class="inline-flex items-center gap-1">${ICONS.pin}${escapeHtml(h.location)}</span>` : ''}
+            </p>
+          </li>`;
+      }).join('');
+      el.className = 'bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-6 animate-fade-in-up';
+      el.innerHTML = `<h4 class="font-bold text-slate-800 mb-5">Riwayat Pengiriman</h4><ul>${items}</ul>`;
+    }
+
+    function renderError(message) {
+      const el = document.getElementById('tracking-card');
+      if (!el) return;
+      el.className = 'bg-white rounded-xl border border-red-200 shadow-sm p-5 animate-fade-in-up';
+      el.innerHTML = `
+        <div class="flex items-center gap-3 text-red-600">
+          <span class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">${ICONS.alert}</span>
+          <div>
+            <p class="font-semibold text-sm">Gagal memuat tracking</p>
+            <p class="text-xs text-red-500 mt-0.5">${escapeHtml(message)}</p>
+          </div>
+        </div>`;
+    }
+
+    let autoTimer = null;
+    function scheduleAutoRefresh(statusKey) {
+      clearInterval(autoTimer);
+      if (!FINAL_STATUSES.includes(String(statusKey || '').toLowerCase())) {
+        autoTimer = setInterval(loadTracking, 60000);
+      }
+    }
+
+    function copyResi() {
+      navigator.clipboard.writeText(trackingId).then(() => {
+        const btn = document.getElementById('copy-resi');
+        if (!btn) return;
+        btn.innerHTML = '<span class="text-xs font-semibold text-emerald-600">Disalin!</span>';
+        setTimeout(() => { btn.innerHTML = ICONS.copy; }, 1600);
+      }).catch(() => {});
+    }
+
+    function wireActions() {
+      const refreshBtn = document.getElementById('refresh-tracking');
+      if (refreshBtn && !refreshBtn.dataset.wired) {
+        refreshBtn.dataset.wired = '1';
+        refreshBtn.addEventListener('click', loadTracking);
+      }
+      const copyBtn = document.getElementById('copy-resi');
+      if (copyBtn && !copyBtn.dataset.wired) {
+        copyBtn.dataset.wired = '1';
+        copyBtn.addEventListener('click', copyResi);
+      }
     }
 
     async function loadTracking() {
-      if (!statusEl || !timelineEl) return;
-      statusEl.textContent = 'Memuat status...';
-      timelineEl.classList.add('hidden');
+      const refreshBtn = document.getElementById('refresh-tracking');
+      const refreshIcon = refreshBtn?.querySelector('.refresh-icon');
+      if (refreshBtn) refreshBtn.disabled = true;
+      if (refreshIcon) refreshIcon.classList.add('animate-spin');
 
       try {
         const res = await fetch(`/api/shipping/biteship/track?trackingId=${encodeURIComponent(trackingId)}`);
         if (!res.ok) throw new Error('Gagal memuat tracking');
         const data = await res.json();
-
-        statusEl.textContent = shippingStatus
-          ? `Status: ${statusLabel(shippingStatus)}`
-          : (data.status ? `Status: ${statusLabel(data.status)}` : 'Status tidak tersedia.');
-        renderTimeline(data.history);
+        const status = data.status || localStatus;
+        renderHeader(status);
+        renderStepper(status);
+        renderTimeline(Array.isArray(data.history) ? data.history : []);
+        scheduleAutoRefresh(status);
       } catch (err) {
-        if (shippingStatus) {
-          statusEl.textContent = `Status: ${statusLabel(shippingStatus)}`;
+        if (localStatus) {
+          renderHeader(localStatus);
+          renderStepper(localStatus);
           renderTimeline([]);
+          scheduleAutoRefresh(localStatus);
         } else {
-          statusEl.textContent = err instanceof Error ? err.message : 'Gagal memuat tracking.';
+          renderError(err instanceof Error ? err.message : 'Terjadi kesalahan.');
         }
+      } finally {
+        if (refreshBtn) refreshBtn.disabled = false;
+        if (refreshIcon) refreshIcon.classList.remove('animate-spin');
       }
-    }
-
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', loadTracking);
     }
 
     loadTracking();
