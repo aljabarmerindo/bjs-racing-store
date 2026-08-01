@@ -216,6 +216,7 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
                   id="tracking-container"
                   data-tracking-id={order.courier_details.tracking_id || ''}
                   data-shipping-status={order.courier_details.shipping_status || ''}
+                  data-courier-code={order.courier_details.code || ''}
                   class="space-y-4"
                 >
                  <div id="tracking-card" class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-6">
@@ -329,6 +330,41 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
     const escapeHtml = (s) =>
       String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+    const COURIER_NAMES = {
+      gojek: 'Gojek',
+      jne: 'JNE',
+      jnt: 'J&T Express',
+      tiki: 'TIKI',
+      wahana: 'Wahana Express',
+      pos: 'POS Indonesia',
+      lion: 'Lion Parcel',
+    };
+
+    const NOTE_TRANSLATIONS = [
+      [/courier order is confirmed/i, 'Pesanan kurir telah dikonfirmasi'],
+      [/\bbiteship\b/gi, 'Biteship'],
+      [/\b(gojek|jne|jnt|tiki|wahana|pos|lion)\b/gi, (m) => COURIER_NAMES[m.toLowerCase()] || m],
+      [/has been notified to pick up/i, 'telah diberitahu untuk mengambil paket'],
+      [/pickup number:\s*/i, 'Nomor penjemputan: '],
+      [/courier has picked up (?:your )?package/i, 'Kurir telah mengambil paket Anda'],
+      [/package (?:is )?(?:now )?in transit/i, 'Paket sedang dalam perjalanan'],
+      [/package (?:is )?out for delivery/i, 'Paket sedang diantar ke tujuan'],
+      [/package (?:has been )?delivered/i, 'Paket telah tiba di tujuan'],
+      [/package.*?(?:has been )?dropped off/i, 'Paket telah diantar'],
+      [/package scheduled/i, 'Paket telah dijadwalkan'],
+      [/package.*?(?:has been )?allocated/i, 'Kurir telah dialokasikan untuk paket'],
+      [/order.*?created/i, 'Pesanan pengiriman telah dibuat'],
+      [/failed to (?:deliver|pick up)/i, 'Gagal'],
+      [/\bcanceled|cancelled\b/i, 'Dibatalkan'],
+    ];
+
+    const translateNote = (note) => {
+      if (!note) return '';
+      let t = String(note);
+      for (const [re, rep] of NOTE_TRANSLATIONS) t = t.replace(re, rep);
+      return t;
+    };
+
     const formatDateTime = (ts) => {
       const d = new Date(ts);
       if (isNaN(d.getTime())) return '';
@@ -418,7 +454,7 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
             ${isLast ? '' : '<span class="absolute left-[19px] top-10 bottom-0 w-0.5 bg-slate-200"></span>'}
             <span class="absolute left-0 top-0 w-10 h-10 rounded-full text-white flex items-center justify-center ${meta.dot} ${isLatest ? 'ring-4 ring-offset-2 ' + meta.ring : ''} ${pulse}">${ICONS[meta.icon]}</span>
             <p class="font-bold ${meta.text}">${meta.label}</p>
-            ${h.note ? `<p class="text-sm text-slate-600 mt-1">${escapeHtml(h.note)}</p>` : ''}
+            ${h.note ? `<p class="text-sm text-slate-600 mt-1">${escapeHtml(translateNote(h.note))}</p>` : ''}
             <p class="text-xs text-slate-400 mt-1.5 flex items-center gap-1.5 flex-wrap">
               ${time ? `<span class="inline-flex items-center gap-1">${ICONS.clock}${time}</span>` : ''}
               ${time && h.location ? '<span class="text-slate-300">•</span>' : ''}
