@@ -152,35 +152,8 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
             ) : (
               <p class="text-slate-400">Metode pengiriman tidak tersedia</p>
             )}
-            {order.shipping_receipt_number && hasCourier && (
-              <div class="mt-2">
-                <p>
-                  No. Resi: <span class="font-bold text-slate-800">{order.shipping_receipt_number}</span>
-                </p>
-                <a
-                  href={`/lacak-pesanan?awb=${order.shipping_receipt_number}&courier=${order.courier_details.code}`}
-                  target="_blank"
-                  class="inline-block mt-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700"
-                >
-                  Lacak Pengiriman
-                </a>
-              </div>
-            )}
 
-            {hasCourier && (order.courier_details.tracking_id || order.courier_details.waybill_id) && (
-              <div class="mt-2">
-                <p>
-                  No. Resi Biteship: <span class="font-bold text-slate-800">{order.courier_details.tracking_id || order.courier_details.waybill_id}</span>
-                </p>
-                <a
-                  href={`/lacak-pesanan?awb=${order.courier_details.tracking_id || order.courier_details.waybill_id}&courier=${order.courier_details.code}`}
-                  target="_blank"
-                  class="inline-block mt-2 px-4 py-2 bg-orange-600 text-white text-sm font-semibold rounded-lg hover:bg-orange-700"
-                >
-                  Lacak Pengiriman Biteship
-                </a>
-              </div>
-            )}
+
 
             {hasCourier && (
               <div class="mt-6">
