@@ -172,9 +172,8 @@ const TrackingView = ({
 
   const translateNote = (text = '') => {
     const s = String(text);
-    return NOTE_TRANSLATIONS.reduce((acc, item) => {
-      const [pattern, replacement] = item;
-      return acc.replace(pattern, typeof replacement === 'function' ? replacement() : replacement);
+    return NOTE_TRANSLATIONS.reduce((acc, [pattern, replacement]) => {
+      return acc.replace(pattern, replacement);
     }, s);
   };
 
