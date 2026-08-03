@@ -6,6 +6,7 @@ type Task = {
   maxRetries: number;
   nextRetryAt: number;
   run: () => Promise<void>;
+  onFinalFailure?: (error: unknown) => void;
 };
 
 const queue: Task[] = [];
@@ -42,6 +43,9 @@ async function runQueue() {
       task.retries += 1;
       if (task.retries >= task.maxRetries) {
         console.error(`[RetryQueue] ${task.id} failed after ${task.retries} retries:`, err);
+        if (task.onFinalFailure) {
+          task.onFinalFailure(err);
+        }
         queue.shift();
       } else {
         const backoff = [60_000, 5 * 60_000, 15 * 60_000][Math.min(task.retries - 1, 2)];

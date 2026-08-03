@@ -25,6 +25,9 @@ export async function processGojekAutoBooking(orderId: string): Promise<{ booked
   }
 
   const cd = order.courier_details || {};
+  if (cd.biteship_order_id) {
+    return { booked: true, reason: "Sudah pernah di-booking." };
+  }
   if (cd.courier_company?.toLowerCase() !== "gojek" && cd.code?.toLowerCase() !== "gojek") {
     return { booked: false, reason: "Bukan kurir GOJEK." };
   }

@@ -5,10 +5,85 @@
 //  - endpoint konfirmasi manual admin
 // Semua bagian idempoten (guard status RPC + UNIQUE invoice_number).
 import { supabaseAdmin } from "@/lib/supabaseServer.ts";
+import { createBiteshipOrder } from "./biteship.ts";
 
 export interface ConfirmResult {
   ok: boolean;
   error?: string;
+}
+
+const BITESHIP_CODES = new Set(["gojek", "pos", "jne", "jnt", "jntcargo"]);
+
+const ORIGIN = {
+  contactName: import.meta.env.BITESHIP_ORIGIN_NAME || "BJS Racing Store",
+  contactPhone: import.meta.env.BITESHIP_ORIGIN_PHONE || "",
+  address: import.meta.env.BITESHIP_ORIGIN_ADDRESS || "",
+  postalCode: import.meta.env.BITESHIP_ORIGIN_POSTAL || "",
+  latitude: Number(import.meta.env.BITESHIP_ORIGIN_LAT || 0),
+  longitude: Number(import.meta.env.BITESHIP_ORIGIN_LNG || 0),
+};
+
+async function bookBiteshipIfNeeded(orderData: any): Promise<void> {
+  const cd = orderData.courier_details || {};
+  const courierCompany = String(cd.courier_company || cd.code || "").toLowerCase();
+  const courierServiceCode = cd.courier_service_code || "";
+
+  if (!BITESHIP_CODES.has(courierCompany)) return;
+  if (!courierServiceCode) return;
+  if (cd.biteship_order_id) return;
+
+  const addr = orderData.shipping_address;
+  if (!addr) return;
+
+  const { data: customer } = await supabaseAdmin
+    .from("customers")
+    .select("nama_pelanggan, telepon")
+    .eq("id", orderData.customer_id)
+    .single();
+
+  const items = (orderData.order_items || []).map((it: any) => ({
+    name: it.products?.nama || "Item BJS",
+    description: "Pesanan BJS Racing",
+    quantity: it.quantity,
+    weight: it.products?.berat_gram || 500,
+    value: Number(it.price) || 0,
+  }));
+
+  try {
+    const result = await createBiteshipOrder({
+      referenceId: orderData.order_number,
+      origin: ORIGIN,
+      destination: {
+        contactName: addr.recipient_name || customer?.nama_pelanggan || "",
+        contactPhone: addr.recipient_phone || customer?.telepon || "",
+        address: addr.full_address || "",
+        postalCode: addr.postal_code || "",
+        latitude: addr.latitude ? Number(addr.latitude) : undefined,
+        longitude: addr.longitude ? Number(addr.longitude) : undefined,
+      },
+      courierCompany: courierCompany,
+      courierType: courierServiceCode,
+      items,
+    });
+
+    await supabaseAdmin
+      .from("orders")
+      .update({
+        courier_details: {
+          ...cd,
+          biteship_order_id: result.id,
+          waybill_id: result.waybillId,
+          tracking_id: result.trackingId,
+          routing_code: result.routingCode,
+          shipping_status: result.status,
+          courier_company: courierCompany,
+          courier_service_code: courierServiceCode,
+        },
+      })
+      .eq("id", orderData.id);
+  } catch (err) {
+    console.error(`[Biteship] Gagal booking untuk order ${orderData.order_number}:`, err);
+  }
 }
 
 export async function confirmOrderPayment(
@@ -40,6 +115,8 @@ export async function confirmOrderPayment(
         .update({ status: "paid" })
         .eq("order_id", orderData.id);
     }
+
+    await bookBiteshipIfNeeded(orderData);
 
     const stockLogEntries = orderData.order_items.map((item: any) => {
       if (!item.products)

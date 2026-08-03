@@ -8,7 +8,8 @@ export type OrderEvent =
   | "order_shipped"
   | "order_completed"
   | "order_cancelled"
-  | "shipping_status_update";
+  | "shipping_status_update"
+  | "booking_failed";
 
 export interface NotificationPayload {
   to: string;
@@ -142,6 +143,23 @@ const EVENT_TEMPLATES: Record<
         `<p>Status pengiriman pesanan <strong>${d.orderNumber}</strong> diperbarui: <strong>${d.shippingStatus || "sedang diproses"}</strong>.</p>` +
         `<p>No. Resi: <strong>${d.trackingNumber || "-"}</strong></p>` +
         `<p>Terima kasih,<br/>${d.storeName || "BJS Racing Store"}</p>`,
+    },
+  },
+  booking_failed: {
+    whatsapp: (d) =>
+      `⚠️ Gagal Booking Biteship\n\n` +
+      `Order: ${d.orderNumber || "-"}\n` +
+      `Kurir: ${d.courierName || "tidak diketahui"}\n` +
+      `Alasan: ${d.reason || "Unknown error"}\n\n` +
+      `Segera proses order ini secara manual.`,
+    email: {
+      subject: (d) => `Gagal Booking Biteship - ${d.orderNumber || "Unknown"}`,
+      body: (d) =>
+        `<h2>Gagal Booking Biteship</h2>` +
+        `<p>Order: <strong>${d.orderNumber || "-"}</strong></p>` +
+        `<p>Kurir: <strong>${d.courierName || "tidak diketahui"}</strong></p>` +
+        `<p>Alasan: ${d.reason || "Unknown error"}</p>` +
+        `<p>Segera proses order ini secara manual.</p>`,
     },
   },
 };

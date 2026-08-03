@@ -4,6 +4,7 @@ import type { APIRoute } from "astro";
 import { supabaseAdmin } from "@/lib/supabaseServer.ts";
 import { createBiteshipOrder } from "@/lib/biteship.ts";
 import { scheduleRetry } from "@/lib/retryQueue.ts";
+import { sendOrderNotification } from "@/lib/notifications.ts";
 
 const ORIGIN = {
   contactName: import.meta.env.BITESHIP_ORIGIN_NAME || "BJS Racing Store",
@@ -51,6 +52,14 @@ export const POST: APIRoute = async (context) => {
       );
     }
 
+    const validStatuses = ["awaiting_payment", "paid", "processing"];
+    if (!validStatuses.includes(order.status)) {
+      return new Response(
+        JSON.stringify({ message: `Order dalam status "${order.status}" tidak valid untuk booking.` }),
+        { status: 422 },
+      );
+    }
+
     const { data: customer, error: customerError } =
       await supabaseAdmin
         .from("customers")
@@ -70,6 +79,20 @@ export const POST: APIRoute = async (context) => {
       return new Response(
         JSON.stringify({ message: "Alamat pengiriman tidak ditemukan." }),
         { status: 400 },
+      );
+    }
+
+    const existing = order.courier_details || {};
+    if (existing.biteship_order_id) {
+      return new Response(
+        JSON.stringify({
+          message: "Order ini sudah pernah dibooking ke Biteship.",
+          waybill_id: existing.waybill_id,
+          tracking_id: existing.tracking_id,
+          status: existing.shipping_status,
+          price: existing.price,
+        }),
+        { status: 200 },
       );
     }
 
@@ -96,6 +119,12 @@ export const POST: APIRoute = async (context) => {
       courierType: courier_service_code,
       items,
     });
+
+    const quotedPrice = Number(order.shipping_cost || 0);
+    const actualPrice = Number(result.price || 0);
+    if (quotedPrice > 0 && Math.abs(quotedPrice - actualPrice) > 100) {
+      console.warn(`[Biteship] Price mismatch for order ${order.order_number}: quoted=${quotedPrice}, actual=${actualPrice}`);
+    }
 
     const current = order.courier_details || {};
     await supabaseAdmin
@@ -124,13 +153,15 @@ export const POST: APIRoute = async (context) => {
       { status: 200 },
     );
   } catch (error) {
+    const capturedOrderId = order_id;
+    const capturedCourierCompany = courier_company;
     scheduleRetry({
       maxRetries: 3,
       run: async () => {
         const { data: retryOrder } = await supabaseAdmin
           .from("orders")
           .select("*, order_items(*, products(*))")
-          .eq("id", order_id)
+          .eq("id", capturedOrderId)
           .single();
 
         if (!retryOrder) return;
@@ -166,21 +197,42 @@ export const POST: APIRoute = async (context) => {
           items: retryItems,
         });
 
-        const current = retryOrder.courier_details || {};
+        const existingRetry = retryOrder.courier_details || {};
         await supabaseAdmin
           .from("orders")
           .update({
             courier_details: {
-              ...current,
+              ...existingRetry,
               biteship_order_id: result.id,
               waybill_id: result.waybillId,
               tracking_id: result.trackingId,
+              routing_code: result.routingCode,
               shipping_status: result.status,
               courier_company: courier_company,
               courier_service_code: courier_service_code,
             },
           })
           .eq("id", order_id);
+      },
+      onFinalFailure: async (retryErr) => {
+        const reason = retryErr instanceof Error ? retryErr.message : "Unknown error";
+        console.error(`[Biteship] Booking gagal permanen untuk order ${capturedOrderId}:`, reason);
+        try {
+          await sendOrderNotification({
+            to: import.meta.env.STORE_PHONE || "+6288101169213",
+            channel: "whatsapp",
+            event: "booking_failed",
+            data: {
+              orderNumber: capturedOrderId || undefined,
+              courierName: capturedCourierCompany || undefined,
+              reason,
+              storeName: import.meta.env.STORE_NAME || "BJS Racing Store",
+              storePhone: import.meta.env.STORE_PHONE || "+6288101169213",
+            },
+          });
+        } catch (notifErr) {
+          console.error("[Biteship] Gagal kirim notifikasi admin:", notifErr);
+        }
       },
     });
 

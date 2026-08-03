@@ -44,6 +44,9 @@ export async function getBiteshipRates(params: {
   weight: number;
   couriers?: string;
   value?: number;
+  length?: number;
+  width?: number;
+  height?: number;
 }): Promise<BiteshipRateOption[]> {
   const couriers = params.couriers || "gojek,pos";
   const body: any = {
@@ -57,9 +60,9 @@ export async function getBiteshipRates(params: {
         value: Math.max(0, Math.round(params.value || 0)),
         quantity: 1,
         weight: Math.max(1, Math.round(params.weight)),
-        length: 10,
-        width: 10,
-        height: 10,
+        length: params.length || 10,
+        width: params.width || 10,
+        height: params.height || 10,
       },
     ],
   };
@@ -109,7 +112,7 @@ export interface CreateBiteshipOrderParams {
   courierCompany: string;
   courierType: string;
   deliveryType?: "now" | "scheduled" | "later";
-  items: { name: string; description: string; quantity: number; weight: number; value: number }[];
+  items: { name: string; description: string; quantity: number; weight: number; value: number; length?: number; width?: number; height?: number }[];
 }
 
 export interface BiteshipOrderResult {
@@ -119,6 +122,12 @@ export interface BiteshipOrderResult {
   routingCode: string;
   status: string;
   price: number;
+  delivery?: {
+    datetime: string;
+    type: string;
+    distance: number;
+    distance_unit: string;
+  };
 }
 
 export async function createBiteshipOrder(
@@ -143,9 +152,9 @@ export async function createBiteshipOrder(
       quantity: it.quantity,
       weight: Math.max(1, Math.round(it.weight)),
       value: it.value,
-      length: 10,
-      width: 10,
-      height: 10,
+      length: it.length || 10,
+      width: it.width || 10,
+      height: it.height || 10,
     })),
   };
 
@@ -164,6 +173,14 @@ export async function createBiteshipOrder(
     routingCode: json.courier?.routing_code || "",
     status: json.status,
     price: json.price,
+    delivery: json.delivery
+      ? {
+          datetime: json.delivery.datetime || "",
+          type: json.delivery.type || "",
+          distance: json.delivery.distance || 0,
+          distance_unit: json.delivery.distance_unit || "",
+        }
+      : undefined,
   };
 }
 
@@ -188,19 +205,27 @@ export async function searchBiteshipAreas(query: string): Promise<BiteshipAreaRe
     `/v1/maps/areas?countries=ID&input=${encodeURIComponent(query)}&type=single&limit=10`,
   );
   const areas = (json.areas || json.data || []) as any[];
-  return areas.map((area) => ({
-    id: String(area.id || area.area_id || ""),
-    name: area.name || area.area_name || "",
-    type: area.type || "",
-    country: area.country || "",
-    administrativeLevel1: area.administrative_division_level_1_name || area.province_name || "",
-    administrativeLevel2: area.administrative_division_level_2_name || area.city_name || "",
-    administrativeLevel3: area.administrative_division_level_3_name || area.district_name || "",
-    administrativeLevel4: area.administrative_division_level_4_name || area.subdistrict_name || "",
-    latitude: String(area.latitude || area.lat || ""),
-    longitude: String(area.longitude || area.lng || ""),
-    postalCode: area.postal_code ? String(area.postal_code) : area.zip_code || "",
-  }));
+  return areas.map((area) => {
+    const mapped: BiteshipAreaResult = {
+      id: String(area.id ?? area.area_id ?? ""),
+      name: area.name ?? area.area_name ?? "",
+      type: area.type ?? "",
+      country: area.country ?? "",
+      administrativeLevel1: area.administrative_level_1_name ?? area.province_name ?? "",
+      administrativeLevel2: area.administrative_level_2_name ?? area.city_name ?? "",
+      administrativeLevel3: area.administrative_level_3_name ?? area.district_name ?? "",
+      administrativeLevel4: area.administrative_level_4_name ?? area.subdistrict_name ?? "",
+      latitude: String(area.latitude ?? area.lat ?? ""),
+      longitude: String(area.longitude ?? area.lng ?? ""),
+      postalCode: area.postal_code ? String(area.postal_code) : area.zip_code ?? undefined,
+    };
+
+    if (!mapped.id || !mapped.name) {
+      console.warn("[Biteship] Area mapping issue:", JSON.stringify(area));
+    }
+
+    return mapped;
+  });
 }
 
 export interface BiteshipTrackingResult {
@@ -216,15 +241,19 @@ export interface BiteshipTrackingResult {
 export async function getBiteshipTracking(trackingId: string): Promise<BiteshipTrackingResult> {
   const json = await biteshipRequest("GET", `/v1/trackings/${encodeURIComponent(trackingId)}`);
   const history = (json.history || []).map((h: any) => ({
-    status: h.status || "",
-    note: h.note || h.description || "",
-    timestamp: h.timestamp || h.created_at || "",
-    location: h.location || h.city || "",
+    status: h.status ?? "",
+    note: h.note ?? h.description ?? "",
+    timestamp: h.timestamp ?? h.created_at ?? "",
+    location: h.location ?? h.city ?? undefined,
   }));
   return {
-    status: json.status || json.current_status || "",
+    status: json.status ?? json.current_status ?? "",
     history,
   };
+}
+
+export async function cancelBiteshipOrder(orderId: string): Promise<void> {
+  await biteshipRequest("POST", `/v1/orders/${encodeURIComponent(orderId)}/cancel`, {});
 }
 
 export function verifyBiteshipWebhook(
@@ -236,30 +265,19 @@ export function verifyBiteshipWebhook(
   const signature = headers.get(WEBHOOK_KEY);
   if (!signature) return false;
 
-  const constantTimeEqual = (a: string, b: string) => {
-    if (a.length !== b.length) return false;
-    let result = 0;
-    for (let i = 0; i < a.length; i++) {
-      result |= a.charCodeAt(i) ^ b.charCodeAt(i);
-    }
-    return result === 0;
-  };
+  const expected = crypto
+    .createHmac("sha256", WEBHOOK_SECRET)
+    .update(rawBody)
+    .digest("hex");
 
-  // Skema utama: Biteship mengirim nilai secret apa adanya sebagai header.
-  if (constantTimeEqual(signature, WEBHOOK_SECRET)) {
-    return true;
+  const sigBuf = Buffer.from(signature, "hex");
+  const expBuf = Buffer.from(expected, "hex");
+
+  if (sigBuf.length !== expBuf.length) return false;
+
+  try {
+    return crypto.timingSafeEqual(sigBuf, expBuf);
+  } catch {
+    return false;
   }
-
-  // Fallback: HMAC-SHA256 hex dari raw body (skema lama, jika dashboard dikonfigurasi berbeda).
-  if (signature.length === 64) {
-    const expected = crypto
-      .createHmac("sha256", WEBHOOK_SECRET)
-      .update(rawBody)
-      .digest("hex");
-    if (constantTimeEqual(signature, expected)) {
-      return true;
-    }
-  }
-
-  return false;
 }

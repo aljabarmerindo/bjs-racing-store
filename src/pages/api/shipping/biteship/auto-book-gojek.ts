@@ -4,6 +4,13 @@ import type { APIRoute } from "astro";
 import { processGojekAutoBooking } from "@/lib/gojekAutoBooking";
 
 export const POST: APIRoute = async (context) => {
+  const { session } = context.locals;
+  if (!session) {
+    return new Response(JSON.stringify({ message: "Tidak diizinkan" }), {
+      status: 401,
+    });
+  }
+
   try {
     const body = await context.request.json().catch(() => ({}));
     const orderId = body?.orderId;

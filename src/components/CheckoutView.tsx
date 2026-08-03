@@ -207,7 +207,9 @@ export default function CheckoutView() {
 
   const isWithinSchedule = (code: string) => {
     if (!courierConfig) return true;
-    const schedule = code === "internal" ? courierConfig.bjs_express : courierConfig.gojek;
+    const normalized = String(code || "").toLowerCase();
+    if (["pos", "jne", "jnt", "jntcargo"].includes(normalized)) return true;
+    const schedule = normalized === "internal" ? courierConfig.bjs_express : courierConfig.gojek;
     if (!schedule.enabled) return false;
     const currentMinutes = getJakartaMinutes();
     const open = toMinutes(schedule.open_time);
@@ -219,14 +221,18 @@ export default function CheckoutView() {
 
   const getScheduleLabel = (code: string) => {
     if (!courierConfig) return "";
-    const schedule = code === "internal" ? courierConfig.bjs_express : courierConfig.gojek;
+    const normalized = String(code || "").toLowerCase();
+    if (["pos", "jne", "jnt", "jntcargo"].includes(normalized)) return "";
+    const schedule = normalized === "internal" ? courierConfig.bjs_express : courierConfig.gojek;
     if (!schedule.enabled) return "Dinonaktifkan";
     return `${schedule.open_time.slice(0, 5)} - ${schedule.cutoff_time.slice(0, 5)} WIB`;
   };
 
   const getScheduleReason = (code: string) => {
     if (!courierConfig) return "";
-    const schedule = code === "internal" ? courierConfig.bjs_express : courierConfig.gojek;
+    const normalized = String(code || "").toLowerCase();
+    if (["pos", "jne", "jnt", "jntcargo"].includes(normalized)) return "";
+    const schedule = normalized === "internal" ? courierConfig.bjs_express : courierConfig.gojek;
     if (!schedule.enabled) return `${formatServiceName("", code)} sedang dinonaktifkan.`;
     const currentMinutes = getJakartaMinutes();
     const open = toMinutes(schedule.open_time);
@@ -564,6 +570,17 @@ export default function CheckoutView() {
             setIsPolling(false);
             clearCart();
             window.location.href = `/akun/pesanan/${orderId}?status=success`;
+          } else if (["cancelled", "expired", "denied", "failed"].includes(data.status)) {
+            clearInterval(interval);
+            setIsPolling(false);
+            setIsProcessingPayment(false);
+            addToast({
+              type: "error",
+              message: data.status === "cancelled"
+                ? "Pembayaran dibatalkan. Silakan coba lagi."
+                : `Pembayaran gagal dengan status: ${data.status}.`,
+            });
+            window.location.href = `/akun/pesanan/${orderId}?status=${data.status}`;
           }
         }
       } catch {
@@ -573,6 +590,7 @@ export default function CheckoutView() {
     setTimeout(() => {
       clearInterval(interval);
       setIsPolling(false);
+      setIsProcessingPayment(false);
     }, 1000 * 60 * 10);
   };
 
@@ -636,44 +654,6 @@ export default function CheckoutView() {
         return;
       }
 
-      const biteshipCodes = new Set(["gojek", "pos", "jne", "jnt", "jntcargo"]);
-      const isBiteshipCourier =
-        courierDetails?.code && biteshipCodes.has(String(courierDetails.code).toLowerCase());
-
-      if (isBiteshipCourier && result.order_id) {
-        void (async () => {
-          try {
-            await fetch("/api/shipping/biteship/book", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                order_id: result.order_id,
-                courier_company: courierDetails?.code || "biteship",
-                courier_service_code: courierDetails?.courier_service_code || "",
-              }),
-            });
-          } catch (bookingError) {
-            console.error("Gagal booking Biteship:", bookingError);
-            addToast({
-              type: "warning",
-              message: "Pesanan dibuat, tetapi booking pengiriman gagal. Admin akan memprosesnya.",
-            });
-          }
-        })();
-      }
-
-      if (result.qr_content) {
-        setQrData({
-          qr_content: result.qr_content,
-          qr_image_base64: result.qr_image_base64,
-          expires_at: result.expires_at,
-          order_id: result.order_id,
-        });
-        setShowQr(true);
-        setIsProcessingPayment(false);
-        pollOrderStatus(result.order_id);
-        return;
-      }
       const { snap_token, order_id } = result;
       const isGojek = courierDetails?.code === "gojek";
       window.snap.pay(snap_token, {

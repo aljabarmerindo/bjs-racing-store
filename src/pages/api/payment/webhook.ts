@@ -3,6 +3,7 @@ import type { APIRoute } from "astro";
 import { supabaseAdmin } from "@/lib/supabaseServer.ts";
 import crypto from "crypto";
 import { confirmOrderPayment } from "@/lib/confirmOrderPayment.ts";
+import { cancelBiteshipOrder } from "@/lib/biteship.ts";
 
 export const POST: APIRoute = async ({ request }) => {
     try {
@@ -44,7 +45,7 @@ export const POST: APIRoute = async ({ request }) => {
                 .from("orders")
                 .update({ status: "cancelled" })
                 .eq("order_number", order_id)
-                .select("id")
+                .select("id, courier_details")
                 .single();
             if (orderData) {
                 await supabaseAdmin
@@ -76,6 +77,26 @@ export const POST: APIRoute = async ({ request }) => {
                             .from("flash_sales")
                             .update({ stock_allocated: restoredStock })
                             .eq("id", flashSale.id);
+                    }
+                }
+
+                const cd = orderData.courier_details || {};
+                const biteshipOrderId = cd.biteship_order_id;
+                if (biteshipOrderId) {
+                    try {
+                        await cancelBiteshipOrder(biteshipOrderId);
+                        await supabaseAdmin
+                            .from("orders")
+                            .update({
+                                courier_details: {
+                                    ...cd,
+                                    biteship_order_id: null,
+                                    shipping_status: "cancelled",
+                                },
+                            })
+                            .eq("id", orderData.id);
+                    } catch (cancelErr) {
+                        console.error(`[Biteship] Gagal cancel order ${biteshipOrderId}:`, cancelErr);
                     }
                 }
             }

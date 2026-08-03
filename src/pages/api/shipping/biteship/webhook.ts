@@ -4,7 +4,6 @@ import type { APIRoute } from "astro";
 import { supabaseAdmin } from "@/lib/supabaseServer.ts";
 import { verifyBiteshipWebhook } from "@/lib/biteship.ts";
 import { sendOrderNotification } from "@/lib/notifications.ts";
-import { scheduleRetry } from "@/lib/retryQueue.ts";
 
 const SHIPPING_STATUS_LABEL: Record<string, string> = {
   pending: "menunggu",
@@ -40,9 +39,8 @@ export const POST: APIRoute = async (context) => {
     }
 
     const body = JSON.parse(trimmed);
+    const event = body.event || "order.status";
     const biteshipOrderId = body.order_id;
-    const status = body.status;
-    const waybill = body.courier_waybill_id || body.waybill_id || "";
 
     if (!biteshipOrderId) {
       return new Response("OK", { status: 200 });
@@ -53,45 +51,83 @@ export const POST: APIRoute = async (context) => {
       .select("id, courier_details, order_number, customer_id")
       .filter("courier_details->>biteship_order_id", "eq", biteshipOrderId);
 
-    if (orders && orders.length > 0) {
-      const o = orders[0];
-      const cd = o.courier_details || {};
-      await supabaseAdmin
-        .from("orders")
-        .update({
-          courier_details: {
-            ...cd,
-            shipping_status: status,
-            waybill_id: waybill || cd.waybill_id,
-          },
-        })
-        .eq("id", o.id);
+    if (!orders || orders.length === 0) {
+      return new Response("OK", { status: 200 });
+    }
 
-      const { data: customer } = await supabaseAdmin
-        .from("customers")
-        .select("nama_pelanggan, telepon")
-        .eq("id", o.customer_id)
-        .single();
+    const o = orders[0];
+    const cd = o.courier_details || {};
 
-      const phone = customer?.telepon || cd?.recipient_phone || "";
-      if (phone) {
-        try {
-          await sendOrderNotification({
-            to: phone,
-            channel: "whatsapp",
-            event: "shipping_status_update",
-            data: {
-              orderNumber: o.order_number,
-              customerName: customer?.nama_pelanggan,
-              trackingNumber: waybill || cd.waybill_id,
-              shippingStatus: normalizeStatus(status),
-              storeName: import.meta.env.STORE_NAME || "BJS Racing Store",
-              storePhone: import.meta.env.STORE_PHONE || "+6288101169213",
+    if (event === "order.price") {
+      const newPrice = body.price;
+      if (typeof newPrice === "number") {
+        await supabaseAdmin
+          .from("orders")
+          .update({
+            courier_details: {
+              ...cd,
+              price: newPrice,
             },
-          });
-        } catch (err) {
-          console.error("[Biteship] notifikasi gagal:", err);
-        }
+          })
+          .eq("id", o.id);
+      }
+      return new Response("OK", { status: 200 });
+    }
+
+    if (event === "order.waybill_id") {
+      const newWaybill = body.waybill_id || body.courier_waybill_id || "";
+      if (newWaybill) {
+        await supabaseAdmin
+          .from("orders")
+          .update({
+            courier_details: {
+              ...cd,
+              waybill_id: newWaybill,
+            },
+          })
+          .eq("id", o.id);
+      }
+      return new Response("OK", { status: 200 });
+    }
+
+    const status = body.status;
+    const waybill = body.courier_waybill_id || body.waybill_id || "";
+
+    await supabaseAdmin
+      .from("orders")
+      .update({
+        courier_details: {
+          ...cd,
+          shipping_status: status,
+          waybill_id: waybill || cd.waybill_id,
+        },
+      })
+      .eq("id", o.id);
+
+    const { data: customer } = await supabaseAdmin
+      .from("customers")
+      .select("nama_pelanggan, telepon")
+      .eq("id", o.customer_id)
+      .single();
+
+    const phone = customer?.telepon || cd?.recipient_phone || "";
+    if (phone) {
+      try {
+        await sendOrderNotification({
+          to: phone,
+          channel: "whatsapp",
+          event: "shipping_status_update",
+          data: {
+            orderNumber: o.order_number,
+            customerName: customer?.nama_pelanggan,
+            trackingNumber: waybill || cd.waybill_id,
+            shippingStatus: normalizeStatus(status),
+            storeName: import.meta.env.STORE_NAME || "BJS Racing Store",
+            storePhone: import.meta.env.STORE_PHONE || "+6288101169213",
+          },
+        });
+      } catch (err) {
+        console.error("[Biteship] notifikasi gagal:", err);
       }
     }
 
