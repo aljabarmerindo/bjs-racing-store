@@ -80,6 +80,8 @@ if (orderStatus === 'cancelled') {
 const hasShipping = order.shipping_address && typeof order.shipping_address === 'object';
 const hasCourier = order.courier_details && typeof order.courier_details === 'object';
 const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.latitude) && Number.isFinite(order.shipping_address.longitude);
+const paidStatuses = ['paid', 'processing', 'shipped', 'completed'];
+const showShippingLabel = hasCourier && paidStatuses.includes(order.status);
 ---
 
 <MainLayout title={`Detail Pesanan ${order.order_number}`}>
@@ -155,7 +157,7 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
 
 
 
-            {hasCourier && (
+            {showShippingLabel && (
               <div class="mt-6">
                 <h3 class="font-bold text-lg mb-2">Shipping Label</h3>
                 <ShippingLabel
