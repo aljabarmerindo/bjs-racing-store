@@ -1,6 +1,6 @@
 // File: src/components/ShippingLabel.tsx
 // Shipping label generator untuk print thermal printer 80mm + export PNG.
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { toPng } from "html-to-image";
 import * as BWIPJS from "bwip-js";
 
@@ -76,21 +76,28 @@ export default function ShippingLabel({
   const isInternal = courierCode === "internal";
   const logoPath = COURIER_LOGOS[(courierCode || "").toLowerCase()] || "";
 
-  const generateBarcode = (text: string) => {
-    try {
-      const canvas = document.createElement("canvas");
-      BWIPJS.toCanvas(canvas, {
-        bcid: "code128",
-        text: String(text || "-"),
-        scale: 3,
-        height: 30,
-        includetext: false,
-      });
-      return canvas.toDataURL("image/png");
-    } catch {
-      return null;
-    }
-  };
+  const [barcodeSrc, setBarcodeSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const text = String(waybillId || "-");
+    BWIPJS.toBuffer({
+      bcid: "code128",
+      text,
+      scale: 3,
+      height: 30,
+      includetext: false,
+    }).then((buf: Buffer) => {
+      if (!cancelled) {
+        const base64 = Buffer.from(buf).toString("base64");
+        setBarcodeSrc(`data:image/png;base64,${base64}`);
+      }
+    }).catch((err) => {
+      console.error("[ShippingLabel] Gagal generate barcode:", err);
+      if (!cancelled) setBarcodeSrc(null);
+    });
+    return () => { cancelled = true; };
+  }, [waybillId]);
 
   const handlePrint = () => {
     if (!labelRef.current) return;
@@ -136,8 +143,6 @@ export default function ShippingLabel({
     link.href = dataUrl;
     link.click();
   };
-
-  const barcodeSrc = generateBarcode(waybillId);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "12px", alignItems: "center" }}>
