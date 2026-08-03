@@ -6,6 +6,7 @@
 // Semua bagian idempoten (guard status RPC + UNIQUE invoice_number).
 import { supabaseAdmin } from "@/lib/supabaseServer.ts";
 import { createBiteshipOrder } from "./biteship.ts";
+import { sendOrderNotification } from "@/lib/notifications.ts";
 
 export interface ConfirmResult {
   ok: boolean;
@@ -109,11 +110,34 @@ export async function confirmOrderPayment(
     if (orderFetchError) throw orderFetchError;
     if (!orderData) throw new Error("Order tidak ditemukan.");
 
+    const { data: customer } = await supabaseAdmin
+      .from("customers")
+      .select("nama_pelanggan, telepon")
+      .eq("id", orderData.customer_id)
+      .single();
+
     if (orderData.id) {
       await supabaseAdmin
         .from("payments")
         .update({ status: "paid" })
         .eq("order_id", orderData.id);
+    }
+
+    try {
+      await sendOrderNotification({
+        to: customer?.telepon || "",
+        channel: "whatsapp",
+        event: "payment_confirmed",
+        data: {
+          orderNumber: orderData.order_number,
+          customerName: customer?.nama_pelanggan || "Customer",
+          amount: orderData.total_amount,
+          storeName: import.meta.env.STORE_NAME || "BJS Racing Store",
+          storePhone: import.meta.env.STORE_PHONE || "+6288101169213",
+        },
+      });
+    } catch (notifErr) {
+      console.error("[Payment] Gagal kirim notifikasi payment_confirmed:", notifErr);
     }
 
     await bookBiteshipIfNeeded(orderData);
