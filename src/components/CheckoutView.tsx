@@ -671,7 +671,6 @@ export default function CheckoutView() {
           window.location.href = `/akun/pesanan/${order_id}?status=success`;
         },
         onPending: function (_result: any) {
-          clearCart();
           window.location.href = `/akun/pesanan/${order_id}?status=pending`;
         },
         onError: function (_result: any) {
