@@ -82,8 +82,8 @@ export default function ShippingLabel({
       BWIPJS.toCanvas(canvas, {
         bcid: "code128",
         text: String(text || "-"),
-        scale: 2,
-        height: 18,
+        scale: 3,
+        height: 30,
         includetext: false,
       });
       return canvas.toDataURL("image/png");
