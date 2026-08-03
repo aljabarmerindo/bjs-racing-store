@@ -183,7 +183,7 @@ export default function ShippingLabel({
             <div style={{ fontSize: "7.5pt", fontWeight: "bold", marginTop: "4px" }}>Nomor Referensi - {referenceId}</div>
           ) : (
             <>
-              {barcodeSrc && <img src={barcodeSrc} alt="barcode" style={{ height: "18px" }} />}
+              {barcodeSrc && <img src={barcodeSrc} alt="barcode" style={{ height: "36px" }} />}
               <div style={{ fontSize: "7.5pt", fontWeight: "bold", marginTop: "1px" }}>Nomor Resi - {waybillId}</div>
             </>
           )}
