@@ -156,6 +156,8 @@ const TrackingView = ({
       const map = { gojek: 'Gojek', jne: 'JNE', jnt: 'J&T Express', jntcargo: 'J&T Cargo', pos: 'POS Indonesia', internal: 'BJS Express' };
       return map[m.toLowerCase()] || m;
     }],
+    [/courier order is confirmed\./gi, 'Pesanan kurir dikonfirmasi.'],
+    [/has been notified to pick up/i, 'telah dinotifikasi untuk penjemputan'],
     [/pickup number:\s*/gi, 'Nomor penjemputan: '],
     [/order number:\s*/gi, 'Nomor pesanan: '],
     [/\bdelivery delayed due to (?:bad )?weather\b/i, 'Pengiriman tertunda karena cuaca buruk'],
