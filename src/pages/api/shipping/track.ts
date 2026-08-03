@@ -5,11 +5,20 @@ import { getBiteshipTracking } from "@/lib/biteship";
 
 const BITESHIP_CODES = new Set(["gojek", "pos", "jne", "jnt", "jntcargo"]);
 
+const COURIER_NAMES: Record<string, string> = {
+  gojek: 'Gojek',
+  pos: 'POS Indonesia',
+  jne: 'JNE',
+  jnt: 'J&T Express',
+  jntcargo: 'J&T Cargo',
+  internal: 'BJS Express',
+};
+
 function toRajaongkirLike(trackingId: string, courier: string, tracking: Awaited<ReturnType<typeof getBiteshipTracking>>) {
   return {
     summary: {
       waybill_number: trackingId,
-      courier_name: courier,
+      courier_name: COURIER_NAMES[courier.toLowerCase()] || courier,
       service_code: "",
       status: tracking.status,
     },

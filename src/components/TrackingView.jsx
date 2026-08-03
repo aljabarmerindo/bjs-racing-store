@@ -75,6 +75,22 @@ const getStatusMeta = (status) => {
   };
 };
 
+const STATUS_TRANSLATIONS = {
+  pending: 'Menunggu',
+  confirmed: 'Dikonfirmasi',
+  scheduled: 'Dijadwalkan',
+  allocated: 'Kurir dialokasikan',
+  picking_up: 'Kurir menuju lokasi penjemputan',
+  picked: 'Barang diambil kurir',
+  in_transit: 'Dalam perjalanan',
+  dropping_off: 'Sedang diantar',
+  delivered: 'Tiba di tujuan',
+  failed: 'Gagal',
+  cancelled: 'Dibatalkan',
+};
+
+const translateStatus = (status) => STATUS_TRANSLATIONS[String(status || '').toLowerCase()] || status;
+
 const Stepper = ({ current }) => (
   <div className="flex items-start">
     {PHASES.map((label, i) => {
@@ -133,6 +149,34 @@ const TrackingView = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
+
+  const NOTE_TRANSLATIONS = [
+    [/\bbiteship\b/gi, 'Biteship'],
+    [/\b(gojek|jne|jnt|jntcargo|pos|internal)\b/gi, (m) => {
+      const map = { gojek: 'Gojek', jne: 'JNE', jnt: 'J&T Express', jntcargo: 'J&T Cargo', pos: 'POS Indonesia', internal: 'BJS Express' };
+      return map[m.toLowerCase()] || m;
+    }],
+    [/pickup number:\s*/gi, 'Nomor penjemputan: '],
+    [/order number:\s*/gi, 'Nomor pesanan: '],
+    [/\bdelivery delayed due to (?:bad )?weather\b/i, 'Pengiriman tertunda karena cuaca buruk'],
+    [/\bdelivery delayed\b/i, 'Pengiriman tertunda'],
+    [/delayed due to (?:bad )?weather/i, 'tertunda karena cuaca buruk'],
+    [/\bbecause\b/i, 'karena'],
+    [/recipient (?:was|is) not available/i, 'penerima tidak ada di tempat'],
+    [/rescheduled(?: for (?:the )?next day)?/i, 'dijadwalkan ulang'],
+    [/address (?:is )?not complete|incomplete address/i, 'alamat tidak lengkap'],
+    [/attempted (?:to )?deliver/i, 'pernah mencoba mengantar'],
+    [/failed to (?:deliver|pick up)/i, 'Pengiriman gagal'],
+    [/\bcanceled|cancelled\b/i, 'Dibatalkan'],
+  ];
+
+  const translateNote = (text = '') => {
+    const s = String(text);
+    return NOTE_TRANSLATIONS.reduce((acc, item) => {
+      const [pattern, replacement] = item;
+      return acc.replace(pattern, typeof replacement === 'function' ? replacement() : replacement);
+    }, s);
+  };
 
   const trackShipment = async (awbToTrack, courierToTrack) => {
     setLoading(true);
@@ -320,7 +364,7 @@ const TrackingView = ({
                 <div>
                   <p className="text-slate-400 text-xs">Status</p>
                   <p className="font-bold text-slate-800 capitalize">
-                    {trackingData.summary.status}
+                    {translateStatus(trackingData.summary.status)}
                   </p>
                 </div>
               </div>
@@ -330,8 +374,8 @@ const TrackingView = ({
               <Stepper current={currentPhase} />
             </div>
 
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-6">
-              <h2 className="text-xl font-bold mb-5">Riwayat Perjalanan</h2>
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-6">
+                <h2 className="text-xl font-bold mb-5">Riwayat Pengiriman</h2>
               {manifest.length === 0 ? (
                 <div className="py-10 text-center">
                   <div className="mx-auto w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
@@ -339,7 +383,7 @@ const TrackingView = ({
                   </div>
                   <p className="font-semibold text-slate-700">Belum ada riwayat perjalanan</p>
                   <p className="text-sm text-slate-400 mt-1">
-                    Riwayat akan muncul setelah paket diproses kurir.
+                    Riwayat akan muncul setelah kurir memproses pesanan Anda.
                   </p>
                 </div>
               ) : (
@@ -361,7 +405,7 @@ const TrackingView = ({
                         )}
                       </span>
                       <p className="font-bold text-slate-800">
-                        {item.manifest_description}
+                        {translateNote(item.manifest_description)}
                       </p>
                       <p className="text-sm text-slate-500 mt-1 flex items-center gap-1.5">
                         <FiClock className="w-3.5 h-3.5 text-slate-400" />
