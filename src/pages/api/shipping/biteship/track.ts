@@ -4,13 +4,6 @@ import type { APIRoute } from "astro";
 import { getBiteshipTracking } from "@/lib/biteship";
 
 export const GET: APIRoute = async (context) => {
-  const { session } = context.locals;
-  if (!session) {
-    return new Response(JSON.stringify({ message: "Tidak diizinkan" }), {
-      status: 401,
-    });
-  }
-
   const trackingId = context.url.searchParams.get("trackingId");
   if (!trackingId) {
     return new Response(

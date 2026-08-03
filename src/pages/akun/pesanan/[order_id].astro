@@ -167,6 +167,21 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
               </div>
             )}
 
+            {hasCourier && (order.courier_details.tracking_id || order.courier_details.waybill_id) && (
+              <div class="mt-2">
+                <p>
+                  No. Resi Biteship: <span class="font-bold text-slate-800">{order.courier_details.tracking_id || order.courier_details.waybill_id}</span>
+                </p>
+                <a
+                  href={`/lacak-pesanan?awb=${order.courier_details.tracking_id || order.courier_details.waybill_id}&courier=${order.courier_details.code}`}
+                  target="_blank"
+                  class="inline-block mt-2 px-4 py-2 bg-orange-600 text-white text-sm font-semibold rounded-lg hover:bg-orange-700"
+                >
+                  Lacak Pengiriman Biteship
+                </a>
+              </div>
+            )}
+
             {hasCourier && (
               <div class="mt-6">
                 <h3 class="font-bold text-lg mb-2">Shipping Label</h3>
@@ -337,17 +352,16 @@ const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.lat
 
     const COURIER_NAMES = {
       gojek: 'Gojek',
+      pos: 'POS Indonesia',
       jne: 'JNE',
       jnt: 'J&T Express',
-      tiki: 'TIKI',
-      wahana: 'Wahana Express',
-      pos: 'POS Indonesia',
-      lion: 'Lion Parcel',
+      jntcargo: 'J&T Cargo',
+      internal: 'BJS Express',
     };
 
     const NOTE_TRANSLATIONS = [
       [/\bbiteship\b/gi, 'Biteship'],
-      [/\b(gojek|jne|jnt|tiki|wahana|pos|lion)\b/gi, (m) => COURIER_NAMES[m.toLowerCase()] || m],
+      [/\b(gojek|jne|jnt|jntcargo|pos|internal)\b/gi, (m) => COURIER_NAMES[m.toLowerCase()] || m],
       [/pickup number:\s*/gi, 'Nomor penjemputan: '],
       [/order number:\s*/gi, 'Nomor pesanan: '],
       [/\bdelivery delayed due to (?:bad )?weather\b/i, 'Pengiriman tertunda karena cuaca buruk'],

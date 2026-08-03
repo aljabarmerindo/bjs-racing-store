@@ -1,17 +1,33 @@
 // File: /src/pages/api/shipping/track.ts
+// Tracking pengiriman: Biteship untuk kurir Biteship, RajaOngkir untuk kurir lain.
 import type { APIRoute } from "astro";
+import { getBiteshipTracking } from "@/lib/biteship";
+
+const BITESHIP_CODES = new Set(["gojek", "pos", "jne", "jnt", "jntcargo"]);
+
+function toRajaongkirLike(trackingId: string, courier: string, tracking: Awaited<ReturnType<typeof getBiteshipTracking>>) {
+  return {
+    summary: {
+      waybill_number: trackingId,
+      courier_name: courier,
+      service_code: "",
+      status: tracking.status,
+    },
+    manifest: (tracking.history || []).map((h) => {
+      const parts = (h.timestamp || "").split("T");
+      const datePart = parts[0] || "";
+      const timePart = parts[1] ? parts[1].split(".")[0] : "";
+      return {
+        manifest_description: h.note || h.status || "",
+        manifest_date: datePart,
+        manifest_time: timePart,
+        city_name: h.location || "",
+      };
+    }),
+  };
+}
 
 export const GET: APIRoute = async ({ url }) => {
-  const apiKey = import.meta.env.RAJAONGKIR_API_KEY;
-
-  if (!apiKey) {
-    return new Response(
-      JSON.stringify({ message: "RajaOngkir API key tidak dikonfigurasi." }),
-      { status: 500 },
-    );
-  }
-
-  // 1. Ambil nomor resi (awb) dan kurir dari parameter URL
   const awb = url.searchParams.get("awb");
   const courier = url.searchParams.get("courier");
 
@@ -23,12 +39,26 @@ export const GET: APIRoute = async ({ url }) => {
   }
 
   try {
-    // 2. Siapkan body untuk dikirim ke RajaOngkir
+    if (BITESHIP_CODES.has(courier.toLowerCase())) {
+      const tracking = await getBiteshipTracking(awb);
+      return new Response(JSON.stringify(toRajaongkirLike(awb, courier, tracking)), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const apiKey = import.meta.env.RAJAONGKIR_API_KEY;
+    if (!apiKey) {
+      return new Response(
+        JSON.stringify({ message: "RajaOngkir API key tidak dikonfigurasi." }),
+        { status: 500 },
+      );
+    }
+
     const urlencoded = new URLSearchParams();
     urlencoded.append("awb", awb);
     urlencoded.append("courier", courier);
 
-    // 3. Kirim permintaan ke RajaOngkir
     const response = await fetch(
       "https://rajaongkir.komerce.id/api/v1/track/waybill",
       {
@@ -52,7 +82,6 @@ export const GET: APIRoute = async ({ url }) => {
       });
     }
 
-    // 4. Kembalikan data pelacakan yang berhasil ke frontend
     return new Response(JSON.stringify(result.data), {
       status: 200,
       headers: { "Content-Type": "application/json" },

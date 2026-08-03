@@ -28,12 +28,11 @@ const formatTanggal = (dateString, timeString) => {
 
 const courierOptions = [
   { code: "gojek", name: "Gojek" },
+  { code: "pos", name: "POS Indonesia" },
   { code: "jne", name: "JNE" },
   { code: "jnt", name: "J&T Express" },
-  { code: "tiki", name: "TIKI" },
-  { code: "wahana", name: "Wahana Express" },
-  { code: "pos", name: "POS Indonesia" },
-  { code: "lion", name: "Lion Parcel" },
+  { code: "jntcargo", name: "J&T Cargo" },
+  { code: "internal", name: "BJS Express" },
 ];
 
 const PHASES = ["Konfirmasi", "Penjemputan", "Pengiriman", "Selesai"];
