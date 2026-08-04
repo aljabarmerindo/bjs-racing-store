@@ -1,7 +1,8 @@
 // File: src/components/ShippingLabel.tsx
 // Shipping label generator untuk print thermal printer 80mm + export PNG.
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { toPng } from "html-to-image";
+import { FiDownload, FiLoader } from "react-icons/fi";
 
 interface ShippingLabelProps {
   barcodeDataUrl?: string;
@@ -73,21 +74,27 @@ export default function ShippingLabel({
   insuranceAmount = 0,
 }: ShippingLabelProps) {
   const labelRef = useRef<HTMLDivElement>(null);
+  const [downloading, setDownloading] = useState(false);
   const weightText = `${(weight / 1000).toFixed(2)} Kg`;
   const isInternal = courierCode === "internal";
   const logoPath = COURIER_LOGOS[(courierCode || "").toLowerCase()] || "";
 
   const handleDownloadPng = async () => {
-    if (!labelRef.current) return;
-    const dataUrl = await toPng(labelRef.current, {
-      cacheBust: true,
-      pixelRatio: 3,
-      backgroundColor: "#ffffff",
-    });
-    const link = document.createElement("a");
-    link.download = `label-${waybillId || "order"}.png`;
-    link.href = dataUrl;
-    link.click();
+    if (!labelRef.current || downloading) return;
+    setDownloading(true);
+    try {
+      const dataUrl = await toPng(labelRef.current, {
+        cacheBust: true,
+        pixelRatio: 3,
+        backgroundColor: "#ffffff",
+      });
+      const link = document.createElement("a");
+      link.download = `resi-${waybillId || "order"}.png`;
+      link.href = dataUrl;
+      link.click();
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -210,15 +217,15 @@ export default function ShippingLabel({
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
-        <button
-          type="button"
-          onClick={handleDownloadPng}
-          style={{ padding: "6px 12px", fontSize: "10pt", fontWeight: "bold", cursor: "pointer" }}
-        >
-          Download PNG
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={handleDownloadPng}
+        disabled={downloading}
+        className="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white font-bold rounded-lg shadow-sm hover:bg-orange-600 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
+      >
+        {downloading ? <FiLoader className="animate-spin" /> : <FiDownload />}
+        {downloading ? "Mengunduh..." : "Download Resi"}
+      </button>
     </div>
   );
 }
