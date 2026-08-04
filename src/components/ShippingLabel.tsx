@@ -6,6 +6,7 @@ import { FiDownload, FiLoader } from "react-icons/fi";
 
 interface ShippingLabelProps {
   barcodeDataUrl?: string;
+  orderBarcodeDataUrl?: string;
   courierCode?: string;
   courierName?: string;
   routingCode?: string;
@@ -48,6 +49,7 @@ const BORDER_RIGHT = "0.8pt solid #000";
 
 export default function ShippingLabel({
   barcodeDataUrl = "",
+  orderBarcodeDataUrl = "",
   courierCode = "",
   courierName = "Biteship",
   routingCode = "-",
@@ -149,7 +151,7 @@ export default function ShippingLabel({
 
         <div style={{ textAlign: "center", padding: "3px 2px 2px 2px", height: "60px", flexShrink: 0, overflow: "hidden", borderBottom: BORDER_BOTTOM }}>
           {isInternal ? (
-            <div style={{ fontSize: "12px", lineHeight: "14px", fontWeight: "bold", marginTop: "4px" }}>Nomor Referensi - {referenceId}</div>
+            <div style={{ fontSize: "12px", lineHeight: "14px", fontWeight: "bold", marginTop: "4px" }}>Nomor Order - {referenceId}</div>
           ) : (
             <>
               {barcodeDataUrl ? (
@@ -168,12 +170,17 @@ export default function ShippingLabel({
           Jenis Layanan - {serviceName}. Kode Rute - {routingCode}
         </div>
 
-        <table style={{ width: "100%", fontSize: "6pt", height: "26px", flexShrink: 0, overflow: "hidden", borderBottom: BORDER_BOTTOM }}>
+        <table style={{ width: "100%", fontSize: "6pt", height: "38px", flexShrink: 0, overflow: "hidden", borderBottom: BORDER_BOTTOM }}>
           <tr>
             <td style={{ width: "50%", borderRight: BORDER_RIGHT }}>
-              <strong>Reference Number</strong>
-              <br />
-              {referenceId}
+              <div style={{ textAlign: "center" }}>
+                {orderBarcodeDataUrl ? (
+                  <img src={orderBarcodeDataUrl} alt="Order Barcode" style={{ display: "block", margin: "0 auto", width: "100%", height: "24px", objectFit: "contain" }} />
+                ) : null}
+                <div>
+                  <strong>Order Number:</strong> {referenceId}
+                </div>
+              </div>
             </td>
             <td style={{ width: "50%" }}>
               Quantity: <strong>{quantity} Pcs</strong>

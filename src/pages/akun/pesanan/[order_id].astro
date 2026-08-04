@@ -85,6 +85,7 @@ const paidStatuses = ['paid', 'processing', 'shipped', 'completed'];
 const showShippingLabel = hasCourier && paidStatuses.includes(order.status);
 
 let waybillBarcodeDataUrl = '';
+let orderBarcodeDataUrl = '';
 if (showShippingLabel) {
   const waybillId = order.courier_details.waybill_id || order.courier_details.tracking_id || order.shipping_receipt_number || '';
   if (waybillId) {
@@ -99,6 +100,20 @@ if (showShippingLabel) {
       waybillBarcodeDataUrl = `data:image/png;base64,${barcodePng.toString('base64')}`;
     } catch (error) {
       console.error('Gagal generate barcode waybill:', error);
+    }
+  }
+  if (order.order_number) {
+    try {
+      const orderPng: Buffer = await bwipjs.toBuffer({
+        bcid: 'code128',
+        text: order.order_number,
+        scale: 3,
+        height: 8,
+        includetext: false,
+      });
+      orderBarcodeDataUrl = `data:image/png;base64,${orderPng.toString('base64')}`;
+    } catch (error) {
+      console.error('Gagal generate barcode order:', error);
     }
   }
 }
@@ -182,6 +197,7 @@ if (showShippingLabel) {
                 <h3 class="font-bold text-lg mb-2">Shipping Label</h3>
                 <ShippingLabel client:load
                   barcodeDataUrl={waybillBarcodeDataUrl}
+                  orderBarcodeDataUrl={orderBarcodeDataUrl}
                   courierCode={order.courier_details.code || order.courier_details.courier_company || ''}
                   courierName={order.courier_details.name || order.courier_details.courier_company || 'Biteship'}
                   routingCode={order.courier_details.routing_code || '-'}

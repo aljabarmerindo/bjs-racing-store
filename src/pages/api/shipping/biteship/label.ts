@@ -89,6 +89,22 @@ export const GET: APIRoute = async (context) => {
       }
     }
 
+    let orderBarcodeImg = "";
+    if (labelData.referenceId && labelData.referenceId !== "-") {
+      try {
+        const orderPng: Buffer = await bwipjs.toBuffer({
+          bcid: "code128",
+          text: String(labelData.referenceId),
+          scale: 3,
+          height: 8,
+          includetext: false,
+        });
+        orderBarcodeImg = `data:image/png;base64,${orderPng.toString("base64")}`;
+      } catch (err) {
+        console.error("Gagal generate barcode order:", err);
+      }
+    }
+
     const html = `<!DOCTYPE html><html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -200,9 +216,19 @@ export const GET: APIRoute = async (context) => {
       font-size: 6pt;
     }
     .ref-table {
-      height: 26px;
+      height: 38px;
       flex-shrink: 0;
       overflow: hidden;
+    }
+    .ref-order-box {
+      text-align: center;
+    }
+    .ref-order-img {
+      display: block;
+      margin: 0 auto;
+      width: 100%;
+      height: 24px;
+      object-fit: contain;
     }
     .address-header {
       font-weight: bold;
@@ -274,7 +300,7 @@ export const GET: APIRoute = async (context) => {
 
     <div class="barcode-section border-bottom">
       ${labelData.isInternal
-        ? `<div class="resi-text">Nomor Referensi - ${labelData.referenceId}</div>`
+        ? `<div class="resi-text">Nomor Order - ${labelData.referenceId}</div>`
         : `${barcodeImg ? `<img src="${barcodeImg}" alt="Barcode" style="display: block; margin: 0 auto; width: 100%; height: 40px; object-fit: contain;" />` : ""}<div class="resi-text">Nomor Resi - ${labelData.waybillId}</div>`}
     </div>
 
@@ -288,9 +314,9 @@ export const GET: APIRoute = async (context) => {
 
     <table class="ref-table border-bottom">
       <tr>
-        <td style="width: 50%;" class="border-right">
-          <strong>Reference Number</strong><br />
-          ${labelData.referenceId}
+        <td style="width: 50%;" class="border-right ref-order-box">
+          ${orderBarcodeImg ? `<img src="${orderBarcodeImg}" alt="Order Barcode" class="ref-order-img" />` : ""}
+          <div><strong>Order Number:</strong> ${labelData.referenceId}</div>
         </td>
         <td style="width: 50%;">
           Quantity: <strong>${labelData.quantity} Pcs</strong><br />
