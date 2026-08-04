@@ -1,6 +1,6 @@
 // File: src/components/ShippingLabel.tsx
 // Shipping label generator untuk print thermal printer 80mm + export PNG.
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { toPng } from "html-to-image";
 import bwipjs from "bwip-js/browser";
 
@@ -76,58 +76,40 @@ export default function ShippingLabel({
   const isInternal = courierCode === "internal";
   const logoPath = COURIER_LOGOS[(courierCode || "").toLowerCase()] || "";
 
-  const barcodeCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [barcodeDataUrl, setBarcodeDataUrl] = useState("");
 
   useEffect(() => {
-    const canvas = barcodeCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (isInternal) {
+      setBarcodeDataUrl("");
+      return;
+    }
+    const text = String(waybillId || "-");
+    let cancelled = false;
     try {
-      bwipjs.toCanvas(canvas, {
-        bcid: "code128",
-        text: String(waybillId || "-"),
-        scale: 3,
-        height: 30,
-        includetext: false,
-      });
+      (bwipjs as unknown as { toDataURL: (opts: Record<string, unknown>, cb: (err: unknown, png: string) => void) => void }).toDataURL(
+        {
+          bcid: "code128",
+          text,
+          scale: 3,
+          height: 30,
+          includetext: false,
+        },
+        (err: unknown, png: string) => {
+          if (cancelled) return;
+          if (err) {
+            console.error("[ShippingLabel] Gagal render barcode:", err);
+            return;
+          }
+          setBarcodeDataUrl(png);
+        },
+      );
     } catch (err) {
       console.error("[ShippingLabel] Gagal render barcode:", err);
     }
-  }, [waybillId]);
-
-  const handlePrint = () => {
-    if (!labelRef.current) return;
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
-    const content = labelRef.current.innerHTML;
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Shipping Label - ${waybillId}</title>
-          <style>
-            @page { size: 80mm 100mm; margin: 1.5mm; background: #fff; }
-            * { box-sizing: border-box; }
-            body { margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; color: #000; font-size: 6.5pt; line-height: 1.15; }
-            img { max-width: 100%; height: auto; }
-            table { width: 100%; border-collapse: collapse; }
-            td { padding: 2px 3px; vertical-align: middle; }
-            .border-bottom { border-bottom: 0.8pt solid #000; }
-            .border-right { border-right: 0.8pt solid #000; }
-            .no-print { display: none !important; }
-          </style>
-        </head>
-        <body>
-          <div style="width: 80mm; max-width: 80mm; border: 1pt solid #000; background: #fff; padding: 0; margin: 0;">
-            ${content}
-          </div>
-          <script>window.onload = () => { window.print(); }</script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  };
+    return () => {
+      cancelled = true;
+    };
+  }, [waybillId, isInternal]);
 
   const handleDownloadPng = async () => {
     if (!labelRef.current) return;
@@ -186,7 +168,9 @@ export default function ShippingLabel({
             <div style={{ fontSize: "7.5pt", fontWeight: "bold", marginTop: "4px" }}>Nomor Referensi - {referenceId}</div>
           ) : (
             <>
-              <canvas ref={barcodeCanvasRef} width="240" height="60" style={{ height: "36px", width: "auto" }} />
+              {barcodeDataUrl ? (
+                <img src={barcodeDataUrl} alt="Barcode" style={{ height: "36px", width: "auto", maxWidth: "100%" }} />
+              ) : null}
               <div style={{ fontSize: "7.5pt", fontWeight: "bold", marginTop: "1px" }}>Nomor Resi - {waybillId}</div>
             </>
           )}
@@ -261,13 +245,6 @@ export default function ShippingLabel({
       </div>
 
       <div style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
-        <button
-          type="button"
-          onClick={handlePrint}
-          style={{ padding: "6px 12px", fontSize: "10pt", fontWeight: "bold", cursor: "pointer" }}
-        >
-          Print Label
-        </button>
         <button
           type="button"
           onClick={handleDownloadPng}

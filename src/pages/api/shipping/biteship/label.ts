@@ -2,6 +2,7 @@
 // Generate shipping label HTML untuk print thermal printer 80mm.
 import type { APIRoute } from "astro";
 import { supabaseAdmin } from "@/lib/supabaseServer.ts";
+import bwipjs from "bwip-js";
 
 export const GET: APIRoute = async (context) => {
   const { session } = context.locals;
@@ -72,8 +73,23 @@ export const GET: APIRoute = async (context) => {
       insuranceAmount: 0,
     };
 
-    const html = `<!DOCTYPE html>
-<html lang="id">
+    let barcodeImg = "";
+    if (!isInternal && labelData.waybillId && labelData.waybillId !== "-") {
+      try {
+        const barcodePng: Buffer = await bwipjs.toBuffer({
+          bcid: "code128",
+          text: String(labelData.waybillId),
+          scale: 3,
+          height: 30,
+          includetext: false,
+        });
+        barcodeImg = `data:image/png;base64,${barcodePng.toString("base64")}`;
+      } catch (err) {
+        console.error("Gagal generate barcode label:", err);
+      }
+    }
+
+    const html = `<!DOCTYPE html><html lang="id">
 <head>
   <meta charset="UTF-8">
   <title>Shipping Label - ${labelData.waybillId}</title>
@@ -228,7 +244,7 @@ export const GET: APIRoute = async (context) => {
     <div class="barcode-section border-bottom">
       ${labelData.isInternal
         ? `<div class="resi-text">Nomor Referensi - ${labelData.referenceId}</div>`
-        : `<div class="resi-text">Nomor Resi - ${labelData.waybillId}</div>`}
+        : `${barcodeImg ? `<img src="${barcodeImg}" alt="Barcode" style="height: 36px; max-width: 100%;" />` : ""}<div class="resi-text">Nomor Resi - ${labelData.waybillId}</div>`}
     </div>
 
     <div class="info-text border-bottom">
