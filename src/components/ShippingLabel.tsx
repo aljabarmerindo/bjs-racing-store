@@ -141,7 +141,7 @@ export default function ShippingLabel({
                   />
                   <div style={{ fontSize: "24px", lineHeight: "34px", fontWeight: "bold", color: "#f97316" }}>BJS RACING</div>
                 </div>
-                <div style={{ fontSize: "5.5pt", color: "#444", fontWeight: "bold", lineHeight: "16px" }}>bjs-racing.com</div>
+                <div style={{ fontSize: "11pt", color: "#444", fontWeight: "bold", lineHeight: "16px" }}>bjs-racing.com</div>
               </div>
             </td>
           </tr>

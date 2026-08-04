@@ -169,7 +169,7 @@ export const GET: APIRoute = async (context) => {
       color: #f97316;
     }
     .bjs-url {
-      font-size: 5.5pt;
+      font-size: 11pt;
       line-height: 16px;
       color: #444;
       font-weight: bold;
