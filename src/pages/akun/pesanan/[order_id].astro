@@ -108,7 +108,7 @@ if (showShippingLabel) {
         bcid: 'code128',
         text: order.order_number,
         scale: 3,
-        height: 8,
+        height: 16,
         includetext: false,
       });
       orderBarcodeDataUrl = `data:image/png;base64,${orderPng.toString('base64')}`;

@@ -96,7 +96,7 @@ export const GET: APIRoute = async (context) => {
           bcid: "code128",
           text: String(labelData.referenceId),
           scale: 3,
-          height: 8,
+          height: 16,
           includetext: false,
         });
         orderBarcodeImg = `data:image/png;base64,${orderPng.toString("base64")}`;
