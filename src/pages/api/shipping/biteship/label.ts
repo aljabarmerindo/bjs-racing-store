@@ -95,7 +95,7 @@ export const GET: APIRoute = async (context) => {
   <title>Shipping Label - ${labelData.waybillId}</title>
   <style>
     @page {
-      size: 80mm 80mm;
+      size: 80mm 100mm;
       margin: 0;
       background-color: #ffffff;
     }
@@ -114,8 +114,8 @@ export const GET: APIRoute = async (context) => {
     .label-container {
       width: 80mm;
       max-width: 80mm;
-      height: 80mm;
-      max-height: 80mm;
+      height: 100mm;
+      max-height: 100mm;
       display: flex;
       flex-direction: column;
       overflow: hidden;
