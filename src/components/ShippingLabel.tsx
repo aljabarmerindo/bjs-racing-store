@@ -149,13 +149,13 @@ export default function ShippingLabel({
 
         <div style={{ textAlign: "center", padding: "3px 2px 2px 2px", height: "60px", flexShrink: 0, overflow: "hidden", borderBottom: BORDER_BOTTOM }}>
           {isInternal ? (
-            <div style={{ fontSize: "7.5pt", fontWeight: "bold", marginTop: "4px" }}>Nomor Referensi - {referenceId}</div>
+            <div style={{ fontSize: "12px", lineHeight: "14px", fontWeight: "bold", marginTop: "4px" }}>Nomor Referensi - {referenceId}</div>
           ) : (
             <>
               {barcodeDataUrl ? (
-                <img src={barcodeDataUrl} alt="Barcode" style={{ display: "block", margin: "0 auto", width: "100%", height: "38px", objectFit: "contain" }} />
+                <img src={barcodeDataUrl} alt="Barcode" style={{ display: "block", margin: "0 auto", width: "100%", height: "40px", objectFit: "contain" }} />
               ) : null}
-              <div style={{ fontSize: "7.5pt", fontWeight: "bold", marginTop: "1px" }}>Nomor Resi - {waybillId}</div>
+              <div style={{ fontSize: "12px", lineHeight: "14px", fontWeight: "bold", marginTop: "1px" }}>Nomor Resi - {waybillId}</div>
             </>
           )}
         </div>

@@ -182,7 +182,8 @@ export const GET: APIRoute = async (context) => {
       overflow: hidden;
     }
     .resi-text {
-      font-size: 7.5pt;
+      font-size: 12px;
+      line-height: 14px;
       font-weight: bold;
       margin-top: 1px;
     }
@@ -274,7 +275,7 @@ export const GET: APIRoute = async (context) => {
     <div class="barcode-section border-bottom">
       ${labelData.isInternal
         ? `<div class="resi-text">Nomor Referensi - ${labelData.referenceId}</div>`
-        : `${barcodeImg ? `<img src="${barcodeImg}" alt="Barcode" style="display: block; margin: 0 auto; width: 100%; height: 38px; object-fit: contain;" />` : ""}<div class="resi-text">Nomor Resi - ${labelData.waybillId}</div>`}
+        : `${barcodeImg ? `<img src="${barcodeImg}" alt="Barcode" style="display: block; margin: 0 auto; width: 100%; height: 40px; object-fit: contain;" />` : ""}<div class="resi-text">Nomor Resi - ${labelData.waybillId}</div>`}
     </div>
 
     <div class="info-text border-bottom">
