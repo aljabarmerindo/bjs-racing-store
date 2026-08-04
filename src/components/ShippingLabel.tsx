@@ -2,7 +2,7 @@
 // Shipping label generator untuk print thermal printer 80mm + export PNG.
 import { useRef, useEffect } from "react";
 import { toPng } from "html-to-image";
-import * as BWIPJS from "bwip-js";
+import bwipjs from "bwip-js/browser";
 
 interface ShippingLabelProps {
   courierCode?: string;
@@ -85,7 +85,7 @@ export default function ShippingLabel({
     if (!ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     try {
-      BWIPJS.render(canvas, {
+      bwipjs.toCanvas(canvas, {
         bcid: "code128",
         text: String(waybillId || "-"),
         scale: 3,
