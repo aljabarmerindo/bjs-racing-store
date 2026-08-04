@@ -77,7 +77,11 @@ export default function ShippingLabel({
 }: ShippingLabelProps) {
   const labelRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
-  const weightText = `${(weight / 1000).toFixed(2)} Kg`;
+  const weightText = weight > 0
+    ? weight >= 1000
+      ? `${(weight / 1000).toFixed(2)} Kg`
+      : `${Math.round(weight)} g`
+    : "-";
   const isInternal = courierCode === "internal";
   const logoPath = COURIER_LOGOS[(courierCode || "").toLowerCase()] || "";
 

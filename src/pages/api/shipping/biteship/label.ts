@@ -3,7 +3,7 @@
 import type { APIRoute } from "astro";
 import { supabaseAdmin } from "@/lib/supabaseServer.ts";
 import bwipjs from "bwip-js";
-import { aggregatePackageDims, formatDimsCm } from "@/lib/packageDimensions";
+import { aggregatePackageDims, formatDimsCm, getProductWeightGram } from "@/lib/packageDimensions";
 
 export const GET: APIRoute = async (context) => {
   const { session } = context.locals;
@@ -54,7 +54,7 @@ export const GET: APIRoute = async (context) => {
       serviceName: shipping?.service || shipping?.courier_service_name || "-",
       referenceId: order?.order_number || "-",
       quantity: order?.order_items?.length || 1,
-      weight: order?.order_items?.reduce?.((sum: number, item: any) => sum + ((item.products?.berat_gram || 500) * (item.quantity || 1)), 0) || 0,
+      weight: order?.order_items?.reduce?.((sum: number, item: any) => sum + (getProductWeightGram(item.products) * (item.quantity || 1)), 0) || 0,
       dimensions: formatDimsCm(aggregatePackageDims((order?.order_items || []).map((it: any) => ({ product: it.products, quantity: it.quantity })))),
       recipientName: order?.shipping_address?.recipient_name || "-",
       recipientPhone: order?.shipping_address?.recipient_phone || "-",
@@ -324,7 +324,7 @@ export const GET: APIRoute = async (context) => {
         </td>
         <td style="width: 50%;">
           Quantity: <strong>${labelData.quantity} Pcs</strong><br />
-          Weight: <strong>${(labelData.weight / 1000).toFixed(2)} Kg</strong><br />
+          Weight: <strong>${labelData.weight > 0 ? (labelData.weight >= 1000 ? `${(labelData.weight / 1000).toFixed(2)} Kg` : `${Math.round(labelData.weight)} g`) : "-"}</strong><br />
           Dimensi: <strong>${labelData.dimensions}</strong>
         </td>
       </tr>

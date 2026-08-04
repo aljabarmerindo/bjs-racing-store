@@ -1,12 +1,13 @@
 // File: src/lib/packageDimensions.ts
-// Util dimensi paket untuk integrasi Biteship (berat volumetrik).
-// Kolom DB: products.panjang_cm / lebar_cm / tinggi_cm (default 10, cm).
+// Util dimensi & berat paket untuk integrasi Biteship (berat fisik + volumetrik).
+// Kolom DB: products.panjang_cm / lebar_cm / tinggi_cm (default 10, cm), products.berat_gram (gram).
 // Rumus volumetrik Biteship: (P x L x T) / 6000 = kg.
 
 interface ProductDims {
   panjang_cm?: number | null;
   lebar_cm?: number | null;
   tinggi_cm?: number | null;
+  berat_gram?: number | null;
 }
 
 export interface BoxDims {
@@ -16,10 +17,16 @@ export interface BoxDims {
 }
 
 const DEFAULT_CM = 10;
+export const DEFAULT_WEIGHT_GRAM = 500;
 
 function toCm(value: unknown): number {
   const n = Number(value);
   return Number.isFinite(n) && n > 0 ? n : DEFAULT_CM;
+}
+
+export function getProductWeightGram(product?: ProductDims | null): number {
+  const n = Number(product?.berat_gram);
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_WEIGHT_GRAM;
 }
 
 export function getProductDimsCm(product?: ProductDims | null): BoxDims {

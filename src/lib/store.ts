@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { supabase } from "../lib/supabaseBrowserClient.ts";
 import type { Session } from "@supabase/supabase-js";
+import { getProductWeightGram } from "./packageDimensions";
 
 // ==================================================================
 // == DEFINISI TIPE DATA (TYPESCRIPT)                              ==
@@ -343,9 +344,8 @@ export const useAppStore = create<StoreState>()(
       set({ items: [], isCartLoading: false });
     },
     calculateTotalWeight: () => {
-      const DEFAULT_WEIGHT_GRAM = 500;
       return get().items.reduce(
-        (total, item) => total + (item.berat_gram || DEFAULT_WEIGHT_GRAM) * item.quantity,
+        (total, item) => total + getProductWeightGram(item) * item.quantity,
         0,
       );
     },

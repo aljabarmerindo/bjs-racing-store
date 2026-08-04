@@ -5,7 +5,7 @@ import { supabaseAdmin } from '@/lib/supabaseServer.ts';
 import { formatToWIB } from '@/lib/utils.ts';
 import ShippingLabel from '@/components/ShippingLabel.tsx';
 import bwipjs from 'bwip-js';
-import { aggregatePackageDims, formatDimsCm } from '@/lib/packageDimensions';
+import { aggregatePackageDims, formatDimsCm, getProductWeightGram } from '@/lib/packageDimensions';
 
 const { session } = Astro.locals;
 const { order_id } = Astro.params;
@@ -207,7 +207,7 @@ if (showShippingLabel) {
                   serviceName={order.courier_details.service || order.courier_details.courier_service_name || '-'}
                   referenceId={order.order_number || '-'}
                   quantity={(order.order_items || []).length}
-                  weight={(order.order_items || []).reduce((sum: number, item: any) => sum + ((item.products?.berat_gram || 500) * (item.quantity || 1)), 0)}
+                  weight={(order.order_items || []).reduce((sum: number, item: any) => sum + (getProductWeightGram(item.products) * (item.quantity || 1)), 0)}
                   dimensions={formatDimsCm(aggregatePackageDims((order.order_items || []).map((item: any) => ({ product: item.products, quantity: item.quantity }))))}
                   recipientName={order.shipping_address.recipient_name || '-'}
                   recipientPhone={order.shipping_address.recipient_phone || '-'}
@@ -219,7 +219,7 @@ if (showShippingLabel) {
                   senderAddress={import.meta.env.BITESHIP_ORIGIN_ADDRESS || '-'}
                   senderCity="Jepara, Jawa Tengah"
                   senderPostal={import.meta.env.BITESHIP_ORIGIN_POSTAL || '-'}
-                  items={(order.order_items || []).map((item: any) => `${item.quantity}x ${item.products?.nama || 'Item'}`).join(', ') || '-'}
+                  items={(order.order_items || []).map((item: any) => `${item.quantity}x ${item.products?.nama || 'Item'}${item.products?.ukuran ? ` ${item.products.ukuran}` : ''}`).join(', ') || '-'}
                   notes={order.notes || ''}
                   codAmount={order.payment_method === 'cod' ? order.total_amount : 0}
                   insuranceAmount={0}

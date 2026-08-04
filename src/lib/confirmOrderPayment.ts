@@ -6,7 +6,7 @@
 // Semua bagian idempoten (guard status RPC + UNIQUE invoice_number).
 import { supabaseAdmin } from "@/lib/supabaseServer.ts";
 import { createBiteshipOrder } from "./biteship.ts";
-import { getProductDimsCm } from "./packageDimensions";
+import { getProductDimsCm, getProductWeightGram } from "./packageDimensions";
 import { sendOrderNotification } from "@/lib/notifications.ts";
 
 export interface ConfirmResult {
@@ -49,7 +49,7 @@ async function bookBiteshipIfNeeded(orderData: any): Promise<void> {
       name: it.products?.nama || "Item BJS",
       description: "Pesanan BJS Racing",
       quantity: it.quantity,
-      weight: it.products?.berat_gram || 500,
+      weight: getProductWeightGram(it.products),
       value: Number(it.price) || 0,
       length: dims.length,
       width: dims.width,

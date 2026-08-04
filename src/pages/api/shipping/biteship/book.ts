@@ -3,7 +3,7 @@
 import type { APIRoute } from "astro";
 import { supabaseAdmin } from "@/lib/supabaseServer.ts";
 import { createBiteshipOrder } from "@/lib/biteship.ts";
-import { getProductDimsCm } from "@/lib/packageDimensions";
+import { getProductDimsCm, getProductWeightGram } from "@/lib/packageDimensions";
 import { scheduleRetry } from "@/lib/retryQueue.ts";
 import { sendOrderNotification } from "@/lib/notifications.ts";
 
@@ -103,7 +103,7 @@ export const POST: APIRoute = async (context) => {
         name: it.products?.nama || "Item BJS",
         description: "Pesanan BJS Racing",
         quantity: it.quantity,
-        weight: it.products?.berat_gram || 500,
+        weight: getProductWeightGram(it.products),
         value: Number(it.price) || 0,
         length: dims.length,
         width: dims.width,
@@ -186,7 +186,7 @@ export const POST: APIRoute = async (context) => {
             name: it.products?.nama || "Item BJS",
             description: "Pesanan BJS Racing",
             quantity: it.quantity,
-            weight: it.products?.berat_gram || 500,
+            weight: getProductWeightGram(it.products),
             value: Number(it.price) || 0,
             length: dims.length,
             width: dims.width,
