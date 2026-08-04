@@ -4,6 +4,7 @@ import MainLayout from '@/layouts/MainLayout.astro';
 import { supabaseAdmin } from '@/lib/supabaseServer.ts';
 import { formatToWIB } from '@/lib/utils.ts';
 import ShippingLabel from '@/components/ShippingLabel.tsx';
+import bwipjs from 'bwip-js';
 
 const { session } = Astro.locals;
 const { order_id } = Astro.params;
@@ -82,6 +83,25 @@ const hasCourier = order.courier_details && typeof order.courier_details === 'ob
 const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.latitude) && Number.isFinite(order.shipping_address.longitude);
 const paidStatuses = ['paid', 'processing', 'shipped', 'completed'];
 const showShippingLabel = hasCourier && paidStatuses.includes(order.status);
+
+let waybillBarcodeDataUrl = '';
+if (showShippingLabel) {
+  const waybillId = order.courier_details.waybill_id || order.courier_details.tracking_id || order.shipping_receipt_number || '';
+  if (waybillId) {
+    try {
+      const barcodePng: Buffer = await bwipjs.toBuffer({
+        bcid: 'code128',
+        text: waybillId,
+        scale: 3,
+        height: 30,
+        includetext: false,
+      });
+      waybillBarcodeDataUrl = `data:image/png;base64,${barcodePng.toString('base64')}`;
+    } catch (error) {
+      console.error('Gagal generate barcode waybill:', error);
+    }
+  }
+}
 ---
 
 <MainLayout title={`Detail Pesanan ${order.order_number}`}>
@@ -161,6 +181,7 @@ const showShippingLabel = hasCourier && paidStatuses.includes(order.status);
               <div class="mt-6">
                 <h3 class="font-bold text-lg mb-2">Shipping Label</h3>
                 <ShippingLabel client:load
+                  barcodeDataUrl={waybillBarcodeDataUrl}
                   courierCode={order.courier_details.code || order.courier_details.courier_company || ''}
                   courierName={order.courier_details.name || order.courier_details.courier_company || 'Biteship'}
                   routingCode={order.courier_details.routing_code || '-'}

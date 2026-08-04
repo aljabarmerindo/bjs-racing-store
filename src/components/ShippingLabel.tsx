@@ -1,10 +1,10 @@
 // File: src/components/ShippingLabel.tsx
 // Shipping label generator untuk print thermal printer 80mm + export PNG.
-import { useRef, useEffect, useState } from "react";
+import { useRef } from "react";
 import { toPng } from "html-to-image";
-import bwipjs from "bwip-js/browser";
 
 interface ShippingLabelProps {
+  barcodeDataUrl?: string;
   courierCode?: string;
   courierName?: string;
   routingCode?: string;
@@ -46,6 +46,7 @@ const BORDER_BOTTOM = "0.8pt solid #000";
 const BORDER_RIGHT = "0.8pt solid #000";
 
 export default function ShippingLabel({
+  barcodeDataUrl = "",
   courierCode = "",
   courierName = "Biteship",
   routingCode = "-",
@@ -75,41 +76,6 @@ export default function ShippingLabel({
   const weightText = `${(weight / 1000).toFixed(2)} Kg`;
   const isInternal = courierCode === "internal";
   const logoPath = COURIER_LOGOS[(courierCode || "").toLowerCase()] || "";
-
-  const [barcodeDataUrl, setBarcodeDataUrl] = useState("");
-
-  useEffect(() => {
-    if (isInternal) {
-      setBarcodeDataUrl("");
-      return;
-    }
-    const text = String(waybillId || "-");
-    let cancelled = false;
-    try {
-      (bwipjs as unknown as { toDataURL: (opts: Record<string, unknown>, cb: (err: unknown, png: string) => void) => void }).toDataURL(
-        {
-          bcid: "code128",
-          text,
-          scale: 3,
-          height: 30,
-          includetext: false,
-        },
-        (err: unknown, png: string) => {
-          if (cancelled) return;
-          if (err) {
-            console.error("[ShippingLabel] Gagal render barcode:", err);
-            return;
-          }
-          setBarcodeDataUrl(png);
-        },
-      );
-    } catch (err) {
-      console.error("[ShippingLabel] Gagal render barcode:", err);
-    }
-    return () => {
-      cancelled = true;
-    };
-  }, [waybillId, isInternal]);
 
   const handleDownloadPng = async () => {
     if (!labelRef.current) return;
