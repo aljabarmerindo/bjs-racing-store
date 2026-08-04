@@ -250,11 +250,12 @@ export const GET: APIRoute = async (context) => {
       font-size: 5.8pt;
       padding: 2px 4px;
       line-height: 1.15;
-      height: 18px;
-      flex-shrink: 0;
+      min-height: 18px;
+      flex: 0 1 auto;
       overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 6;
+      -webkit-box-orient: vertical;
     }
     .footer {
       text-align: center;

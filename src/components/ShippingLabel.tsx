@@ -217,12 +217,12 @@ export default function ShippingLabel({
           </tr>
         </table>
 
-        <div style={{ fontSize: "5.8pt", padding: "2px 4px", lineHeight: 1.15, height: "18px", flexShrink: 0, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", borderBottom: BORDER_BOTTOM }}>
+        <div style={{ fontSize: "5.8pt", padding: "2px 4px", lineHeight: 1.15, minHeight: "18px", flex: "0 1 auto", overflow: "hidden", borderBottom: BORDER_BOTTOM, display: "-webkit-box", WebkitLineClamp: 6, WebkitBoxOrient: "vertical" }}>
           <strong>Jenis Barang:</strong> {items}
         </div>
 
         {notes ? (
-          <div style={{ fontSize: "5.8pt", padding: "2px 4px", lineHeight: 1.15, height: "18px", flexShrink: 0, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", borderBottom: BORDER_BOTTOM }}>
+          <div style={{ fontSize: "5.8pt", padding: "2px 4px", lineHeight: 1.15, minHeight: "18px", flex: "0 1 auto", overflow: "hidden", borderBottom: BORDER_BOTTOM, display: "-webkit-box", WebkitLineClamp: 6, WebkitBoxOrient: "vertical" }}>
             <strong>Catatan:</strong> {notes}
           </div>
         ) : null}
