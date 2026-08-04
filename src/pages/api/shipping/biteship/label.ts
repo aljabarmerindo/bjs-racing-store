@@ -150,7 +150,7 @@ export const GET: APIRoute = async (context) => {
     }
     .logo-bjs {
       text-align: center;
-      padding: 2px 4px;
+      padding: 5px 4px 5px 4px;
     }
     .bjs-brand-row {
       display: flex;
@@ -249,9 +249,9 @@ export const GET: APIRoute = async (context) => {
 </head>
 <body>
   <div class="label-container">
-    <table style="height: 32px; flex-shrink: 0;" class="border-bottom">
+    <table style="height: 56px; flex-shrink: 0;" class="border-bottom">
       <tr>
-        <td style="width: 32px; height: 32px; padding: 0; text-align: center; vertical-align: middle;" class="border-right">
+        <td style="width: 56px; height: 56px; padding: 5px 0 0 5px; text-align: left; vertical-align: top;">
           <div style="text-align: center;">
             <div class="logo-courier">
               ${labelData.courierName}
@@ -259,7 +259,7 @@ export const GET: APIRoute = async (context) => {
             </div>
           </div>
         </td>
-        <td style="vertical-align: middle;" class="logo-bjs">
+        <td style="vertical-align: middle; padding: 5px 4px 5px;" class="logo-bjs">
           <div class="bjs-brand-row">
             <img src="/icons/bjs-racing.png" alt="BJS Racing Store" class="bjs-logo-img" />
             <div class="bjs-sub">BJS RACING</div>

@@ -117,12 +117,12 @@ export default function ShippingLabel({
           lineHeight: 1.15,
         }}
       >
-        <table style={{ width: "100%", height: "32px", flexShrink: 0, borderBottom: BORDER_BOTTOM }}>
+        <table style={{ width: "100%", height: "56px", flexShrink: 0, borderBottom: BORDER_BOTTOM }}>
           <tr>
-            <td style={{ width: "32px", height: "32px", borderRight: BORDER_RIGHT, padding: 0, textAlign: "center", verticalAlign: "middle" }}>
+            <td style={{ width: "56px", height: "56px", padding: "5px 0 0 5px", textAlign: "left", verticalAlign: "top" }}>
               <div>
                 {logoPath ? (
-                  <img src={logoPath} alt={courierName} style={{ display: "block", margin: "0 auto", height: "24px", objectFit: "contain" }} />
+                  <img src={logoPath} alt={courierName} style={{ display: "block", height: "24px", objectFit: "contain" }} />
                 ) : (
                   <div style={{ fontWeight: 900, fontSize: "10pt", lineHeight: 1 }}>
                     {courierName}
@@ -131,7 +131,7 @@ export default function ShippingLabel({
                 )}
               </div>
             </td>
-            <td style={{ verticalAlign: "middle" }}>
+            <td style={{ verticalAlign: "middle", padding: "5px 4px 5px" }}>
               <div style={{ textAlign: "center", padding: "2px 4px" }}>
                 <div style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
                   <img
