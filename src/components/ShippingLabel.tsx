@@ -122,7 +122,7 @@ export default function ShippingLabel({
             <td style={{ width: "56px", height: "56px", padding: "5px 0 0 5px", textAlign: "left", verticalAlign: "top" }}>
               <div>
                 {logoPath ? (
-                  <img src={logoPath} alt={courierName} style={{ display: "block", height: "24px", objectFit: "contain" }} />
+                  <img src={logoPath} alt={courierName} style={{ display: "block", height: "34px", objectFit: "contain" }} />
                 ) : (
                   <div style={{ fontWeight: 900, fontSize: "10pt", lineHeight: 1 }}>
                     {courierName}
