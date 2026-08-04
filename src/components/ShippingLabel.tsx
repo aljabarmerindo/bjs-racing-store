@@ -135,7 +135,7 @@ export default function ShippingLabel({
           ) : (
             <>
               {barcodeDataUrl ? (
-                <img src={barcodeDataUrl} alt="Barcode" style={{ height: "36px", width: "auto", maxWidth: "100%" }} />
+                <img src={barcodeDataUrl} alt="Barcode" style={{ display: "block", margin: "0 auto", width: "100%", maxWidth: "100%", height: "36px", objectFit: "contain" }} />
               ) : null}
               <div style={{ fontSize: "7.5pt", fontWeight: "bold", marginTop: "1px" }}>Nomor Resi - {waybillId}</div>
             </>

@@ -244,7 +244,7 @@ export const GET: APIRoute = async (context) => {
     <div class="barcode-section border-bottom">
       ${labelData.isInternal
         ? `<div class="resi-text">Nomor Referensi - ${labelData.referenceId}</div>`
-        : `${barcodeImg ? `<img src="${barcodeImg}" alt="Barcode" style="height: 36px; max-width: 100%;" />` : ""}<div class="resi-text">Nomor Resi - ${labelData.waybillId}</div>`}
+        : `${barcodeImg ? `<img src="${barcodeImg}" alt="Barcode" style="display: block; margin: 0 auto; width: 100%; max-width: 100%; height: 36px; object-fit: contain;" />` : ""}<div class="resi-text">Nomor Resi - ${labelData.waybillId}</div>`}
     </div>
 
     <div class="info-text border-bottom">
