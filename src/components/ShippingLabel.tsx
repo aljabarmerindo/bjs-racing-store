@@ -1,6 +1,6 @@
 // File: src/components/ShippingLabel.tsx
 // Shipping label generator untuk print thermal printer 80mm + export PNG.
-import { useRef, useState, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { toPng } from "html-to-image";
 import * as BWIPJS from "bwip-js";
 
@@ -76,27 +76,25 @@ export default function ShippingLabel({
   const isInternal = courierCode === "internal";
   const logoPath = COURIER_LOGOS[(courierCode || "").toLowerCase()] || "";
 
-  const [barcodeSrc, setBarcodeSrc] = useState<string | null>(null);
+  const barcodeCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    let cancelled = false;
-    const text = String(waybillId || "-");
-    BWIPJS.toBuffer({
-      bcid: "code128",
-      text,
-      scale: 3,
-      height: 30,
-      includetext: false,
-    }).then((buf: Buffer) => {
-      if (!cancelled) {
-        const base64 = Buffer.from(buf).toString("base64");
-        setBarcodeSrc(`data:image/png;base64,${base64}`);
-      }
-    }).catch((err) => {
-      console.error("[ShippingLabel] Gagal generate barcode:", err);
-      if (!cancelled) setBarcodeSrc(null);
-    });
-    return () => { cancelled = true; };
+    const canvas = barcodeCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    try {
+      BWIPJS.render(canvas, {
+        bcid: "code128",
+        text: String(waybillId || "-"),
+        scale: 3,
+        height: 30,
+        includetext: false,
+      });
+    } catch (err) {
+      console.error("[ShippingLabel] Gagal render barcode:", err);
+    }
   }, [waybillId]);
 
   const handlePrint = () => {
@@ -188,7 +186,7 @@ export default function ShippingLabel({
             <div style={{ fontSize: "7.5pt", fontWeight: "bold", marginTop: "4px" }}>Nomor Referensi - {referenceId}</div>
           ) : (
             <>
-              {barcodeSrc && <img src={barcodeSrc} alt="barcode" style={{ height: "36px" }} />}
+              <canvas ref={barcodeCanvasRef} width="240" height="60" style={{ height: "36px", width: "auto" }} />
               <div style={{ fontSize: "7.5pt", fontWeight: "bold", marginTop: "1px" }}>Nomor Resi - {waybillId}</div>
             </>
           )}
