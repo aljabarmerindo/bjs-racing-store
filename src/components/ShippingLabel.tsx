@@ -131,15 +131,15 @@ export default function ShippingLabel({
                 )}
               </div>
             </td>
-            <td style={{ verticalAlign: "middle", padding: "2px 4px" }}>
+            <td style={{ verticalAlign: "middle", padding: "5px 0" }}>
               <div style={{ textAlign: "center", padding: "0 4px" }}>
                 <div style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
                   <img
                     src="/icons/bjs-racing.png"
                     alt="BJS Racing Store"
-                    style={{ height: "26px", objectFit: "contain" }}
+                    style={{ height: "34px", objectFit: "contain" }}
                   />
-                  <div style={{ fontSize: "6pt", fontWeight: "bold", color: "#f97316" }}>BJS RACING</div>
+                  <div style={{ fontSize: "24px", lineHeight: "34px", fontWeight: "bold", color: "#f97316" }}>BJS RACING</div>
                 </div>
                 <div style={{ fontSize: "5.5pt", color: "#444", fontWeight: "bold" }}>bjs-racing.com</div>
               </div>
