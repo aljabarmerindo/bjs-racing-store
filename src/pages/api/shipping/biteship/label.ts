@@ -147,18 +147,20 @@ export const GET: APIRoute = async (context) => {
       text-align: center;
       padding: 2px 4px;
     }
+    .bjs-brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
     .bjs-logo-img {
-      display: block;
-      margin: 0 auto;
-      height: 15px;
+      height: 16px;
       object-fit: contain;
     }
     .bjs-sub {
       font-size: 5.5pt;
       font-weight: bold;
-      color: #111111;
-      display: block;
-      margin-top: -1px;
+      color: #f97316;
     }
     .bjs-url {
       font-size: 5pt;
@@ -233,8 +235,10 @@ export const GET: APIRoute = async (context) => {
           </div>
         </td>
         <td style="width: 55%;" class="logo-bjs">
-          <img src="/icons/bjs-racing.png" alt="BJS Racing Store" class="bjs-logo-img" />
-          <div class="bjs-sub">BJS RACING</div>
+          <div class="bjs-brand-row">
+            <img src="/icons/bjs-racing.png" alt="BJS Racing Store" class="bjs-logo-img" />
+            <div class="bjs-sub">BJS RACING</div>
+          </div>
           <div class="bjs-url">bjs-racing.com</div>
         </td>
       </tr>

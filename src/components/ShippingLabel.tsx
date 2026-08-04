@@ -112,7 +112,7 @@ export default function ShippingLabel({
           lineHeight: 1.15,
         }}
       >
-        <table style={{ height: "32px", borderBottom: BORDER_BOTTOM }}>
+        <table style={{ width: "100%", height: "32px", borderBottom: BORDER_BOTTOM }}>
           <tr>
             <td style={{ width: "45%", borderRight: BORDER_RIGHT, padding: "3px" }}>
               <div style={{ textAlign: "center" }}>
@@ -128,12 +128,14 @@ export default function ShippingLabel({
             </td>
             <td style={{ width: "55%" }}>
               <div style={{ textAlign: "center", padding: "2px 4px" }}>
-                <img
-                  src="/icons/bjs-racing.png"
-                  alt="BJS Racing Store"
-                  style={{ display: "block", margin: "0 auto", height: "15px", objectFit: "contain" }}
-                />
-                <div style={{ fontSize: "5.5pt", fontWeight: "bold", color: "#111", marginTop: "1px", display: "block" }}>BJS RACING</div>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                  <img
+                    src="/icons/bjs-racing.png"
+                    alt="BJS Racing Store"
+                    style={{ height: "16px", objectFit: "contain" }}
+                  />
+                  <div style={{ fontSize: "5.5pt", fontWeight: "bold", color: "#f97316" }}>BJS RACING</div>
+                </div>
                 <div style={{ fontSize: "5pt", color: "#444", fontWeight: "bold" }}>bjs-racing.com</div>
               </div>
             </td>
@@ -161,7 +163,7 @@ export default function ShippingLabel({
           Jenis Layanan - {serviceName}. Kode Rute - {routingCode}
         </div>
 
-        <table style={{ fontSize: "6pt", borderBottom: BORDER_BOTTOM }}>
+        <table style={{ width: "100%", fontSize: "6pt", borderBottom: BORDER_BOTTOM }}>
           <tr>
             <td style={{ width: "50%", borderRight: BORDER_RIGHT }}>
               <strong>Reference Number</strong>
@@ -178,7 +180,7 @@ export default function ShippingLabel({
           </tr>
         </table>
 
-        <table style={{ borderBottom: BORDER_BOTTOM }}>
+        <table style={{ width: "100%", borderBottom: BORDER_BOTTOM }}>
           <tr>
             <td style={{ width: "50%", verticalAlign: "top", padding: "3px", borderRight: BORDER_RIGHT }}>
               <div style={{ fontWeight: "bold", fontSize: "6pt", marginBottom: "1px" }}>Alamat Penerima:</div>
