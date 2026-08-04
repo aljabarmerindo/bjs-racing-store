@@ -226,7 +226,7 @@ export const GET: APIRoute = async (context) => {
   <div class="label-container">
     <table style="height: 32px;" class="border-bottom">
       <tr>
-        <td style="width: 45%; padding: 3px;" class="border-right">
+        <td style="width: 32px; height: 32px; padding: 0; text-align: center; vertical-align: middle;" class="border-right">
           <div style="text-align: center;">
             <div class="logo-courier">
               ${labelData.courierName}
@@ -234,7 +234,7 @@ export const GET: APIRoute = async (context) => {
             </div>
           </div>
         </td>
-        <td style="width: 55%;" class="logo-bjs">
+        <td style="vertical-align: middle;" class="logo-bjs">
           <div class="bjs-brand-row">
             <img src="/icons/bjs-racing.png" alt="BJS Racing Store" class="bjs-logo-img" />
             <div class="bjs-sub">BJS RACING</div>
