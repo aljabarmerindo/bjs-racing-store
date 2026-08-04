@@ -159,18 +159,18 @@ export const GET: APIRoute = async (context) => {
       gap: 4px;
     }
     .bjs-logo-img {
-      height: 34px;
+      height: 38px;
       object-fit: contain;
     }
     .bjs-sub {
       font-size: 24px;
-      line-height: 34px;
+      line-height: 38px;
       font-weight: bold;
       color: #f97316;
     }
     .bjs-url {
       font-size: 11pt;
-      line-height: 16px;
+      line-height: 12px;
       color: #444;
       font-weight: bold;
     }

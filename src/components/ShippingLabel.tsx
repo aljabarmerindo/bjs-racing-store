@@ -122,7 +122,7 @@ export default function ShippingLabel({
             <td style={{ width: "56px", height: "60px", padding: "5px 0 0 5px", textAlign: "left", verticalAlign: "top" }}>
               <div>
                 {logoPath ? (
-                  <img src={logoPath} alt={courierName} style={{ display: "block", height: "34px", objectFit: "contain" }} />
+                  <img src={logoPath} alt={courierName} style={{ display: "block", height: "38px", objectFit: "contain" }} />
                 ) : (
                   <div style={{ fontWeight: 900, fontSize: "10pt", lineHeight: 1 }}>
                     {courierName}
@@ -137,11 +137,11 @@ export default function ShippingLabel({
                   <img
                     src="/icons/bjs-racing.png"
                     alt="BJS Racing Store"
-                    style={{ height: "34px", objectFit: "contain" }}
+                    style={{ height: "38px", objectFit: "contain" }}
                   />
-                  <div style={{ fontSize: "24px", lineHeight: "34px", fontWeight: "bold", color: "#f97316" }}>BJS RACING</div>
+                  <div style={{ fontSize: "24px", lineHeight: "38px", fontWeight: "bold", color: "#f97316" }}>BJS RACING</div>
                 </div>
-                <div style={{ fontSize: "11pt", color: "#444", fontWeight: "bold", lineHeight: "16px" }}>bjs-racing.com</div>
+                <div style={{ fontSize: "11pt", color: "#444", fontWeight: "bold", lineHeight: "12px" }}>bjs-racing.com</div>
               </div>
             </td>
           </tr>
