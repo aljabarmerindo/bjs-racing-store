@@ -1,6 +1,7 @@
 // File: src/lib/gojekAutoBooking.ts
 // Auto-booking GOJEK untuk order yang memenuhi syarat before 15:00 WIB.
 import { supabaseAdmin } from "./supabaseServer";
+import { getProductDimsCm } from "./packageDimensions";
 
 const CUT_OFF_HOUR = Number(import.meta.env.GOJEK_CUTOFF_HOUR || 15);
 
@@ -74,13 +75,19 @@ export async function processGojekAutoBooking(orderId: string): Promise<{ booked
       .select("quantity, products(*)")
       .eq("order_id", orderId);
 
-    const mappedItems = (items || []).map((it: any) => ({
-      name: it.products?.nama || "Item BJS",
-      description: "Pesanan BJS Racing",
-      quantity: it.quantity,
-      weight: it.products?.berat_gram || 500,
-      value: 0,
-    }));
+    const mappedItems = (items || []).map((it: any) => {
+      const dims = getProductDimsCm(it.products);
+      return {
+        name: it.products?.nama || "Item BJS",
+        description: "Pesanan BJS Racing",
+        quantity: it.quantity,
+        weight: it.products?.berat_gram || 500,
+        value: 0,
+        length: dims.length,
+        width: dims.width,
+        height: dims.height,
+      };
+    });
 
     const result = await createBiteshipOrder({
       referenceId: order.order_number,

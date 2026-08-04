@@ -14,6 +14,9 @@ interface Product {
   harga_jual: number;
   image_url: string;
   berat_gram: number;
+  panjang_cm?: number;
+  lebar_cm?: number;
+  tinggi_cm?: number;
   merek?: string;
   ukuran?: string;
   sku?: string;

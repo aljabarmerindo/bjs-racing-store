@@ -14,7 +14,7 @@ interface CacheEntry {
 
 const ratesCache = new Map<string, CacheEntry>();
 
-function getCacheKey(destination: any, weight: number, couriers: string, value: number) {
+function getCacheKey(destination: any, weight: number, couriers: string, value: number, dims: any) {
   const parts = [
     destination.latitude || "",
     destination.longitude || "",
@@ -22,6 +22,9 @@ function getCacheKey(destination: any, weight: number, couriers: string, value: 
     String(weight),
     couriers,
     String(value),
+    dims?.length || 10,
+    dims?.width || 10,
+    dims?.height || 10,
   ];
   return parts.join("|");
 }
@@ -56,6 +59,13 @@ export const POST: APIRoute = async (context) => {
     const destination = body?.destination || {};
     const weight = Number(body?.weight || 0);
     const value = body.value ? Number(body.value) : 0;
+    const dims = body?.length || body?.width || body?.height
+      ? {
+          length: Number(body.length),
+          width: Number(body.width),
+          height: Number(body.height),
+        }
+      : undefined;
 
     if (!weight || weight <= 0) {
       return new Response(
@@ -64,7 +74,7 @@ export const POST: APIRoute = async (context) => {
       );
     }
 
-    const cacheKey = getCacheKey(destination, weight, body?.couriers || "", value);
+    const cacheKey = getCacheKey(destination, weight, body?.couriers || "", value, dims);
     const cached = getCachedRates(cacheKey);
     if (cached) {
       // console.log("[Rates API] cache hit:", cacheKey);
@@ -97,6 +107,9 @@ export const POST: APIRoute = async (context) => {
           weight,
           couriers: normalizedCouriers || ALL_COURIERS.join(","),
           value,
+          length: dims?.length,
+          width: dims?.width,
+          height: dims?.height,
         }).catch((err) => {
           // console.error("[Rates API] combined call failed:", err);
           return [];
@@ -113,6 +126,9 @@ export const POST: APIRoute = async (context) => {
           weight,
           couriers: normalizedCouriers || ALL_COURIERS.join(","),
           value,
+          length: dims?.length,
+          width: dims?.width,
+          height: dims?.height,
         }).catch((err) => {
           // console.error("[Rates API] coords call failed:", err);
           return [];
@@ -128,6 +144,9 @@ export const POST: APIRoute = async (context) => {
           weight,
           couriers: normalizedCouriers || ALL_COURIERS.join(","),
           value,
+          length: dims?.length,
+          width: dims?.width,
+          height: dims?.height,
         }).catch((err) => {
           // console.error("[Rates API] postal call failed:", err);
           return [];

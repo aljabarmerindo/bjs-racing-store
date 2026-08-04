@@ -3,6 +3,7 @@
 import type { APIRoute } from "astro";
 import { supabaseAdmin } from "@/lib/supabaseServer.ts";
 import { createBiteshipOrder } from "@/lib/biteship.ts";
+import { getProductDimsCm } from "@/lib/packageDimensions";
 import { scheduleRetry } from "@/lib/retryQueue.ts";
 import { sendOrderNotification } from "@/lib/notifications.ts";
 
@@ -96,13 +97,19 @@ export const POST: APIRoute = async (context) => {
       );
     }
 
-    const items = (order.order_items || []).map((it: any) => ({
-      name: it.products?.nama || "Item BJS",
-      description: "Pesanan BJS Racing",
-      quantity: it.quantity,
-      weight: it.products?.berat_gram || 500,
-      value: Number(it.price) || 0,
-    }));
+    const items = (order.order_items || []).map((it: any) => {
+      const dims = getProductDimsCm(it.products);
+      return {
+        name: it.products?.nama || "Item BJS",
+        description: "Pesanan BJS Racing",
+        quantity: it.quantity,
+        weight: it.products?.berat_gram || 500,
+        value: Number(it.price) || 0,
+        length: dims.length,
+        width: dims.width,
+        height: dims.height,
+      };
+    });
 
     const result = await createBiteshipOrder({
       referenceId: order.order_number,
@@ -173,13 +180,19 @@ export const POST: APIRoute = async (context) => {
           .single();
 
         const retryAddr = retryOrder.shipping_address;
-        const retryItems = (retryOrder.order_items || []).map((it: any) => ({
-          name: it.products?.nama || "Item BJS",
-          description: "Pesanan BJS Racing",
-          quantity: it.quantity,
-          weight: it.products?.berat_gram || 500,
-          value: Number(it.price) || 0,
-        }));
+        const retryItems = (retryOrder.order_items || []).map((it: any) => {
+          const dims = getProductDimsCm(it.products);
+          return {
+            name: it.products?.nama || "Item BJS",
+            description: "Pesanan BJS Racing",
+            quantity: it.quantity,
+            weight: it.products?.berat_gram || 500,
+            value: Number(it.price) || 0,
+            length: dims.length,
+            width: dims.width,
+            height: dims.height,
+          };
+        });
 
         const result = await createBiteshipOrder({
           referenceId: retryOrder.order_number,

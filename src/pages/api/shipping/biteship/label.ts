@@ -3,6 +3,7 @@
 import type { APIRoute } from "astro";
 import { supabaseAdmin } from "@/lib/supabaseServer.ts";
 import bwipjs from "bwip-js";
+import { aggregatePackageDims, formatDimsCm } from "@/lib/packageDimensions";
 
 export const GET: APIRoute = async (context) => {
   const { session } = context.locals;
@@ -54,7 +55,7 @@ export const GET: APIRoute = async (context) => {
       referenceId: order?.order_number || "-",
       quantity: order?.order_items?.length || 1,
       weight: order?.order_items?.reduce?.((sum: number, item: any) => sum + ((item.products?.berat_gram || 500) * (item.quantity || 1)), 0) || 0,
-      dimensions: "10x10x10 cm",
+      dimensions: formatDimsCm(aggregatePackageDims((order?.order_items || []).map((it: any) => ({ product: it.products, quantity: it.quantity })))),
       recipientName: order?.shipping_address?.recipient_name || "-",
       recipientPhone: order?.shipping_address?.recipient_phone || "-",
       recipientAddress: order?.shipping_address?.full_address || "-",

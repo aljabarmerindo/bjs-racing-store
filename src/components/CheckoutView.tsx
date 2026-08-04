@@ -4,6 +4,7 @@ import { useAppStore } from "../lib/store.ts";
 import type { CartItem, Address } from "../lib/store.ts";
 import { getOsrmRoute, formatDistance, formatDuration } from "@/lib/osrm";
 import { getPaymentFee, type PaymentMethod } from "@/lib/paymentFee";
+import { aggregatePackageDims } from "@/lib/packageDimensions";
 
 declare global {
   interface Window {
@@ -152,6 +153,13 @@ export default function CheckoutView() {
   const totalWeight = useMemo(
     () => calculateTotalWeight(),
     [items, calculateTotalWeight],
+  );
+  const packageDims = useMemo(
+    () =>
+      aggregatePackageDims(
+        items.map((item) => ({ product: item, quantity: item.quantity })),
+      ),
+    [items],
   );
   const subtotal = useMemo(
     () =>
@@ -403,6 +411,9 @@ export default function CheckoutView() {
               postal_code: selectedAddress.postal_code || undefined,
             },
             weight: totalWeight,
+            length: packageDims.length,
+            width: packageDims.width,
+            height: packageDims.height,
             couriers: couriers.join(","),
             value: subtotal,
           }),

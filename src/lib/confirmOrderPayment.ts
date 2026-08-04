@@ -6,6 +6,7 @@
 // Semua bagian idempoten (guard status RPC + UNIQUE invoice_number).
 import { supabaseAdmin } from "@/lib/supabaseServer.ts";
 import { createBiteshipOrder } from "./biteship.ts";
+import { getProductDimsCm } from "./packageDimensions";
 import { sendOrderNotification } from "@/lib/notifications.ts";
 
 export interface ConfirmResult {
@@ -42,13 +43,19 @@ async function bookBiteshipIfNeeded(orderData: any): Promise<void> {
     .eq("id", orderData.customer_id)
     .single();
 
-  const items = (orderData.order_items || []).map((it: any) => ({
-    name: it.products?.nama || "Item BJS",
-    description: "Pesanan BJS Racing",
-    quantity: it.quantity,
-    weight: it.products?.berat_gram || 500,
-    value: Number(it.price) || 0,
-  }));
+  const items = (orderData.order_items || []).map((it: any) => {
+    const dims = getProductDimsCm(it.products);
+    return {
+      name: it.products?.nama || "Item BJS",
+      description: "Pesanan BJS Racing",
+      quantity: it.quantity,
+      weight: it.products?.berat_gram || 500,
+      value: Number(it.price) || 0,
+      length: dims.length,
+      width: dims.width,
+      height: dims.height,
+    };
+  });
 
   try {
     const result = await createBiteshipOrder({
