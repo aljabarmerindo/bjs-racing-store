@@ -117,9 +117,9 @@ export default function ShippingLabel({
           lineHeight: 1.15,
         }}
       >
-        <table style={{ width: "100%", height: "56px", flexShrink: 0, borderBottom: BORDER_BOTTOM }}>
+        <table style={{ width: "100%", height: "60px", flexShrink: 0, borderBottom: BORDER_BOTTOM }}>
           <tr>
-            <td style={{ width: "56px", height: "56px", padding: "5px 0 0 5px", textAlign: "left", verticalAlign: "top" }}>
+            <td style={{ width: "56px", height: "60px", padding: "5px 0 0 5px", textAlign: "left", verticalAlign: "top" }}>
               <div>
                 {logoPath ? (
                   <img src={logoPath} alt={courierName} style={{ display: "block", height: "34px", objectFit: "contain" }} />
@@ -141,13 +141,13 @@ export default function ShippingLabel({
                   />
                   <div style={{ fontSize: "24px", lineHeight: "34px", fontWeight: "bold", color: "#f97316" }}>BJS RACING</div>
                 </div>
-                <div style={{ fontSize: "5.5pt", color: "#444", fontWeight: "bold" }}>bjs-racing.com</div>
+                <div style={{ fontSize: "5.5pt", color: "#444", fontWeight: "bold", lineHeight: "16px" }}>bjs-racing.com</div>
               </div>
             </td>
           </tr>
         </table>
 
-        <div style={{ textAlign: "center", padding: "3px 2px 2px 2px", height: "56px", flexShrink: 0, overflow: "hidden", borderBottom: BORDER_BOTTOM }}>
+        <div style={{ textAlign: "center", padding: "3px 2px 2px 2px", height: "60px", flexShrink: 0, overflow: "hidden", borderBottom: BORDER_BOTTOM }}>
           {isInternal ? (
             <div style={{ fontSize: "7.5pt", fontWeight: "bold", marginTop: "4px" }}>Nomor Referensi - {referenceId}</div>
           ) : (

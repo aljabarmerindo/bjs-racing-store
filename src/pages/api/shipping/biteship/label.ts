@@ -170,13 +170,14 @@ export const GET: APIRoute = async (context) => {
     }
     .bjs-url {
       font-size: 5.5pt;
+      line-height: 16px;
       color: #444;
       font-weight: bold;
     }
     .barcode-section {
       text-align: center;
       padding: 3px 2px 2px 2px;
-      height: 56px;
+      height: 60px;
       flex-shrink: 0;
       overflow: hidden;
     }
@@ -250,9 +251,9 @@ export const GET: APIRoute = async (context) => {
 </head>
 <body>
   <div class="label-container">
-    <table style="height: 56px; flex-shrink: 0;" class="border-bottom">
+    <table style="height: 60px; flex-shrink: 0;" class="border-bottom">
       <tr>
-        <td style="width: 56px; height: 56px; padding: 5px 0 0 5px; text-align: left; vertical-align: top;">
+        <td style="width: 56px; height: 60px; padding: 5px 0 0 5px; text-align: left; vertical-align: top;">
           <div style="text-align: center;">
             <div class="logo-courier">
               ${labelData.courierName}
