@@ -216,7 +216,7 @@ export const GET: APIRoute = async (context) => {
       font-size: 6pt;
     }
     .ref-table {
-      height: 38px;
+      height: 46px;
       flex-shrink: 0;
       overflow: hidden;
     }
@@ -229,6 +229,7 @@ export const GET: APIRoute = async (context) => {
       width: 100%;
       height: 24px;
       object-fit: contain;
+      padding: 0 8px;
     }
     .address-header {
       font-weight: bold;
@@ -316,7 +317,8 @@ export const GET: APIRoute = async (context) => {
       <tr>
         <td style="width: 50%;" class="border-right ref-order-box">
           ${orderBarcodeImg ? `<img src="${orderBarcodeImg}" alt="Order Barcode" class="ref-order-img" />` : ""}
-          <div><strong>Order Number:</strong> ${labelData.referenceId}</div>
+          <div><strong>Order Number:</strong></div>
+          <div>${labelData.referenceId}</div>
         </td>
         <td style="width: 50%;">
           Quantity: <strong>${labelData.quantity} Pcs</strong><br />

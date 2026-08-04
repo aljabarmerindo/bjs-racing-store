@@ -170,16 +170,15 @@ export default function ShippingLabel({
           Jenis Layanan - {serviceName}. Kode Rute - {routingCode}
         </div>
 
-        <table style={{ width: "100%", fontSize: "6pt", height: "38px", flexShrink: 0, overflow: "hidden", borderBottom: BORDER_BOTTOM }}>
+        <table style={{ width: "100%", fontSize: "6pt", height: "46px", flexShrink: 0, overflow: "hidden", borderBottom: BORDER_BOTTOM }}>
           <tr>
             <td style={{ width: "50%", borderRight: BORDER_RIGHT }}>
               <div style={{ textAlign: "center" }}>
                 {orderBarcodeDataUrl ? (
-                  <img src={orderBarcodeDataUrl} alt="Order Barcode" style={{ display: "block", margin: "0 auto", width: "100%", height: "24px", objectFit: "contain" }} />
+                  <img src={orderBarcodeDataUrl} alt="Order Barcode" style={{ display: "block", margin: "0 auto", width: "100%", height: "24px", objectFit: "contain", padding: "0 8px" }} />
                 ) : null}
-                <div>
-                  <strong>Order Number:</strong> {referenceId}
-                </div>
+                <div style={{ fontWeight: "bold" }}>Order Number:</div>
+                <div>{referenceId}</div>
               </div>
             </td>
             <td style={{ width: "50%" }}>
