@@ -104,8 +104,8 @@ export default function ShippingLabel({
         style={{
           width: "80mm",
           maxWidth: "80mm",
-          height: "100mm",
-          maxHeight: "100mm",
+          height: "80mm",
+          maxHeight: "80mm",
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
