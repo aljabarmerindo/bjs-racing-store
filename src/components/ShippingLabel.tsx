@@ -104,6 +104,11 @@ export default function ShippingLabel({
         style={{
           width: "80mm",
           maxWidth: "80mm",
+          height: "100mm",
+          maxHeight: "100mm",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
           border: "1pt solid #000",
           background: "#fff",
           fontFamily: "Arial, Helvetica, sans-serif",
@@ -112,7 +117,7 @@ export default function ShippingLabel({
           lineHeight: 1.15,
         }}
       >
-        <table style={{ width: "100%", height: "32px", borderBottom: BORDER_BOTTOM }}>
+        <table style={{ width: "100%", height: "32px", flexShrink: 0, borderBottom: BORDER_BOTTOM }}>
           <tr>
             <td style={{ width: "32px", height: "32px", borderRight: BORDER_RIGHT, padding: 0, textAlign: "center", verticalAlign: "middle" }}>
               <div>
@@ -142,28 +147,28 @@ export default function ShippingLabel({
           </tr>
         </table>
 
-        <div style={{ textAlign: "center", padding: "3px 2px 2px 2px", borderBottom: BORDER_BOTTOM }}>
+        <div style={{ textAlign: "center", padding: "3px 2px 2px 2px", height: "56px", flexShrink: 0, overflow: "hidden", borderBottom: BORDER_BOTTOM }}>
           {isInternal ? (
             <div style={{ fontSize: "7.5pt", fontWeight: "bold", marginTop: "4px" }}>Nomor Referensi - {referenceId}</div>
           ) : (
             <>
               {barcodeDataUrl ? (
-                <img src={barcodeDataUrl} alt="Barcode" style={{ display: "block", margin: "0 auto", width: "100%", maxWidth: "100%", height: "auto" }} />
+                <img src={barcodeDataUrl} alt="Barcode" style={{ display: "block", margin: "0 auto", width: "100%", height: "38px", objectFit: "contain" }} />
               ) : null}
               <div style={{ fontSize: "7.5pt", fontWeight: "bold", marginTop: "1px" }}>Nomor Resi - {waybillId}</div>
             </>
           )}
         </div>
 
-        <div style={{ fontSize: "6.5pt", padding: "2px 4px", borderBottom: BORDER_BOTTOM }}>
+        <div style={{ fontSize: "6.5pt", padding: "2px 4px", height: "14px", flexShrink: 0, overflow: "hidden", whiteSpace: "nowrap", borderBottom: BORDER_BOTTOM }}>
           Ongkos Kirim: Rp. {shippingCost.toLocaleString("id-ID")}
         </div>
 
-        <div style={{ fontSize: "6.5pt", padding: "2px 4px", borderBottom: BORDER_BOTTOM }}>
+        <div style={{ fontSize: "6.5pt", padding: "2px 4px", height: "14px", flexShrink: 0, overflow: "hidden", whiteSpace: "nowrap", borderBottom: BORDER_BOTTOM }}>
           Jenis Layanan - {serviceName}. Kode Rute - {routingCode}
         </div>
 
-        <table style={{ width: "100%", fontSize: "6pt", borderBottom: BORDER_BOTTOM }}>
+        <table style={{ width: "100%", fontSize: "6pt", height: "26px", flexShrink: 0, overflow: "hidden", borderBottom: BORDER_BOTTOM }}>
           <tr>
             <td style={{ width: "50%", borderRight: BORDER_RIGHT }}>
               <strong>Reference Number</strong>
@@ -180,7 +185,7 @@ export default function ShippingLabel({
           </tr>
         </table>
 
-        <table style={{ width: "100%", borderBottom: BORDER_BOTTOM }}>
+        <table style={{ width: "100%", flex: "1 1 0", minHeight: 0, overflow: "hidden", borderBottom: BORDER_BOTTOM }}>
           <tr>
             <td style={{ width: "50%", verticalAlign: "top", padding: "3px", borderRight: BORDER_RIGHT }}>
               <div style={{ fontWeight: "bold", fontSize: "6pt", marginBottom: "1px" }}>Alamat Penerima:</div>
@@ -206,17 +211,17 @@ export default function ShippingLabel({
           </tr>
         </table>
 
-        <div style={{ fontSize: "5.8pt", padding: "2px 4px", lineHeight: 1.15, borderBottom: BORDER_BOTTOM }}>
+        <div style={{ fontSize: "5.8pt", padding: "2px 4px", lineHeight: 1.15, height: "18px", flexShrink: 0, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", borderBottom: BORDER_BOTTOM }}>
           <strong>Jenis Barang:</strong> {items}
         </div>
 
         {notes ? (
-          <div style={{ fontSize: "5.8pt", padding: "2px 4px", lineHeight: 1.15, borderBottom: BORDER_BOTTOM }}>
+          <div style={{ fontSize: "5.8pt", padding: "2px 4px", lineHeight: 1.15, height: "18px", flexShrink: 0, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", borderBottom: BORDER_BOTTOM }}>
             <strong>Catatan:</strong> {notes}
           </div>
         ) : null}
 
-        <div style={{ textAlign: "center", fontSize: "5.2pt", color: "#222", padding: "2px 1px", lineHeight: 1.1 }}>
+        <div style={{ textAlign: "center", fontSize: "5.2pt", color: "#222", padding: "2px 1px", lineHeight: 1.1, height: "20px", flexShrink: 0, overflow: "hidden" }}>
           Pengiriman melalui platform BJS RACING
           <br />
           <strong>bjs-racing.com</strong>

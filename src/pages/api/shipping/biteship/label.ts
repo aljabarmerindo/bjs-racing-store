@@ -96,7 +96,7 @@ export const GET: APIRoute = async (context) => {
   <style>
     @page {
       size: 80mm 100mm;
-      margin: 1.5mm;
+      margin: 0;
       background-color: #ffffff;
     }
     *, *::before, *::after {
@@ -114,6 +114,11 @@ export const GET: APIRoute = async (context) => {
     .label-container {
       width: 80mm;
       max-width: 80mm;
+      height: 100mm;
+      max-height: 100mm;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
       border: 1pt solid #000000;
       background: #ffffff;
     }
@@ -170,6 +175,9 @@ export const GET: APIRoute = async (context) => {
     .barcode-section {
       text-align: center;
       padding: 3px 2px 2px 2px;
+      height: 56px;
+      flex-shrink: 0;
+      overflow: hidden;
     }
     .resi-text {
       font-size: 7.5pt;
@@ -179,10 +187,19 @@ export const GET: APIRoute = async (context) => {
     .info-text {
       font-size: 6.5pt;
       padding: 2px 4px;
+      height: 14px;
+      flex-shrink: 0;
+      overflow: hidden;
+      white-space: nowrap;
     }
     .ref-table td {
       padding: 2px 3px;
       font-size: 6pt;
+    }
+    .ref-table {
+      height: 26px;
+      flex-shrink: 0;
+      overflow: hidden;
     }
     .address-header {
       font-weight: bold;
@@ -203,6 +220,11 @@ export const GET: APIRoute = async (context) => {
       font-size: 5.8pt;
       padding: 2px 4px;
       line-height: 1.15;
+      height: 18px;
+      flex-shrink: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
     .footer {
       text-align: center;
@@ -210,6 +232,9 @@ export const GET: APIRoute = async (context) => {
       color: #222222;
       padding: 2px 1px;
       line-height: 1.1;
+      height: 20px;
+      flex-shrink: 0;
+      overflow: hidden;
     }
     @media print {
       body {
@@ -224,7 +249,7 @@ export const GET: APIRoute = async (context) => {
 </head>
 <body>
   <div class="label-container">
-    <table style="height: 32px;" class="border-bottom">
+    <table style="height: 32px; flex-shrink: 0;" class="border-bottom">
       <tr>
         <td style="width: 32px; height: 32px; padding: 0; text-align: center; vertical-align: middle;" class="border-right">
           <div style="text-align: center;">
@@ -247,7 +272,7 @@ export const GET: APIRoute = async (context) => {
     <div class="barcode-section border-bottom">
       ${labelData.isInternal
         ? `<div class="resi-text">Nomor Referensi - ${labelData.referenceId}</div>`
-        : `${barcodeImg ? `<img src="${barcodeImg}" alt="Barcode" style="display: block; margin: 0 auto; width: 100%; max-width: 100%; height: auto;" />` : ""}<div class="resi-text">Nomor Resi - ${labelData.waybillId}</div>`}
+        : `${barcodeImg ? `<img src="${barcodeImg}" alt="Barcode" style="display: block; margin: 0 auto; width: 100%; height: 38px; object-fit: contain;" />` : ""}<div class="resi-text">Nomor Resi - ${labelData.waybillId}</div>`}
     </div>
 
     <div class="info-text border-bottom">
@@ -272,7 +297,7 @@ export const GET: APIRoute = async (context) => {
       </tr>
     </table>
 
-    <table class="border-bottom">
+    <table class="border-bottom" style="flex: 1 1 0; min-height: 0; overflow: hidden;">
       <tr>
         <td style="width: 50%;" class="border-right address-box">
           <div class="address-header">Alamat Penerima:</div>
