@@ -3,7 +3,7 @@
 import type { APIRoute } from "astro";
 import { supabaseAdmin } from "@/lib/supabaseServer.ts";
 import bwipjs from "bwip-js";
-import { aggregatePackageDims, formatDimsCm, getProductWeightGram } from "@/lib/packageDimensions";
+import { formatItemDimsCm, getProductDimsCm, getProductWeightGram, getWeightBasis, volumetricWeightGram } from "@/lib/packageDimensions";
 
 export const GET: APIRoute = async (context) => {
   const { session } = context.locals;
@@ -45,6 +45,10 @@ export const GET: APIRoute = async (context) => {
     }
 
     const isInternal = shipping?.code === "internal";
+    const labelItems = (order?.order_items || []).map((it: any) => ({ product: it.products, quantity: it.quantity }));
+    const labelWeightGram = labelItems.reduce((sum: number, it: any) => sum + (getProductWeightGram(it.product) * (it.quantity || 1)), 0);
+    const labelVolumetricGram = labelItems.reduce((sum: number, it: any) => sum + (volumetricWeightGram(getProductDimsCm(it.product)) * (it.quantity || 1)), 0);
+    const labelWeightBasis = getWeightBasis(labelWeightGram, labelVolumetricGram);
     const labelData = {
       courierName: shipping?.courier_company || shipping?.code || "Biteship",
       isInternal,
@@ -54,8 +58,9 @@ export const GET: APIRoute = async (context) => {
       serviceName: shipping?.service || shipping?.courier_service_name || "-",
       referenceId: order?.order_number || "-",
       quantity: order?.order_items?.length || 1,
-      weight: order?.order_items?.reduce?.((sum: number, item: any) => sum + (getProductWeightGram(item.products) * (item.quantity || 1)), 0) || 0,
-      dimensions: formatDimsCm(aggregatePackageDims((order?.order_items || []).map((it: any) => ({ product: it.products, quantity: it.quantity })))),
+      weight: labelWeightGram,
+      dimensions: formatItemDimsCm(labelItems),
+      weightBasis: labelWeightBasis,
       recipientName: order?.shipping_address?.recipient_name || "-",
       recipientPhone: order?.shipping_address?.recipient_phone || "-",
       recipientAddress: order?.shipping_address?.full_address || "-",
@@ -216,6 +221,12 @@ export const GET: APIRoute = async (context) => {
       padding: 2px 3px;
       font-size: 6pt;
     }
+    .ref-dims {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
     .ref-table {
       height: 52px;
       flex-shrink: 0;
@@ -324,8 +335,8 @@ export const GET: APIRoute = async (context) => {
         </td>
         <td style="width: 50%;">
           Quantity: <strong>${labelData.quantity} Pcs</strong><br />
-          Weight: <strong>${labelData.weight > 0 ? (labelData.weight >= 1000 ? `${(labelData.weight / 1000).toFixed(2)} Kg` : `${Math.round(labelData.weight)} g`) : "-"}</strong><br />
-          Dimensi: <strong>${labelData.dimensions}</strong>
+          Weight: <strong>${labelData.weightBasis === "volumetric" ? "-" : (labelData.weight > 0 ? (labelData.weight >= 1000 ? `${(labelData.weight / 1000).toFixed(2)} Kg` : `${Math.round(labelData.weight)} g`) : "-")}</strong><br />
+          <div class="ref-dims">Dimensi: <strong>${labelData.weightBasis === "physical" ? "-" : labelData.dimensions}</strong></div>
         </td>
       </tr>
     </table>

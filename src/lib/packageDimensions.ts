@@ -64,3 +64,25 @@ export function formatDimsCm(dims: BoxDims): string {
 export function volumetricKg(dims: BoxDims): number {
   return (dims.length * dims.width * dims.height) / 6000;
 }
+
+// Volumetrik dalam gram: (P x L x T) cm / 6000 kg => (P x L x T) / 6 gram.
+export function volumetricWeightGram(dims: BoxDims): number {
+  return Math.ceil((dims.length * dims.width * dims.height) / 6);
+}
+
+export type WeightBasis = "physical" | "volumetric";
+
+// Basis tarif: Biteship memakai max(berat fisik, berat volumetrik).
+export function getWeightBasis(physicalGram: number, volumetricGram: number): WeightBasis {
+  return volumetricGram > physicalGram ? "volumetric" : "physical";
+}
+
+// Representasi dimensi per-unit x qty untuk label: "5x 6x6x17 cm".
+export function formatItemDimsCm(
+  items: { product?: ProductDims | null; quantity?: number }[],
+): string {
+  if (!items || items.length === 0) return "-";
+  return items
+    .map((it) => `${Math.max(1, Number(it.quantity) || 1)}x ${formatDimsCm(getProductDimsCm(it.product))}`)
+    .join(", ");
+}

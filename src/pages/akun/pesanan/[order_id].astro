@@ -5,7 +5,7 @@ import { supabaseAdmin } from '@/lib/supabaseServer.ts';
 import { formatToWIB } from '@/lib/utils.ts';
 import ShippingLabel from '@/components/ShippingLabel.tsx';
 import bwipjs from 'bwip-js';
-import { aggregatePackageDims, formatDimsCm, getProductWeightGram } from '@/lib/packageDimensions';
+import { formatItemDimsCm, getProductDimsCm, getProductWeightGram, getWeightBasis, volumetricWeightGram } from '@/lib/packageDimensions';
 
 const { session } = Astro.locals;
 const { order_id } = Astro.params;
@@ -56,6 +56,11 @@ try {
 }
 
 const formatRupiah = (number: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(number || 0);
+
+const labelItems = (order.order_items || []).map((item: any) => ({ product: item.products, quantity: item.quantity }));
+const labelWeightGram = labelItems.reduce((sum: number, it: any) => sum + (getProductWeightGram(it.product) * (it.quantity || 1)), 0);
+const labelVolumetricGram = labelItems.reduce((sum: number, it: any) => sum + (volumetricWeightGram(getProductDimsCm(it.product)) * (it.quantity || 1)), 0);
+const labelWeightBasis = getWeightBasis(labelWeightGram, labelVolumetricGram);
 
 let statusMessage = { title: "Status Pesanan Tidak Diketahui", description: "Silakan hubungi customer service kami.", color: "bg-gray-100 text-gray-800" };
 const orderStatus = order.status;
@@ -207,8 +212,9 @@ if (showShippingLabel) {
                   serviceName={order.courier_details.service || order.courier_details.courier_service_name || '-'}
                   referenceId={order.order_number || '-'}
                   quantity={(order.order_items || []).length}
-                  weight={(order.order_items || []).reduce((sum: number, item: any) => sum + (getProductWeightGram(item.products) * (item.quantity || 1)), 0)}
-                  dimensions={formatDimsCm(aggregatePackageDims((order.order_items || []).map((item: any) => ({ product: item.products, quantity: item.quantity }))))}
+                  weight={labelWeightGram}
+                  dimensions={formatItemDimsCm(labelItems)}
+                  weightBasis={labelWeightBasis}
                   recipientName={order.shipping_address.recipient_name || '-'}
                   recipientPhone={order.shipping_address.recipient_phone || '-'}
                   recipientAddress={order.shipping_address.full_address || '-'}

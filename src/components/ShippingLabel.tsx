@@ -17,6 +17,7 @@ interface ShippingLabelProps {
   quantity?: number;
   weight?: number;
   dimensions?: string;
+  weightBasis?: "physical" | "volumetric";
   recipientName?: string;
   recipientPhone?: string;
   recipientAddress?: string;
@@ -60,6 +61,7 @@ export default function ShippingLabel({
   quantity = 1,
   weight = 0,
   dimensions = "10x10x10 cm",
+  weightBasis,
   recipientName = "-",
   recipientPhone = "-",
   recipientAddress = "-",
@@ -82,6 +84,8 @@ export default function ShippingLabel({
       ? `${(weight / 1000).toFixed(2)} Kg`
       : `${Math.round(weight)} g`
     : "-";
+  const showWeight = weightBasis !== "volumetric";
+  const showDimensions = weightBasis !== "physical";
   const isInternal = courierCode === "internal";
   const logoPath = COURIER_LOGOS[(courierCode || "").toLowerCase()] || "";
 
@@ -188,9 +192,11 @@ export default function ShippingLabel({
             <td style={{ width: "50%", paddingLeft: "3px" }}>
               Quantity: <strong>{quantity} Pcs</strong>
               <br />
-              Weight: <strong>{weightText}</strong>
+              Weight: <strong>{showWeight ? weightText : "-"}</strong>
               <br />
-              Dimensi: <strong>{dimensions}</strong>
+              <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>
+                Dimensi: <strong>{showDimensions ? dimensions : "-"}</strong>
+              </div>
             </td>
           </tr>
         </table>
