@@ -216,7 +216,7 @@ export const GET: APIRoute = async (context) => {
       font-size: 6pt;
     }
     .ref-table {
-      height: 46px;
+      height: 52px;
       flex-shrink: 0;
       overflow: hidden;
     }
@@ -227,7 +227,7 @@ export const GET: APIRoute = async (context) => {
       display: block;
       margin: 0 auto;
       width: 100%;
-      height: 24px;
+      height: 30px;
       object-fit: contain;
       padding: 0 8px;
     }
