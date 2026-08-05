@@ -71,6 +71,7 @@ const ColorSimulator = ({ initialProductId }) => {
           .from("products")
           .select("*, suppliers(nama_supplier)")
           .eq("kategori", "Pilok")
+          .eq("status", "Aktif")
           .order("merek"),
         supabase.from("simulation_variants").select("*"),
         supabase.from("product_lines").select("*"),

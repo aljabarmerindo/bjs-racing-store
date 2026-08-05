@@ -54,8 +54,9 @@ const FlashSaleSection = () => {
     try {
       const { data, error } = await supabase
         .from("flash_sales")
-        .select("*, products(id, nama, image_url, harga_jual)")
+        .select("*, products(id, nama, image_url, harga_jual, status)")
         .eq("is_active", true)
+        .eq("products.status", "Aktif")
         .gte("valid_until", nowWIB())
         .order("sort_order", { ascending: true })
         .order("created_at", { ascending: false })

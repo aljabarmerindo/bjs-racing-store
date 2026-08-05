@@ -18,6 +18,11 @@ if (productError || !product) {
   return Astro.redirect('/404'); 
 }
 
+// Produk non-aktif/arsip tidak boleh diakses publik (termasuk admin)
+if (product.status !== 'Aktif') {
+  return Astro.redirect('/404');
+}
+
 // --- PERBAIKAN UTAMA DIMULAI DI SINI ---
 let allProducts: any[] = [];
 
@@ -30,6 +35,7 @@ if (product.kategori === 'Pilok') {
         .eq('nama', product.nama)
         .eq('merek', product.merek)
         .eq('lini_produk', product.lini_produk)
+        .eq('status', 'Aktif')
         .order('ukuran', { ascending: true });
     allProducts = variants || [];
 } else {
@@ -38,6 +44,7 @@ if (product.kategori === 'Pilok') {
         .from('products')
         .select('*')
         .eq('group_id', product.group_id)
+        .eq('status', 'Aktif')
         .order('nama', { ascending: true });
     allProducts = variants || [];
 }

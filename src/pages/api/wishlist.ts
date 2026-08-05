@@ -27,6 +27,7 @@ export const GET: APIRoute = async ({ locals }) => {
       .from("wishlists")
       .select("id, product_id, created_at, products(*)")
       .eq("customer_id", customer.id)
+      .eq("products.status", "Aktif")
       .order("created_at", { ascending: false });
 
     if (error) throw error;

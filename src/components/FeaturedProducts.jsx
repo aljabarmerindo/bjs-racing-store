@@ -46,6 +46,7 @@ const FeaturedProducts = () => {
         query = supabase
           .from("products_with_revenue")
           .select("*")
+          .eq("status", "Aktif")
           .gt("stok", 0)
           .order(tab.sort, { ascending: tab.ascending })
           .limit(LIMIT);
