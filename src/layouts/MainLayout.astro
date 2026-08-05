@@ -17,6 +17,11 @@ const { title } = Astro.props;
 
 // Daftar semua ukuran ikon yang diperlukan
 const iconSizes = [72, 96, 128, 144, 152, 192, 384, 512];
+
+// Eruda (debug console) disembunyikan bawaan.
+// Gerbang 1 (build-time): script CDN hanya dimuat jika env PUBLIC_ENABLE_ERUDA="1" atau saat lokal (PROD=false).
+// Gerbang 2 (runtime): tampil hanya jika URL mengandung ?eruda=1. Lihat docs/ERUDA.md.
+const erudaEnabled = import.meta.env.PUBLIC_ENABLE_ERUDA === "1" || !import.meta.env.PROD;
 ---
 
 <!doctype html>
@@ -226,7 +231,16 @@ window.isDesktop = function() {
   return window.deviceInfo?.isDesktop || false;
 };
 </script>
-<script is:inline src="//cdn.jsdelivr.net/npm/eruda"></script>
-    <script is:inline>eruda.init();</script>
+{erudaEnabled && (
+  <>
+    <script is:inline src="//cdn.jsdelivr.net/npm/eruda"></script>
+    <script is:inline>
+      // Eruda tersembunyi bawaan; aktifkan cepat dengan menambah ?eruda=1 di URL
+      if (new URLSearchParams(location.search).get("eruda") === "1" && typeof eruda !== "undefined") {
+        eruda.init();
+      }
+    </script>
+  </>
+)}
   </body>
 </html>
