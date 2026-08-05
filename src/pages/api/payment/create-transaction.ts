@@ -390,7 +390,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
             customerName: customer.nama_pelanggan,
             amount: totalAmount,
             storeName: import.meta.env.STORE_NAME || "BJS Racing Store",
-            storePhone: import.meta.env.STORE_PHONE || "+6288101169213",
+            storePhone: import.meta.env.STORE_PHONE || "+62881011669213",
           },
         }).catch((err: unknown) => console.error("Gagal kirim notifikasi order_created:", err));
 

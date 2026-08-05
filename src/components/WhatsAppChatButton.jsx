@@ -1,7 +1,7 @@
 // src/components/WhatsAppChatButton.jsx
 import React from "react";
 
-const WhatsAppChatButton = ({ phone = "6288101169213", message = "Halo BJS Racing, saya mau tanya tentang produk..." }) => {
+const WhatsAppChatButton = ({ phone = "62881011669213", message = "Halo BJS Racing, saya mau tanya tentang produk..." }) => {
   const encodedMessage = encodeURIComponent(message);
   const href = `https://wa.me/${phone}?text=${encodedMessage}`;
 

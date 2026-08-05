@@ -35,7 +35,7 @@ RESEND_FROM_EMAIL=noreply@yourdomain.com
 import { sendOrderNotification } from "@/lib/notifications";
 
 await sendOrderNotification({
-  to: "6288101169213", // nomor WA atau email
+  to: "62881011669213", // nomor WA atau email
   channel: "whatsapp", // atau "email"
   event: "order_created", // order_created | payment_confirmed | order_shipped | order_completed | order_cancelled
   data: {

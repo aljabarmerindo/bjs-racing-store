@@ -601,7 +601,7 @@ Selisih harga > Rp 100 akan di-log sebagai warning untuk admin.
    onFinalFailure: async (retryErr) => {
      const reason = retryErr instanceof Error ? retryErr.message : "Unknown error";
      await sendOrderNotification({
-       to: import.meta.env.STORE_PHONE || "+6288101169213",
+       to: import.meta.env.STORE_PHONE || "+62881011669213",
        channel: "whatsapp",
        event: "booking_failed",
        data: { orderNumber, courierName, reason, ... }

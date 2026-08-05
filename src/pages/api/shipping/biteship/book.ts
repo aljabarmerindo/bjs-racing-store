@@ -232,7 +232,7 @@ export const POST: APIRoute = async (context) => {
         console.error(`[Biteship] Booking gagal permanen untuk order ${capturedOrderId}:`, reason);
         try {
           await sendOrderNotification({
-            to: import.meta.env.STORE_PHONE || "+6288101169213",
+            to: import.meta.env.STORE_PHONE || "+62881011669213",
             channel: "whatsapp",
             event: "booking_failed",
             data: {
@@ -240,7 +240,7 @@ export const POST: APIRoute = async (context) => {
               courierName: capturedCourierCompany || undefined,
               reason,
               storeName: import.meta.env.STORE_NAME || "BJS Racing Store",
-              storePhone: import.meta.env.STORE_PHONE || "+6288101169213",
+              storePhone: import.meta.env.STORE_PHONE || "+62881011669213",
             },
           });
         } catch (notifErr) {
