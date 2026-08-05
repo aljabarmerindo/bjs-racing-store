@@ -33,12 +33,14 @@ const FeaturedProducts = () => {
 
       if (tabId === "diskon") {
         query = supabase
-          .from("products")
+          .from("products_with_revenue")
           .select("*")
+          .eq("status", "Aktif")
           .gt("harga_coret", 0)
           .gt("stok", 0)
+          .gt("harga_jual", 0)
           .order("harga_jual", { ascending: true })
-          .limit(LIMIT);
+          .limit(500);
       } else {
         const tab = TABS.find((t) => t.id === tabId);
         query = supabase
@@ -54,7 +56,27 @@ const FeaturedProducts = () => {
         console.error("Error fetching featured products:", error);
         setProducts([]);
       } else {
-        setProducts(data || []);
+        let result = data || [];
+        if (tabId === "diskon") {
+          result = result
+            .map((p) => ({
+              ...p,
+              diskonPct:
+                p.harga_coret > p.harga_jual
+                  ? Math.round(
+                      ((p.harga_coret - p.harga_jual) / p.harga_coret) * 100,
+                    )
+                  : 0,
+            }))
+            .filter((p) => p.diskonPct > 0)
+            .sort(
+              (a, b) =>
+                b.diskonPct - a.diskonPct ||
+                (b.total_penjualan || 0) - (a.total_penjualan || 0),
+            )
+            .slice(0, LIMIT);
+        }
+        setProducts(result);
       }
     } catch (err) {
       console.error("Unexpected error:", err);
