@@ -363,24 +363,41 @@ export const POST: APIRoute = async ({ request, locals }) => {
             },
         };
 
-        const midtransResponse = await fetch(
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        let midtransResponse: Response;
+        try {
+          midtransResponse = await fetch(
             "https://app.sandbox.midtrans.com/snap/v1/transactions",
             {
-                method: "POST",
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json",
-                    Authorization: `Basic ${authString}`,
-                },
-                body: JSON.stringify(midtransPayload),
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                Authorization: `Basic ${authString}`,
+              },
+              body: JSON.stringify(midtransPayload),
+              signal: controller.signal,
             },
-        );
+          );
+        } catch (err) {
+          clearTimeout(timeoutId);
+          throw new Error(
+            err instanceof Error && err.name === "AbortError"
+              ? "Gateway pembayaran tidak merespons. Silakan coba lagi."
+              : `Gagal menghubungi Midtrans: ${err instanceof Error ? err.message : "unknown"}`,
+          );
+        } finally {
+          clearTimeout(timeoutId);
+        }
 
         const midtransResult = await midtransResponse.json();
         if (!midtransResponse.ok) {
-            throw new Error(
-                `Midtrans Error: ${JSON.stringify(midtransResult)}`,
-            );
+          const message =
+            midtransResult?.status_message ||
+            midtransResult?.message ||
+            JSON.stringify(midtransResult);
+          throw new Error(`Midtrans Error: ${message}`);
         }
 
         await supabaseAdmin
