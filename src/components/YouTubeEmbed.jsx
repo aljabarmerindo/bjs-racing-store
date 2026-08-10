@@ -17,23 +17,13 @@ const YouTubeEmbed = ({ videoId, title, product, showInfo = true, isActive, onPl
   const iframeRef = useRef(null);
 
   const thumbnailUrl = `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
-  const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&rel=0`;
-
-  const pauseVideo = useCallback(() => {
-    if (iframeRef.current && iframeRef.current.contentWindow) {
-      iframeRef.current.contentWindow.postMessage(
-        JSON.stringify({ event: "command", func: "pauseVideo", args: "" }),
-        "*"
-      );
-    }
-  }, []);
+  const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0`;
 
   useEffect(() => {
     if (isActive) {
       setIsPlaying(true);
       onPlay?.();
     } else if (isPlaying) {
-      pauseVideo();
       setIsPlaying(false);
     }
   }, [isActive]);
