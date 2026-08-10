@@ -16,7 +16,7 @@ const YouTubeEmbed = ({ videoId, title, product, showInfo = true, isActive, onPl
   const [isPlaying, setIsPlaying] = useState(false);
   const iframeRef = useRef(null);
 
-  const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+  const thumbnailUrl = `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
   const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&rel=0`;
 
   const pauseVideo = useCallback(() => {
@@ -70,9 +70,9 @@ const YouTubeEmbed = ({ videoId, title, product, showInfo = true, isActive, onPl
               className="w-full h-full object-cover"
               onError={(e) => {
                 if (e.target.src.includes("maxresdefault")) {
-                  e.target.src = `https://img.youtube.com/vi/${videoId}/sddefault.jpg`;
+                  e.target.src = `https://i.ytimg.com/vi/${videoId}/sddefault.jpg`;
                 } else if (e.target.src.includes("sddefault")) {
-                  e.target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                  e.target.src = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
                 }
               }}
             />
