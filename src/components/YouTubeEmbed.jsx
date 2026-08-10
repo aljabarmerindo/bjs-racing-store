@@ -17,7 +17,7 @@ const YouTubeEmbed = ({ videoId, title, product, showInfo = true, isActive, onPl
   const iframeRef = useRef(null);
 
   const thumbnailUrl = `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
-  const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0`;
+  const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&origin=${typeof window !== 'undefined' ? window.location.origin : 'https://bjsracing.com'}`;
 
   useEffect(() => {
     if (isActive) {
@@ -45,6 +45,7 @@ const YouTubeEmbed = ({ videoId, title, product, showInfo = true, isActive, onPl
             className="absolute inset-0 w-full h-full"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
           />
         ) : (
           <button
