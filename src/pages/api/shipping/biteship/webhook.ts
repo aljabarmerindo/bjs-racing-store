@@ -35,7 +35,7 @@ export const POST: APIRoute = async (context) => {
     }
 
     if (!verifyBiteshipWebhook(context.request.headers, raw)) {
-      return new Response("Unauthorized", { status: 401 });
+      return new Response("OK", { status: 200 });
     }
 
     const body = JSON.parse(trimmed);
