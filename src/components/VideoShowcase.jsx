@@ -10,7 +10,7 @@ const VIDEOS = [
     product: "Underbone Racing",
   },
   {
-    id: "JYJEdrUTQzE",
+    id: "gXK47ZXUudw",
     title: "Demo Spray Paint Metallic BJS Racing",
     product: "Pilok Metallic Series",
   },
@@ -207,21 +207,10 @@ const VideoShowcase = () => {
               aria-current={idx === activeIndex ? "true" : undefined}
             />
           ))}
-        </div>
+         </div>
+       </div>
 
-        {/* CTA */}
-        <div className="text-center mt-8 mobile:mt-10">
-          <a
-              href="/pilok"
-            className="inline-flex items-center gap-2 text-orange-600 font-semibold hover:text-orange-700 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded-lg px-4 py-2 text-sm mobile:text-base"
-          >
-            Lihat Semua Video
-            <FiChevronRight className="w-4 h-4" />
-          </a>
-        </div>
-      </div>
-
-      <style>{`
+       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
       `}</style>
     </section>

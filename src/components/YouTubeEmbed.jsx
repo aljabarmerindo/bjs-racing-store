@@ -38,7 +38,8 @@ const YouTubeEmbed = ({ videoId, title, product, showInfo = true, isActive, onPl
     }
   }, [isActive]);
 
-  const handlePlay = useCallback(() => {
+  const handlePlay = useCallback((e) => {
+    e.stopPropagation();
     setIsPlaying(true);
     onPlay?.();
   }, [onPlay]);
@@ -85,7 +86,7 @@ const YouTubeEmbed = ({ videoId, title, product, showInfo = true, isActive, onPl
         )}
       </div>
 
-      {showInfo && !isPlaying && (
+      {showInfo && (
         <div className="mt-3 px-1">
           <h3 className="text-sm mobile:text-base font-semibold text-slate-800 line-clamp-2">
             {title}
