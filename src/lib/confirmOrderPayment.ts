@@ -149,6 +149,24 @@ export async function confirmOrderPayment(
 
     await bookBiteshipIfNeeded(orderData);
 
+    const { data: currentStock, error: stockRecheckError } = await supabaseAdmin
+      .from("products")
+      .select("id, stok")
+      .in("id", orderData.order_items.map((item: any) => item.product_id));
+    if (stockRecheckError) throw stockRecheckError;
+
+    const stockMap = new Map((currentStock || []).map((p: any) => [p.id, p.stok]));
+    const insufficient = orderData.order_items.find((item: any) => {
+      const available = stockMap.get(item.product_id) ?? 0;
+      return available < item.quantity;
+    });
+    if (insufficient) {
+      return {
+        ok: false,
+        error: `Stok tidak cukup untuk "${insufficient.products?.nama || insufficient.product_id}". Tersisa: ${stockMap.get(insufficient.product_id) ?? 0}, diminta: ${insufficient.quantity}`,
+      };
+    }
+
     const stockLogEntries = orderData.order_items.map((item: any) => {
       if (!item.products)
         throw new Error(

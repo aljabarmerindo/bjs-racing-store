@@ -205,6 +205,17 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
         if (orderError) throw orderError;
 
+        const stockReserveEntries = typedCartItems.map((item: FrontendCartItem) => ({
+          product_id: item.product_id,
+          perubahan: -item.quantity,
+          keterangan: `Reserve Order #${orderNumber}`,
+        }));
+
+        const { error: stockReserveError } = await supabaseAdmin
+          .from("stock_logs")
+          .insert(stockReserveEntries);
+        if (stockReserveError) throw stockReserveError;
+
         // Tandai voucher sudah dipakai & naikkan usage_count agar tidak bisa dipakai ulang.
         // Dilakukan setelah order berhasil dibuat.
         if (appliedVoucherId) {
@@ -242,11 +253,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
             (fs) => fs.product_id === item.product_id,
           );
           if (!flashSale) continue;
-          const newStock = Math.max(0, (flashSale.stock_allocated || 0) - item.quantity);
           const { error: decrementError } = await supabaseAdmin
             .from("flash_sales")
-            .update({ stock_allocated: newStock })
-            .eq("id", flashSale.id);
+            .update({ stock_allocated: flash_sales.stock_allocated - item.quantity })
+            .eq("id", flashSale.id)
+            .gt("stock_allocated", -1);
           if (decrementError) throw decrementError;
         }
 
