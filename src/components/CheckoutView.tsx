@@ -6,6 +6,9 @@ import { getOsrmRoute, formatDistance, formatDuration } from "@/lib/osrm";
 import { getPaymentFee, type PaymentMethod } from "@/lib/paymentFee";
 import { aggregatePackageDims } from "@/lib/packageDimensions";
 
+const MIDTRANS_SNAP_URL = "https://app.sandbox.midtrans.com/snap/snap.js";
+const MIDTRANS_CLIENT_KEY = import.meta.env.PUBLIC_MIDTRANS_CLIENT_KEY || "";
+
 declare global {
   interface Window {
     snap: any;
@@ -110,6 +113,26 @@ export default function CheckoutView() {
   const [isLoadingCosts, setIsLoadingCosts] = useState(false);
   const [error, setError] = useState("");
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [snapLoaded, setSnapLoaded] = useState(false);
+  const [snapError, setSnapError] = useState(false);
+
+  useEffect(() => {
+    if (!MIDTRANS_CLIENT_KEY) return;
+    if (document.querySelector(`script[src="\${MIDTRANS_SNAP_URL}"]`)) {
+      setSnapLoaded(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = MIDTRANS_SNAP_URL;
+    script.async = true;
+    script.onload = () => setSnapLoaded(true);
+    script.onerror = () => setSnapError(true);
+    document.head.appendChild(script);
+    return () => {
+      script.onload = null;
+      script.onerror = null;
+    };
+  }, []);
 
   const [voucherCode, setVoucherCode] = useState("");
   const [appliedVoucher, setAppliedVoucher] = useState<{
@@ -666,10 +689,12 @@ export default function CheckoutView() {
       }
 
       const { snap_token, order_id } = result;
-      if (!window.snap) {
+      if (!snapLoaded || !window.snap) {
         addToast({
           type: "error",
-          message: "Gateway pembayaran belum siap. Silakan refresh halaman dan coba lagi.",
+          message: snapError
+            ? "Gagal memuat gateway pembayaran. Periksa koneksi internet Anda."
+            : "Gateway pembayaran belum siap. Silakan refresh halaman dan coba lagi.",
         });
         setIsProcessingPayment(false);
         return;
