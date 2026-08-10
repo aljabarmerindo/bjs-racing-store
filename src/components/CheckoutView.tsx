@@ -666,6 +666,14 @@ export default function CheckoutView() {
       }
 
       const { snap_token, order_id } = result;
+      if (!window.snap) {
+        addToast({
+          type: "error",
+          message: "Gateway pembayaran belum siap. Silakan refresh halaman dan coba lagi.",
+        });
+        setIsProcessingPayment(false);
+        return;
+      }
       window.snap.pay(snap_token, {
         onSuccess: async function (_result: any) {
           clearCart();
