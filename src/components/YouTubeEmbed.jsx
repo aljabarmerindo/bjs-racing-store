@@ -1,5 +1,5 @@
 // src/components/YouTubeEmbed.jsx
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { FiPlay } from "react-icons/fi";
 
 /**
@@ -9,22 +9,46 @@ import { FiPlay } from "react-icons/fi";
  * @param {string} title - Video title
  * @param {string} [product] - Product name
  * @param {boolean} [showInfo=true] - Show title/product below video
+ * @param {boolean} [isActive] - Whether this video should be playing
+ * @param {function} [onPlay] - Callback when video starts playing
  */
-const YouTubeEmbed = ({ videoId, title, product, showInfo = true }) => {
+const YouTubeEmbed = ({ videoId, title, product, showInfo = true, isActive, onPlay }) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const iframeRef = useRef(null);
 
   const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-  const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+  const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&rel=0`;
+
+  const pauseVideo = useCallback(() => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(
+        JSON.stringify({ event: "command", func: "pauseVideo", args: "" }),
+        "*"
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isActive) {
+      setIsPlaying(true);
+      onPlay?.();
+    } else if (isPlaying) {
+      pauseVideo();
+      setIsPlaying(false);
+    }
+  }, [isActive]);
 
   const handlePlay = useCallback(() => {
     setIsPlaying(true);
-  }, []);
+    onPlay?.();
+  }, [onPlay]);
 
   return (
     <div className="w-full">
       <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-slate-900 group">
         {isPlaying ? (
           <iframe
+            ref={iframeRef}
             src={embedUrl}
             title={title}
             className="absolute inset-0 w-full h-full"

@@ -34,6 +34,7 @@ const VIDEOS = [
 const VideoShowcase = () => {
   const containerRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [activeVideoId, setActiveVideoId] = useState(null);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(true);
 
@@ -77,6 +78,7 @@ const VideoShowcase = () => {
         behavior: prefersReduced ? "auto" : "smooth",
       });
       setActiveIndex(index);
+      setActiveVideoId(null);
     },
     [getSlideWidth],
   );
@@ -117,6 +119,7 @@ const VideoShowcase = () => {
     if (slideWidth === 0) return;
     const idx = Math.round(el.scrollLeft / slideWidth);
     setActiveIndex(Math.min(VIDEOS.length - 1, Math.max(0, idx)));
+    setActiveVideoId(null);
   }, [getSlideWidth]);
 
   return (
@@ -181,6 +184,8 @@ const VideoShowcase = () => {
                   videoId={video.id}
                   title={video.title}
                   product={video.product}
+                  isActive={activeVideoId === video.id}
+                  onPlay={() => setActiveVideoId(video.id)}
                 />
               </div>
             ))}
