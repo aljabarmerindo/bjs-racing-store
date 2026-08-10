@@ -672,6 +672,7 @@ export default function CheckoutView() {
     };
     const controller = new AbortController();
     const checkoutTimeout = setTimeout(() => controller.abort(), 30000);
+    console.log("[Checkout] Starting payment request...");
     try {
       const response = await fetch("/api/payment/create-transaction", {
         method: "POST",
@@ -680,7 +681,16 @@ export default function CheckoutView() {
         signal: controller.signal,
       });
       clearTimeout(checkoutTimeout);
-      const result = await response.json().catch(() => ({}));
+      console.log("[Checkout] Payment API response status:", response.status);
+      const textBody = await response.text().catch(() => "");
+      console.log("[Checkout] Response body preview:", textBody.slice(0, 200));
+      let result = {};
+      try {
+        result = textBody ? JSON.parse(textBody) : {};
+      } catch (e) {
+        console.error("[Checkout] JSON parse failed:", e);
+        result = {};
+      }
       if (!response.ok) {
         if (response.status === 409) {
           addToast({ type: "error", message: result.message || "Stok tidak cukup." });
@@ -697,12 +707,21 @@ export default function CheckoutView() {
       }
 
       const { snap_token, order_id } = result;
+      console.log("[Checkout] Payment result:", { snap_token: !!snap_token, order_id });
       if (!snapLoaded || !window.snap) {
         addToast({
           type: "error",
           message: snapError
             ? "Gagal memuat gateway pembayaran. Periksa koneksi internet Anda."
             : "Gateway pembayaran belum siap. Silakan refresh halaman dan coba lagi.",
+        });
+        setIsProcessingPayment(false);
+        return;
+      }
+      if (!snap_token || !order_id) {
+        addToast({
+          type: "error",
+          message: "Respons pembayaran tidak valid. Silakan coba lagi.",
         });
         setIsProcessingPayment(false);
         return;
