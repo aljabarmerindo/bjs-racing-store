@@ -17,7 +17,7 @@ const YouTubeEmbed = ({ videoId, title, product, showInfo = true, isActive, onPl
   const iframeRef = useRef(null);
 
   const thumbnailUrl = `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
-  const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0`;
+  const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0`;
 
   useEffect(() => {
     if (isActive) {
