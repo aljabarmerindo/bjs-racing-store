@@ -2,41 +2,36 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import YouTubeEmbed from "./YouTubeEmbed";
-
-const VIDEOS = [
-  {
-    id: "4H3ZedPiIvc",
-    title: "Review Underbone System Racing",
-    product: "Underbone Racing",
-  },
-  {
-    id: "gXK47ZXUudw",
-    title: "Demo Spray Paint Metallic BJS Racing",
-    product: "Pilok Metallic Series",
-  },
-  {
-    id: "PDdSFtYcLsE",
-    title: "Cara Pasang Aksesoris Motor",
-    product: "Aksesoris Collection",
-  },
-  {
-    id: "p84JYNhq3Dc",
-    title: "Perbandingan Warna Pilok Gold vs Chrome",
-    product: "Pilok Premium",
-  },
-  {
-    id: "8d6-nH6ManQ",
-    title: "Unboxing Onderdil Federal Part",
-    product: "Federal Part Series",
-  },
-];
+import { supabase } from "@/lib/supabaseBrowserClient.ts";
 
 const VideoShowcase = () => {
   const containerRef = useRef(null);
+  const [videos, setVideos] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeVideoId, setActiveVideoId] = useState(null);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(true);
+
+  useEffect(() => {
+    const fetchVideos = async () => {
+      const { data, error } = await supabase
+        .from("videos")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Gagal memuat video:", error);
+      } else {
+        setVideos(data || []);
+      }
+      setLoading(false);
+    };
+
+    fetchVideos();
+  }, []);
 
   const checkScroll = useCallback(() => {
     const el = containerRef.current;
@@ -93,11 +88,11 @@ const VideoShowcase = () => {
 
   const goNext = useCallback(() => {
     setActiveIndex((prev) => {
-      const next = Math.min(VIDEOS.length - 1, prev + 1);
+      const next = Math.min(videos.length - 1, prev + 1);
       scrollTo(next);
       return next;
     });
-  }, [scrollTo]);
+  }, [scrollTo, videos.length]);
 
   const handleKeyDown = useCallback(
     (e) => {
@@ -118,9 +113,37 @@ const VideoShowcase = () => {
     const slideWidth = getSlideWidth();
     if (slideWidth === 0) return;
     const idx = Math.round(el.scrollLeft / slideWidth);
-    setActiveIndex(Math.min(VIDEOS.length - 1, Math.max(0, idx)));
+    setActiveIndex(Math.min(videos.length - 1, Math.max(0, idx)));
     setActiveVideoId(null);
-  }, [getSlideWidth]);
+  }, [getSlideWidth, videos.length]);
+
+  if (loading) {
+    return (
+      <section className="bg-white py-12 mobile:py-16 tablet:py-20">
+        <div className="container mx-auto px-3 mobile:px-4 tablet:px-6">
+          <h2 className="text-xl mobile:text-2xl tablet:text-3xl font-bold text-center text-slate-800 mb-8 mobile:mb-12">
+            Video Produk Unggulan
+          </h2>
+          <div className="flex items-center justify-center py-20">
+            <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (videos.length === 0) {
+    return (
+      <section className="bg-white py-12 mobile:py-16 tablet:py-20">
+        <div className="container mx-auto px-3 mobile:px-4 tablet:px-6">
+          <h2 className="text-xl mobile:text-2xl tablet:text-3xl font-bold text-center text-slate-800 mb-8 mobile:mb-12">
+            Video Produk Unggulan
+          </h2>
+          <p className="text-center text-slate-500">Belum ada video yang ditampilkan.</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="bg-white py-12 mobile:py-16 tablet:py-20">
@@ -174,16 +197,16 @@ const VideoShowcase = () => {
               WebkitOverflowScrolling: "touch",
             }}
           >
-            {VIDEOS.map((video) => (
+            {videos.map((video) => (
               <div
                 key={video.id}
                 data-slide
                 className="flex-none w-full snap-center"
               >
                 <YouTubeEmbed
-                  videoId={video.id}
+                  videoId={video.youtube_video_id}
                   title={video.title}
-                  product={video.product}
+                  product={video.product_name}
                   isActive={activeVideoId === video.id}
                   onPlay={() => setActiveVideoId(video.id)}
                 />
@@ -194,7 +217,7 @@ const VideoShowcase = () => {
 
         {/* Dot Indicators */}
         <div className="flex items-center justify-center gap-2 mt-6">
-          {VIDEOS.map((_, idx) => (
+          {videos.map((_, idx) => (
             <button
               key={idx}
               onClick={() => scrollTo(idx)}
@@ -207,10 +230,10 @@ const VideoShowcase = () => {
               aria-current={idx === activeIndex ? "true" : undefined}
             />
           ))}
-         </div>
-       </div>
+        </div>
+      </div>
 
-       <style>{`
+      <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
       `}</style>
     </section>
