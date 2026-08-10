@@ -670,21 +670,29 @@ export default function CheckoutView() {
         image_url: item.image_url,
       })),
     };
+    const controller = new AbortController();
+    const checkoutTimeout = setTimeout(() => controller.abort(), 30000);
     try {
       const response = await fetch("/api/payment/create-transaction", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
+        signal: controller.signal,
       });
-      const result = await response.json();
+      clearTimeout(checkoutTimeout);
+      const result = await response.json().catch(() => ({}));
       if (!response.ok) {
         if (response.status === 409) {
-          addToast({ type: "error", message: result.message });
+          addToast({ type: "error", message: result.message || "Stok tidak cukup." });
           useAppStore.getState().fetchCart();
           window.location.href = "/cart";
         } else {
-          throw new Error(result.message || "Gagal membuat transaksi.");
+          const msg =
+            (result && result.message) ||
+            `Gagal membuat transaksi. (HTTP ${response.status})`;
+          throw new Error(msg);
         }
+        setIsProcessingPayment(false);
         return;
       }
 
