@@ -93,16 +93,44 @@ export const POST: APIRoute = async (context) => {
     const status = body.status;
     const waybill = body.courier_waybill_id || body.waybill_id || "";
 
+    const normalizedStatus = String(status || "").toLowerCase();
+    const isFinalStatus = ["delivered", "failed", "cancelled"].includes(normalizedStatus);
+
+    const updatePayload: any = {
+      shipping_status: status,
+      waybill_id: waybill || cd.waybill_id,
+    };
+
+    if (normalizedStatus === "delivered") {
+      updatePayload.status = "completed";
+    }
+
     await supabaseAdmin
       .from("orders")
       .update({
         courier_details: {
           ...cd,
-          shipping_status: status,
-          waybill_id: waybill || cd.waybill_id,
+          ...updatePayload,
         },
       })
       .eq("id", o.id);
+
+    if (normalizedStatus === "failed" || normalizedStatus === "cancelled") {
+      const { data: failedItems } = await supabaseAdmin
+        .from("order_items")
+        .select("product_id, quantity")
+        .eq("order_id", o.id);
+
+      if (failedItems && failedItems.length > 0) {
+        const restoreLogs = failedItems.map((it: any) => ({
+          product_id: it.product_id,
+          perubahan: it.quantity,
+          keterangan: `Restore Order #${o.order_number} - Pengiriman ${normalizedStatus}`,
+        }));
+
+        await supabaseAdmin.from("stock_logs").insert(restoreLogs);
+      }
+    }
 
     const { data: customer } = await supabaseAdmin
       .from("customers")
@@ -113,10 +141,11 @@ export const POST: APIRoute = async (context) => {
     const phone = customer?.telepon || cd?.recipient_phone || "";
     if (phone) {
       try {
+        const eventName = normalizedStatus === "delivered" ? "shipping_delivered" : "shipping_status_update";
         await sendOrderNotification({
           to: phone,
           channel: "whatsapp",
-          event: "shipping_status_update",
+          event: eventName,
           data: {
             orderNumber: o.order_number,
             customerName: customer?.nama_pelanggan,

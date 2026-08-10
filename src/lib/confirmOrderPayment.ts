@@ -27,6 +27,7 @@ const ORIGIN = {
 
 async function bookBiteshipIfNeeded(orderData: any): Promise<void> {
   const cd = orderData.courier_details || {};
+  if (cd.biteship_order_id) return;
   const courierCompany = String(cd.courier_company || cd.code || "").toLowerCase();
   const courierServiceCode = cd.courier_service_code || "";
 

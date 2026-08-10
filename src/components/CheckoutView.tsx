@@ -666,19 +666,9 @@ export default function CheckoutView() {
       }
 
       const { snap_token, order_id } = result;
-      const isGojek = courierDetails?.code === "gojek";
       window.snap.pay(snap_token, {
         onSuccess: async function (_result: any) {
           clearCart();
-          if (isGojek && order_id) {
-            void fetch("/api/shipping/biteship/auto-book-gojek", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ orderId: order_id }),
-            }).catch((err) =>
-              console.error("Auto-booking GOJEK gagal:", err),
-            );
-          }
           window.location.href = `/akun/pesanan/${order_id}?status=success`;
         },
         onPending: function (_result: any) {
