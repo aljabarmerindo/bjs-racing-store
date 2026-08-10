@@ -59,6 +59,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         );
     }
 
+    console.log("[CreateTransaction] Request started, user:", session.user.email);
     try {
         const body = await request.json();
         const {
@@ -255,7 +256,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
           if (!flashSale) continue;
           const { error: decrementError } = await supabaseAdmin
             .from("flash_sales")
-            .update({ stock_allocated: flash_sales.stock_allocated - item.quantity })
+            .update({ stock_allocated: flashSale.stock_allocated - item.quantity })
             .eq("id", flashSale.id)
             .gt("stock_allocated", -1);
           if (decrementError) throw decrementError;
@@ -392,11 +393,13 @@ export const POST: APIRoute = async ({ request, locals }) => {
         }
 
         const midtransResult = await midtransResponse.json();
+        console.log("[Midtrans] Response status:", midtransResponse.status, "result:", midtransResult);
         if (!midtransResponse.ok) {
           const message =
             midtransResult?.status_message ||
             midtransResult?.message ||
             JSON.stringify(midtransResult);
+          console.error("[Midtrans] Error:", message);
           throw new Error(`Midtrans Error: ${message}`);
         }
 
@@ -451,9 +454,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
         if (error instanceof Error) {
             errorMessage = error.message;
         }
-        console.error("Create Transaction API Error:", error);
-        return new Response(JSON.stringify({ message: errorMessage }), {
+        console.error("[CreateTransaction] API Error:", error);
+        return new Response(JSON.stringify({ message: errorMessage, detail: error instanceof Error ? error.stack : String(error) }), {
             status: 500,
         });
     }
+    console.log("[CreateTransaction] Request completed successfully");
 };
