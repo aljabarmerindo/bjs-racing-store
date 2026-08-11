@@ -682,6 +682,7 @@ export default function CheckoutView({ orderId, initialItems }: CheckoutViewProp
         sku: item.sku,
         image_url: item.image_url,
       })),
+      order_id: orderId || null,
     };
     const controller = new AbortController();
     const checkoutTimeout = setTimeout(() => controller.abort(), 30000);

@@ -2,7 +2,7 @@
 import type { APIRoute } from "astro";
 import { supabaseAdmin } from "@/lib/supabaseServer.ts";
 import { getPaymentFee, toMidtransPaymentCode, type PaymentMethod } from "@/lib/paymentFee";
-import { validateAndComputeVoucher, consumeVoucher } from "@/lib/voucher.ts";
+import { validateAndComputeVoucher, consumeVoucher, unconsumeVoucher } from "@/lib/voucher.ts";
 import { generateBriQrMpm, BRI_CONFIG } from "@/lib/bri.ts";
 import { sendOrderNotification } from "@/lib/notifications.ts";
 import { Buffer } from "buffer";
@@ -188,8 +188,120 @@ export const POST: APIRoute = async ({ request, locals }) => {
             finalPaymentGatewayFee -
             (finalDiscountAmount || 0);
 
-        const orderNumber = generateOrderNumber();
-        const { data: newOrder, error: orderError } = await supabaseAdmin
+        const existingOrderId = (body as any).order_id as string | undefined;
+        let orderNumber: string;
+        let newOrder: { id: string; order_number: string; customer_id: string; [key: string]: any };
+
+        if (existingOrderId) {
+          const { data: existingOrder, error: existingOrderError } =
+            await supabaseAdmin
+              .from("orders")
+              .select("*, order_items(*)")
+              .eq("id", existingOrderId)
+              .eq("customer_id", customer.id)
+              .eq("status", "awaiting_payment")
+              .single();
+
+          if (existingOrder && !existingOrderError) {
+            const oldOrderItems = existingOrder.order_items || [];
+            orderNumber = existingOrder.order_number;
+            newOrder = existingOrder;
+
+            const oldVoucherCode = existingOrder.voucher_code;
+            if (oldVoucherCode) {
+              const { data: oldVoucher } = await supabaseAdmin
+                .from("vouchers")
+                .select("id, usage_count")
+                .ilike("code", oldVoucherCode)
+                .single();
+              if (oldVoucher) {
+                await unconsumeVoucher(customer.id, oldVoucher.id);
+              }
+            }
+
+            if (oldOrderItems.length > 0) {
+              const reverseLogs = oldOrderItems.map((item: any) => ({
+                product_id: item.product_id,
+                perubahan: item.quantity,
+                keterangan: `Restore Reserve Order #${orderNumber}`,
+              }));
+              await supabaseAdmin.from("stock_logs").insert(reverseLogs);
+              await supabaseAdmin
+                .from("stock_logs")
+                .delete()
+                .eq("keterangan", `Reserve Order #${orderNumber}`);
+            }
+
+            for (const item of oldOrderItems) {
+              const { data: oldFlashSales } = await supabaseAdmin
+                .from("flash_sales")
+                .select("id, product_id, stock_allocated")
+                .eq("product_id", item.product_id)
+                .eq("is_active", true);
+              const oldFlashSale = (oldFlashSales || []).find(
+                (fs: any) => fs.product_id === item.product_id,
+              );
+              if (oldFlashSale) {
+                await supabaseAdmin
+                  .from("flash_sales")
+                  .update({
+                    stock_allocated: (oldFlashSale.stock_allocated || 0) + item.quantity,
+                  })
+                  .eq("id", oldFlashSale.id);
+              }
+            }
+
+            await supabaseAdmin
+              .from("order_items")
+              .delete()
+              .eq("order_id", existingOrderId);
+
+            const { data: updatedOrder, error: updateError } = await supabaseAdmin
+              .from("orders")
+              .update({
+                total_amount: totalAmount,
+                shipping_cost: finalShippingCost,
+                subtotal_products: subtotalProducts,
+                service_fee: 0,
+                payment_gateway_fee: finalPaymentGatewayFee,
+                voucher_code: voucher_code,
+                discount_amount: finalDiscountAmount,
+                shipping_address: address,
+                courier_details: courier,
+                status: "awaiting_payment",
+              })
+              .eq("id", existingOrderId)
+              .select()
+              .single();
+
+            if (updateError) throw updateError;
+            newOrder = updatedOrder;
+          } else {
+            orderNumber = generateOrderNumber();
+            const { data: createdOrder, error: orderError } = await supabaseAdmin
+              .from("orders")
+              .insert({
+                  order_number: orderNumber,
+                  customer_id: customer.id,
+                  total_amount: totalAmount,
+                  shipping_cost: finalShippingCost,
+                  subtotal_products: subtotalProducts,
+                  service_fee: 0,
+                  payment_gateway_fee: finalPaymentGatewayFee,
+                  voucher_code: voucher_code,
+                  discount_amount: finalDiscountAmount,
+                  shipping_address: address,
+                  courier_details: courier,
+                  status: "awaiting_payment",
+              })
+              .select()
+              .single();
+            if (orderError) throw orderError;
+            newOrder = createdOrder;
+          }
+        } else {
+          orderNumber = generateOrderNumber();
+          const { data: createdOrder, error: orderError } = await supabaseAdmin
             .from("orders")
             .insert({
                 order_number: orderNumber,
@@ -199,16 +311,17 @@ export const POST: APIRoute = async ({ request, locals }) => {
                 subtotal_products: subtotalProducts,
                 service_fee: 0,
                 payment_gateway_fee: finalPaymentGatewayFee,
-                voucher_code: voucher_code, // <-- Simpan kode voucher
-                discount_amount: finalDiscountAmount, // <-- Simpan jumlah diskon
+                voucher_code: voucher_code,
+                discount_amount: finalDiscountAmount,
                 shipping_address: address,
                 courier_details: courier,
                 status: "awaiting_payment",
             })
             .select()
             .single();
-
-        if (orderError) throw orderError;
+          if (orderError) throw orderError;
+          newOrder = createdOrder;
+        }
 
         const stockReserveEntries = typedCartItems.map((item: FrontendCartItem) => ({
           product_id: item.product_id,
@@ -221,8 +334,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
           .insert(stockReserveEntries);
         if (stockReserveError) throw stockReserveError;
 
-        // Tandai voucher sudah dipakai & naikkan usage_count agar tidak bisa dipakai ulang.
-        // Dilakukan setelah order berhasil dibuat.
         if (appliedVoucherId) {
             await consumeVoucher(customer.id, appliedVoucherId);
         }

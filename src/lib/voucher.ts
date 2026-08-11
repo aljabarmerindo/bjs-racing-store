@@ -185,3 +185,29 @@ export async function consumeVoucher(
       .eq("id", voucher_id);
   }
 }
+
+// Kembalikan konsumsi voucher saat order lama dibatalkan/diganti.
+export async function unconsumeVoucher(
+  customer_id: string,
+  voucher_id: string,
+): Promise<void> {
+  await supabaseAdmin
+    .from("customer_vouchers")
+    .update({ is_used: false, used_at: null })
+    .eq("customer_id", customer_id)
+    .eq("voucher_id", voucher_id)
+    .eq("is_used", true);
+
+  const { data: current } = await supabaseAdmin
+    .from("vouchers")
+    .select("usage_count")
+    .eq("id", voucher_id)
+    .single();
+
+  if (current) {
+    await supabaseAdmin
+      .from("vouchers")
+      .update({ usage_count: Math.max(0, (current.usage_count || 1) - 1) })
+      .eq("id", voucher_id);
+  }
+}
