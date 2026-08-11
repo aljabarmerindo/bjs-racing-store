@@ -2,6 +2,7 @@
 // File: src/pages/checkout.astro
 import MainLayout from '@/layouts/MainLayout.astro';
 import CheckoutView from '@/components/CheckoutView.tsx';
+import { supabaseAdmin } from '@/lib/supabaseServer.ts';
 
 const { session } = Astro.locals;
 if (!session) {
@@ -9,16 +10,42 @@ if (!session) {
 }
 
 const midtransClientKey = import.meta.env.PUBLIC_MIDTRANS_CLIENT_KEY;
+
+const orderId = Astro.url.searchParams.get('order_id');
+let initialItems;
+if (orderId) {
+  const { data } = await supabaseAdmin
+    .from('orders')
+    .select('*, order_items(*, products(*))')
+    .eq('id', orderId)
+    .eq('status', 'awaiting_payment')
+    .single();
+  if (data?.order_items) {
+    initialItems = data.order_items.map((it: any) => ({
+      id: it.product_id,
+      product_id: it.product_id,
+      quantity: it.quantity,
+      nama: it.products?.nama || 'Produk',
+      harga_jual: it.price,
+      image_url: it.products?.image_url || '',
+      berat_gram: it.products?.berat_gram ?? 0,
+      panjang_cm: it.products?.panjang_cm,
+      lebar_cm: it.products?.lebar_cm,
+      tinggi_cm: it.products?.tinggi_cm,
+      merek: it.products?.merek,
+      ukuran: it.products?.ukuran,
+      sku: it.products?.sku,
+      stok: it.products?.stok || 999,
+    }));
+  }
+}
 ---
 
 <MainLayout title="Checkout - BJS RACING STORE">
-  
   {/* Midtrans Snap.js dimuat secara manual di CheckoutView.tsx */}
-  
   {/* Konten utama halaman akan otomatis masuk ke <slot /> di MainLayout */}
   <div class="container mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-8 text-center md:text-left">Checkout</h1>
-    <CheckoutView client:load />
+    <CheckoutView client:load orderId={orderId} initialItems={initialItems} />
   </div>
-
 </MainLayout>

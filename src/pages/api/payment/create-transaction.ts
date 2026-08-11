@@ -14,6 +14,10 @@ interface FrontendCartItem {
     name: string;
     sku: string;
     image_url: string;
+    berat_gram?: number | null;
+    panjang_cm?: number | null;
+    lebar_cm?: number | null;
+    tinggi_cm?: number | null;
 }
 
 function generateOrderNumber() {
@@ -233,6 +237,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
                 sku: item.sku,
                 image_url: item.image_url,
             },
+            berat_gram: item.berat_gram ?? null,
+            panjang_cm: item.panjang_cm ?? null,
+            lebar_cm: item.lebar_cm ?? null,
+            tinggi_cm: item.tinggi_cm ?? null,
         }));
 
         const { error: orderItemsError } = await supabaseAdmin

@@ -83,7 +83,12 @@ const getJakartaMinutes = () => {
   return hour * 60 + minute;
 };
 
-export default function CheckoutView() {
+interface CheckoutViewProps {
+  orderId?: string;
+  initialItems?: CartItem[];
+}
+
+export default function CheckoutView({ orderId, initialItems }: CheckoutViewProps) {
   const {
     items,
     addresses,
@@ -133,6 +138,14 @@ export default function CheckoutView() {
       script.onerror = null;
     };
   }, []);
+
+  useEffect(() => {
+    if (!initialItems || initialItems.length === 0) return;
+    const currentItems = useAppStore.getState().items;
+    if (currentItems.length === 0) {
+      useAppStore.setState({ items: initialItems });
+    }
+  }, [initialItems]);
 
   const [voucherCode, setVoucherCode] = useState("");
   const [appliedVoucher, setAppliedVoucher] = useState<{
