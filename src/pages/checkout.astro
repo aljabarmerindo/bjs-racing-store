@@ -16,27 +16,39 @@ let initialItems;
 if (orderId) {
   const { data } = await supabaseAdmin
     .from('orders')
-    .select('*, order_items(*, products(*))')
+    .select('*, order_items(*)')
     .eq('id', orderId)
     .eq('status', 'awaiting_payment')
     .single();
-  if (data?.order_items) {
-    initialItems = data.order_items.map((it: any) => ({
-      id: it.product_id,
-      product_id: it.product_id,
-      quantity: it.quantity,
-      nama: it.products?.nama || 'Produk',
-      harga_jual: it.price,
-      image_url: it.products?.image_url || '',
-      berat_gram: it.products?.berat_gram ?? 0,
-      panjang_cm: it.products?.panjang_cm,
-      lebar_cm: it.products?.lebar_cm,
-      tinggi_cm: it.products?.tinggi_cm,
-      merek: it.products?.merek,
-      ukuran: it.products?.ukuran,
-      sku: it.products?.sku,
-      stok: it.products?.stok || 999,
-    }));
+
+  if (data?.order_items && data.order_items.length > 0) {
+    const productIds = data.order_items.map((it: any) => it.product_id);
+    const { data: products } = await supabaseAdmin
+      .from('products')
+      .select('*')
+      .in('id', productIds);
+
+    const productMap = new Map((products || []).map((p: any) => [p.id, p]));
+
+    initialItems = data.order_items.map((it: any) => {
+      const product = productMap.get(it.product_id) || {};
+      return {
+        id: it.product_id,
+        product_id: it.product_id,
+        quantity: it.quantity,
+        nama: product.nama || 'Produk',
+        harga_jual: it.price,
+        image_url: product.image_url || '',
+        berat_gram: product.berat_gram ?? 0,
+        panjang_cm: product.panjang_cm,
+        lebar_cm: product.lebar_cm,
+        tinggi_cm: product.tinggi_cm,
+        merek: product.merek,
+        ukuran: product.ukuran,
+        sku: product.sku,
+        stok: product.stok || 999,
+      };
+    });
   }
 }
 ---
@@ -46,6 +58,6 @@ if (orderId) {
   {/* Konten utama halaman akan otomatis masuk ke <slot /> di MainLayout */}
   <div class="container mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-8 text-center md:text-left">Checkout</h1>
-    <CheckoutView client:load orderId={orderId} initialItems={initialItems} />
+    <CheckoutView client:load {...{ orderId, initialItems }} />
   </div>
 </MainLayout>

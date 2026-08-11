@@ -697,7 +697,7 @@ export default function CheckoutView({ orderId, initialItems }: CheckoutViewProp
       console.log("[Checkout] Payment API response status:", response.status);
       const textBody = await response.text().catch(() => "");
       console.log("[Checkout] Response body preview:", textBody.slice(0, 200));
-      let result = {};
+      let result: any = {};
       try {
         result = textBody ? JSON.parse(textBody) : {};
       } catch (e) {
