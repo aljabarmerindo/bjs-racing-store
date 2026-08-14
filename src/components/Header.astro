@@ -1,5 +1,6 @@
 ---
 // src/components/Header.astro
+const { currentPath = "/" } = Astro.props;
 import CartIcon from './CartIcon.jsx';
 import WishlistIcon from './WishlistIcon.jsx';
 import AuthMenu from './AuthMenu.jsx';
@@ -30,11 +31,21 @@ const navLinks = [
         
         {/* Desktop nav links */}
         <nav class="hidden lg:flex items-center space-x-4 mobile:space-x-6 tablet:space-x-8">
-            {navLinks.map(link => ( 
-                <a href={link.path} class="font-semibold text-slate-600 hover:text-orange-500 transition-colors text-sm mobile:text-base">
-                    {link.name} 
-                </a> 
-            ))} 
+            {navLinks.map(link => { 
+                const isActive = currentPath === link.path || (link.path !== "/" && currentPath.startsWith(link.path));
+                return (
+                    <a 
+                        href={link.path} 
+                        class={
+                            isActive
+                                ? "font-semibold bg-orange-500 text-white hover:bg-orange-600 hover:text-white transition-colors text-sm mobile:text-base px-3 py-1.5 rounded-md"
+                                : "font-semibold text-slate-600 hover:text-orange-500 transition-colors text-sm mobile:text-base"
+                        }
+                    >
+                        {link.name} 
+                    </a>
+                );
+            })} 
         </nav>
         
         {/* Desktop action icons */}

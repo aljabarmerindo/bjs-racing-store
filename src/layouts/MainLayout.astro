@@ -64,7 +64,7 @@ const erudaEnabled = true;
 
     <UpdateNotifier client:idle />
     <ToastContainer client:idle />
-    <Header session={session} />
+    <Header session={session} currentPath={Astro.url.pathname} />
 
     <main class="min-h-screen container mx-auto px-3 mobile:px-4 tablet:px-6 desktop:px-8 py-4">
       <slot />

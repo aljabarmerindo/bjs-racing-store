@@ -56,17 +56,24 @@ const MobileMenu = () => {
             {/* Nav Links */}
             <nav className="flex-1 overflow-y-auto px-4 py-4">
                 <ul className="space-y-1">
-                    {navLinks.map((link) => (
-                        <li key={link.path}>
-                            <a
-                                href={link.path}
-                                onClick={closeMobileMenu}
-                                className="block px-4 py-3 rounded-lg text-base font-semibold text-slate-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
-                            >
-                                {link.name}
-                            </a>
-                        </li>
-                    ))}
+                    {navLinks.map((link) => {
+                        const isActive = window.location.pathname === link.path || (link.path !== "/" && window.location.pathname.startsWith(link.path));
+                        return (
+                            <li key={link.path}>
+                                <a
+                                    href={link.path}
+                                    onClick={closeMobileMenu}
+                                    className={
+                                        isActive
+                                            ? "block px-4 py-3 rounded-lg text-base font-semibold bg-orange-500 text-white hover:bg-orange-600 hover:text-white transition-colors"
+                                            : "block px-4 py-3 rounded-lg text-base font-semibold text-slate-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                                    }
+                                >
+                                    {link.name}
+                                </a>
+                            </li>
+                        );
+                    })}
                 </ul>
             </nav>
 
