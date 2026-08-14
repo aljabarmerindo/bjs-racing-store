@@ -10,6 +10,7 @@ import {
     FiMinus,
 } from "react-icons/fi";
 import ProductInfoTabs from "./ProductInfoTabs.jsx";
+import WishlistButton from "./WishlistButton.jsx";
 import RelatedProducts from "./RelatedProducts.jsx"; // Kita gunakan lagi komponen ini
 
 const OnderdilDetailView = ({ initialProduct, allProductVariants }) => {
@@ -262,6 +263,9 @@ const OnderdilDetailView = ({ initialProduct, allProductVariants }) => {
                                     : "Stok Habis"}
                             </span>
                         </button>
+                        <div className="mt-3 flex justify-center">
+                            <WishlistButton productId={selectedVariant.id} />
+                        </div>
                     </div>
                 </div>
 
