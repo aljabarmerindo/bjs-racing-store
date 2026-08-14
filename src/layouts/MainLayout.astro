@@ -6,6 +6,7 @@ import CartInitializer from '../components/CartInitializer.jsx';
 import UpdateNotifier from '../components/UpdateNotifier.jsx';
 import ToastContainer from '../components/ToastContainer.jsx';
 import WhatsAppChatButton from '../components/WhatsAppChatButton.jsx';
+import WishlistHelp from '../components/WishlistHelp.jsx';
 
 const { session } = Astro.locals;
 
@@ -72,6 +73,7 @@ const erudaEnabled = true;
 
     <Footer />
     <WhatsAppChatButton client:visible />
+    <WishlistHelp client:visible />
 
     {/* PWA Registration Script */}
     <script>
