@@ -203,6 +203,11 @@ const ProductDetailView = ({ initialProduct, allProductVariants }) => {
                             {selectedVariant.lini_produk}
                         </p>
                     )}
+                    <p className="text-base text-slate-600">
+                        <span className="font-semibold">Merek:</span> {selectedVariant.merek}{" "}
+                        <span className="mx-2">|</span>
+                        <span className="font-semibold">Ukuran:</span> {selectedVariant.ukuran}
+                    </p>
                 </div>
                 <div className="flex items-center gap-4 text-sm text-slate-500">
                     <div className="flex items-center gap-1">
