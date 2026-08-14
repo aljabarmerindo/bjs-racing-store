@@ -120,7 +120,7 @@ const ProductDetailView = ({ initialProduct, allProductVariants }) => {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
             {/* --- KOLOM KIRI: TAMPILAN GAMBAR (SEKARANG DINAMIS) --- */}
-            <div className="relative aspect-square bg-white rounded-lg flex items-center justify-center p-2 shadow-xl border">
+            <div className="relative aspect-square bg-white rounded-lg flex items-center justify-center p-2 shadow-xl">
                 {currentImage ? (
                     <img
                         src={currentImage}
@@ -177,7 +177,7 @@ const ProductDetailView = ({ initialProduct, allProductVariants }) => {
                 </div>
 
                 {selectedVariant.color_swatch_url && (
-                    <div className="absolute bottom-8 left-8 w-28 h-28 rounded-full shadow-lg overflow-hidden border-4 border-white">
+                    <div className="absolute bottom-8 left-8 w-28 h-28 rounded-full shadow-lg overflow-hidden">
                         <img
                             src={selectedVariant.color_swatch_url}
                             alt={`Warna ${selectedVariant.nama}`}
