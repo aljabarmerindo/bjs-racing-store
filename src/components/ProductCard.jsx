@@ -116,6 +116,11 @@ const ProductCard = ({ product }) => {
                     <p className="text-xs text-blue-600 uppercase tracking-wider font-bold">
                         {product.lini_produk || ""}
                     </p>
+                    <p className="text-xs">
+                        <span className="font-semibold text-slate-900">Merek:</span> <span className="text-slate-600">{product.merek}</span>
+                        <span className="mx-1 text-slate-400">|</span>
+                        <span className="font-semibold text-slate-900">Ukuran:</span> <span className="text-slate-600">{product.ukuran}</span>
+                    </p>
                     <div className="flex-grow"></div>
                     <div className="mt-1">
                         {hasDiscount && (
