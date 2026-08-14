@@ -1,5 +1,5 @@
 // src/components/ReviewForm.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const ReviewForm = ({ productId, orderId, onReviewSubmitted }) => {
   const [rating, setRating] = useState(0);
@@ -7,6 +7,40 @@ const ReviewForm = ({ productId, orderId, onReviewSubmitted }) => {
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [eligibleOrderId, setEligibleOrderId] = useState(orderId || null);
+  const [isEligible, setIsEligible] = useState(false);
+  const [checkingEligibility, setCheckingEligibility] = useState(true);
+
+  useEffect(() => {
+    if (orderId) {
+      setEligibleOrderId(orderId);
+      setIsEligible(true);
+      setCheckingEligibility(false);
+      return;
+    }
+
+    const checkEligibility = async () => {
+      try {
+        const response = await fetch(`/api/reviews/eligibility?product_id=${productId}`);
+        const data = await response.json();
+        if (response.ok && data.eligible) {
+          setIsEligible(true);
+          setEligibleOrderId(data.order_id);
+        } else {
+          setIsEligible(false);
+        }
+      } catch (err) {
+        console.error("Gagal memeriksa kelayakan ulasan:", err);
+        setIsEligible(false);
+      } finally {
+        setCheckingEligibility(false);
+      }
+    };
+
+    if (productId) {
+      checkEligibility();
+    }
+  }, [productId, orderId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,7 +57,7 @@ const ReviewForm = ({ productId, orderId, onReviewSubmitted }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           product_id: productId,
-          ...(orderId ? { order_id: orderId } : {}),
+          ...(eligibleOrderId ? { order_id: eligibleOrderId } : {}),
           rating,
           comment: comment.trim() || null,
         }),
@@ -43,6 +77,21 @@ const ReviewForm = ({ productId, orderId, onReviewSubmitted }) => {
       setIsSubmitting(false);
     }
   };
+
+  if (checkingEligibility) {
+    return <p className="text-sm text-slate-500">Memeriksa kelayakan ulasan...</p>;
+  }
+
+  if (!isEligible) {
+    return (
+      <div className="bg-slate-50 p-4 rounded-lg border">
+        <h3 className="font-bold text-lg mb-2">Tulis Ulasan</h3>
+        <p className="text-sm text-slate-600">
+          Anda perlu membeli dan menerima produk ini sebelum dapat memberikan ulasan.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="bg-slate-50 p-4 rounded-lg border">
