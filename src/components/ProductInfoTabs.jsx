@@ -65,7 +65,13 @@ const ProductInfoTabs = ({ product }) => {
             </div>
           </div>
         )}
-        {activeTab === "terkait" && <RelatedProducts product={product} />}
+        {activeTab === "terkait" && (
+          <RelatedProducts
+            productId={product.id}
+            merek={product.merek}
+            lini_produk={product.lini_produk}
+          />
+        )}
       </div>
     </div>
   );
