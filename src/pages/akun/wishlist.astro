@@ -15,31 +15,70 @@ import MainLayout from '@/layouts/MainLayout.astro';
     async function loadWishlist() {
       const res = await fetch('/api/wishlist');
       if (!res.ok) {
-        document.getElementById('wishlist-container')!.innerHTML = '<p class=\"text-red-500 col-span-full text-center py-10\">Gagal memuat wishlist.</p>';
+        document.getElementById('wishlist-container')!.innerHTML = '<p class="text-red-500 col-span-full text-center py-10">Gagal memuat wishlist.</p>';
         return;
       }
       const items: any[] = await res.json();
       const container = document.getElementById('wishlist-container')!;
       if (!items.length) {
-        container.innerHTML = '<p class=\"text-slate-500 col-span-full text-center py-10\">Wishlist Anda masih kosong.</p>';
+        container.innerHTML = '<p class="text-slate-500 col-span-full text-center py-10">Wishlist Anda masih kosong.</p>';
         return;
       }
       container.innerHTML = items.map((item: any) => {
         const p = item.products || {};
+        const hasDiscount = p.harga_coret && p.harga_coret > p.harga_jual;
+        const discountPercentage = hasDiscount
+          ? Math.round(((p.harga_coret - p.harga_jual) / p.harga_coret) * 100)
+          : 0;
+        const isBestSeller = p.total_terjual > 50;
+        const isLowStock = p.stok > 0 && p.stok <= p.stok_min;
         return `
-          <div class=\"bg-white rounded-xl shadow-md overflow-hidden border border-slate-200 flex flex-col h-full\">
-            <a href=\"/products/${p.id}\" class=\"block flex flex-col flex-grow\">
-              <div class=\"aspect-square bg-white flex items-center justify-center p-2\">
-                ${p.image_url ? `<img src=\"${p.image_url}\" alt=\"${p.nama}\" class=\"w-full h-full object-contain\" />` : '<div class=\"w-full h-full bg-slate-100 rounded-md\"></div>'}
+          <div class="bg-white rounded-xl shadow-md overflow-hidden group border border-slate-200 hover:border-orange-500 transition-all duration-300 flex flex-col h-full">
+            <a href="/products/${p.id}" class="block flex flex-col flex-grow">
+              <div class="relative aspect-square bg-white flex items-center justify-center">
+                ${p.image_url ? `<img src="${p.image_url}" alt="${p.nama}" class="w-full h-full object-contain transition-transform group-hover:scale-105" />` : '<div class="w-full h-full bg-slate-100 rounded-md"></div>'}
+                ${[p.image_url_2, p.image_url_3].filter(Boolean).length > 0 ? `<div class="absolute top-2 right-2 bg-black/60 text-white text-[10px] font-bold px-2 py-1 rounded-full">+${[p.image_url_2, p.image_url_3].filter(Boolean).length}</div>` : ''}
+                <div class="absolute top-2 left-2 flex flex-col items-start gap-1">
+                  ${hasDiscount ? `<div class="bg-red-500 text-white text-[10px] md:text-xs font-bold px-2 py-0.5 rounded">DISKON ${discountPercentage}%</div>` : ''}
+                  ${isBestSeller ? `<div class="bg-orange-500 text-white text-[10px] md:text-xs font-bold px-2 py-0.5 rounded">TERLARIS</div>` : ''}
+                  ${isLowStock ? `<div class="bg-yellow-400 text-yellow-900 text-[10px] md:text-xs font-bold px-2 py-0.5 rounded">STOK TERAKHIR</div>` : ''}
+                </div>
+                <div class="absolute bottom-1 left-4 flex flex-col items-center md:hidden">
+                  ${p.color_swatch_url ? `<div class="w-14 h-14 rounded-full shadow-lg flex items-center justify-center overflow-hidden"><img src="${p.color_swatch_url}" alt="Warna ${p.nama}" class="w-full h-full object-cover" /></div>` : ''}
+                  <p class="text-sm font-bold text-slate-900 bg-white/70 px-1 rounded mt-1">${p.sku || ''}</p>
+                </div>
+                <div class="absolute bottom-1 left-4 hidden md:flex flex-col items-center">
+                  ${p.color_swatch_url ? `<div class="w-16 h-16 rounded-full shadow-lg flex items-center justify-center overflow-hidden"><img src="${p.color_swatch_url}" alt="Warna ${p.nama}" class="w-full h-full object-cover" /></div>` : ''}
+                  <p class="text-base font-bold text-slate-900 bg-white/70 px-1 rounded mt-1">${p.sku || ''}</p>
+                </div>
               </div>
-              <div class=\"p-3 flex-grow flex flex-col\">
-                <h3 class=\"text-sm font-bold text-slate-900 line-clamp-2\">${p.nama || ''}</h3>
-                <p class=\"text-xs text-blue-600 uppercase font-bold mt-1\">${p.lini_produk || ''}</p>
-                <p class=\"font-bold text-orange-500 mt-2\">Rp ${Number(p.harga_jual || 0).toLocaleString('id-ID')}</p>
+              <div class="p-3 flex-grow flex flex-col bg-white">
+                <h3 class="text-base font-bold text-slate-900 line-clamp-2 mt-1" title="${p.nama || ''}">${p.nama || ''}</h3>
+                <p class="text-xs text-blue-600 uppercase tracking-wider font-bold">${p.lini_produk || ''}</p>
+                <p class="text-xs">
+                  <span class="font-semibold text-slate-900">Merek:</span> <span class="text-slate-600">${p.merek || ''}</span>
+                  <span class="mx-1 text-slate-400">|</span>
+                  <span class="font-semibold text-slate-900">Ukuran:</span> <span class="text-slate-600">${p.ukuran || ''}</span>
+                </p>
+                <div class="flex-grow"></div>
+                <div class="mt-1">
+                  ${hasDiscount ? `<p class="text-xs text-slate-400 line-through">Rp ${Number(p.harga_coret || 0).toLocaleString('id-ID')}</p>` : ''}
+                  <p class="font-bold text-lg text-orange-500">Rp ${Number(p.harga_jual || 0).toLocaleString('id-ID')}</p>
+                </div>
+                <div class="flex justify-between items-center text-xs text-slate-900 font-semibold mt-auto pt-2 border-t mt-2">
+                  <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-1">
+                      <svg class="text-yellow-400" fill="currentColor" viewBox="0 0 20 20" width="14" height="14"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                      <span class="font-semibold">${(p.rating || 5).toFixed(1)}</span>
+                    </div>
+                    <span class="border-l pl-2">${p.total_terjual || 0} Terjual</span>
+                  </div>
+                  <p class="font-semibold ${isLowStock ? 'text-red-500' : 'text-slate-900'}">Stok: ${p.stok}</p>
+                </div>
               </div>
             </a>
-            <div class=\"p-3 pt-0\">
-              <button onclick=\"_removeFromWishlist('${p.id}')\" class=\"w-full bg-red-50 text-red-600 border border-red-200 font-semibold py-2 rounded-lg text-sm hover:bg-red-100\">Hapus</button>
+            <div class="px-3 pb-3 bg-white">
+              <button onclick="_removeFromWishlist('${p.id}')" class="w-full bg-red-50 text-red-600 border border-red-200 font-semibold py-2 rounded-lg text-sm hover:bg-red-100">Hapus</button>
             </div>
           </div>
         `;
