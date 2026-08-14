@@ -185,7 +185,7 @@ const ProductDetailView = ({ initialProduct, allProductVariants }) => {
                                 className="w-full h-full object-cover"
                             />
                         </div>
-                        <p className="text-sm font-bold text-slate-900 bg-white/70 px-1 rounded mt-1">
+                        <p className="text-base mobile:text-lg tablet:text-xl desktop:text-2xl font-bold text-slate-900 bg-white/70 px-1 rounded mt-1">
                             {selectedVariant.sku || ""}
                         </p>
                     </div>
