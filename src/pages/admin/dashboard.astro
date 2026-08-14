@@ -83,17 +83,21 @@ if (!admin.ok) {
       }
       const data = await res.json();
 
-      const formatRupiah = (number) =>
+      const formatRupiah = (number: number) =>
         new Intl.NumberFormat('id-ID', {
           style: 'currency',
           currency: 'IDR',
           minimumFractionDigits: 0,
         }).format(number || 0);
 
-      document.getElementById('total-revenue').textContent = formatRupiah(data.summary.totalRevenue);
-      document.getElementById('total-orders').textContent = String(data.summary.totalOrders);
-      document.getElementById('avg-order').textContent = formatRupiah(data.summary.avgOrderValue);
-      document.getElementById('shipping-fee').textContent = formatRupiah(data.summary.shippingTotal + data.summary.gatewayFeeTotal);
+      const totalRevenueEl = document.getElementById('total-revenue');
+      const totalOrdersEl = document.getElementById('total-orders');
+      const avgOrderEl = document.getElementById('avg-order');
+      const shippingFeeEl = document.getElementById('shipping-fee');
+      if (totalRevenueEl) totalRevenueEl.textContent = formatRupiah(data.summary.totalRevenue);
+      if (totalOrdersEl) totalOrdersEl.textContent = String(data.summary.totalOrders);
+      if (avgOrderEl) avgOrderEl.textContent = formatRupiah(data.summary.avgOrderValue);
+      if (shippingFeeEl) shippingFeeEl.textContent = formatRupiah(data.summary.shippingTotal + data.summary.gatewayFeeTotal);
 
       const dailyEntries = Object.entries(data.dailyRevenue || {}).sort((a, b) => a[0].localeCompare(b[0]));
       const dailyContainer = document.getElementById('daily-chart');
@@ -140,7 +144,7 @@ if (!admin.ok) {
         if (!products.length) {
           topContainer.innerHTML = '<p class="text-sm text-slate-500">Belum ada data penjualan.</p>';
         }
-        products.forEach((product, idx) => {
+        products.forEach((product: any, idx: number) => {
           const row = document.createElement('div');
           row.className = 'flex items-center justify-between py-2 border-b last:border-b-0';
           row.innerHTML = `
@@ -182,7 +186,7 @@ if (!admin.ok) {
               </tr>
             </thead>
             <tbody>
-              ${data.map((s) => `
+              ${data.map((s: any) => `
                 <tr class="border-b">
                   <td class="px-3 py-2">${s.order_number}</td>
                   <td class="px-3 py-2">${s.courier}</td>
@@ -204,7 +208,7 @@ if (!admin.ok) {
   </script>
   <script>
     (function() {
-      const btn = document.getElementById('cleanup-expired-btn');
+      const btn = document.getElementById('cleanup-expired-btn') as HTMLButtonElement | null;
       const msg = document.getElementById('cleanup-expired-message');
       if (!btn || !msg) return;
 

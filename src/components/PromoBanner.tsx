@@ -60,15 +60,25 @@ const RacingPattern = () => (
   </svg>
 );
 
-const PromoBanner = ({ slides: dbSlides = [] }) => {
+interface Slide {
+  id: string;
+  title: string;
+  subtitle: string;
+  cta_text: string;
+  cta_href: string;
+  bg_gradient?: string;
+  image_url?: string | null;
+}
+
+const PromoBanner = ({ slides: dbSlides = [] }: { slides?: Slide[] }) => {
   const slides = dbSlides.length > 0 ? dbSlides : FALLBACK_SLIDES;
   const [index, setIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [progressKey, setProgressKey] = useState(0);
-  const timerRef = useRef(null);
+  const timerRef = useRef<number | null>(null);
 
   const goTo = useCallback(
-    (next) => {
+    (next?: number) => {
       setIndex((prev) => {
         const nextIndex = typeof next === "number" ? next : (prev + 1) % slides.length;
         return nextIndex;
@@ -90,14 +100,14 @@ const PromoBanner = ({ slides: dbSlides = [] }) => {
 
   useEffect(() => {
     if (isPaused || slides.length <= 1) {
-      clearInterval(timerRef.current);
+      if (timerRef.current) window.clearInterval(timerRef.current);
       return;
     }
-    timerRef.current = setInterval(() => {
+    timerRef.current = window.setInterval(() => {
       setIndex((prev) => (prev + 1) % slides.length);
       setProgressKey((k) => k + 1);
     }, SLIDE_DURATION);
-    return () => clearInterval(timerRef.current);
+    return () => { if (timerRef.current) window.clearInterval(timerRef.current); };
   }, [isPaused, progressKey, slides.length]);
 
   const current = slides[index];

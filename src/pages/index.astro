@@ -2,10 +2,10 @@
 // src/pages/index.astro
 import MainLayout from '../layouts/MainLayout.astro';
 import id from '../../public/locales/id/common.json';
-import PromoBanner from '../components/PromoBanner.jsx';
-import StatsCounter from '../components/StatsCounter.jsx';
+import PromoBanner from '../components/PromoBanner.tsx';
+import StatsCounter from '../components/StatsCounter.tsx';
 import VideoShowcase from '../components/VideoShowcase.jsx';
-import BrandMarquee from '../components/BrandMarquee.jsx';
+import BrandMarquee from '../components/BrandMarquee.tsx';
 import FeaturedProducts from '../components/FeaturedProducts.jsx';
 import FlashSaleSection from '../components/FlashSaleSection.jsx';
 import CategoriesPreview from '../components/CategoriesPreview.jsx';
@@ -53,7 +53,7 @@ const { data: brands } = await supabaseAdmin
 ---
 
 <MainLayout title="BJS RACING STORE - Home">
-    <PromoBanner client:load slides={activePromos} />
+    <PromoBanner client:load slides={activePromos as any} />
 
     {/* Hero Section - Split Layout */}
     <section class="relative bg-gradient-to-br from-orange-600 via-orange-500 to-orange-600 text-white overflow-hidden">
@@ -104,9 +104,9 @@ const { data: brands } = await supabaseAdmin
 
                 {/* Right: Stats Counters */}
                 <div class="grid grid-cols-3 gap-3 mobile:gap-4">
-                    <StatsCounter client:load endValue={totalProduk ?? 0} suffix="+" label="Produk" icon="package" duration={2000} />
-                    <StatsCounter client:load endValue={totalTerjual} suffix="+" label="Terjual" icon="users" duration={2200} />
-                    <StatsCounter client:load endValue={5} suffix="" label="Rating" icon="star" duration={1800} />
+                    <StatsCounter client:load endValue={totalProduk ?? 0} suffix="+" label="Produk" icon="package" duration={2000}/>
+                    <StatsCounter client:load endValue={totalTerjual} suffix="+" label="Terjual" icon="users" duration={2200}/>
+                    <StatsCounter client:load endValue={5} suffix="" label="Rating" icon="star" duration={1800}/>
                 </div>
             </div>
         </div>
@@ -134,7 +134,7 @@ const { data: brands } = await supabaseAdmin
     <VideoShowcase client:visible />
 
     {/* BrandMarquee Section */}
-    <BrandMarquee client:visible brands={brands ?? []} />
+    <BrandMarquee client:visible brands={brands ?? [] as any} />
 
     {/* FeaturedProducts Section */}
     <FeaturedProducts client:visible />

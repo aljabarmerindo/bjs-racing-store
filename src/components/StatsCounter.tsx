@@ -11,19 +11,27 @@ import { FiPackage, FiStar, FiUsers } from "react-icons/fi";
  * @param {"package"|"star"|"users"} [icon] - Icon type
  * @param {number} [duration=2000] - Animation duration in ms
  */
+interface StatsCounterProps {
+  endValue: number;
+  suffix?: string;
+  label: string;
+  icon?: string;
+  duration?: number;
+}
+
 const StatsCounter = ({
   endValue,
   suffix = "",
   label,
   icon,
   duration = 2000,
-}) => {
+}: StatsCounterProps) => {
   const [count, setCount] = useState(0);
   const [hasAnimated, setHasAnimated] = useState(false);
   const ref = useRef(null);
-  const rafRef = useRef(null);
+  const rafRef = useRef<number | null>(null);
 
-  const formatNumber = (num) => {
+  const formatNumber = (num: number) => {
     const isFloat = !Number.isInteger(endValue);
     const fixed = isFloat ? num.toFixed(1) : Math.floor(num);
     return fixed.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -41,7 +49,7 @@ const StatsCounter = ({
     }
 
     const startTime = performance.now();
-    const step = (currentTime) => {
+    const step = (currentTime: number) => {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);

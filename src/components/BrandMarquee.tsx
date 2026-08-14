@@ -16,7 +16,7 @@ const FALLBACK_BRANDS = [
 
 const DURATION = 50;
 
-const BrandLogo = ({ brand }) => (
+const BrandLogo = ({ brand }: { brand: Brand }) => (
   <div className="flex-none px-6 mobile:px-8 flex flex-col items-center justify-center select-none gap-1.5">
     {brand.logo_url ? (
       <img
@@ -33,7 +33,13 @@ const BrandLogo = ({ brand }) => (
   </div>
 );
 
-const BrandMarquee = ({ brands: dbBrands = [] }) => {
+interface Brand {
+  id: string;
+  name: string;
+  logo_url?: string | null;
+}
+
+const BrandMarquee = ({ brands: dbBrands = [] }: { brands?: Brand[] }) => {
   const brands = dbBrands.length > 0 ? dbBrands : FALLBACK_BRANDS;
   const [isPaused, setIsPaused] = useState(false);
   const prefersReduced = useRef(false);
@@ -41,7 +47,7 @@ const BrandMarquee = ({ brands: dbBrands = [] }) => {
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     prefersReduced.current = mq.matches;
-    const handler = (e) => { prefersReduced.current = e.matches; };
+    const handler = (e: MediaQueryListEvent) => { prefersReduced.current = e.matches; };
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
   }, []);

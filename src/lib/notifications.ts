@@ -9,6 +9,7 @@ export type OrderEvent =
   | "order_completed"
   | "order_cancelled"
   | "shipping_status_update"
+  | "shipping_delivered"
   | "booking_failed";
 
 export interface NotificationPayload {
@@ -141,6 +142,22 @@ const EVENT_TEMPLATES: Record<
         `<h2>Update Pengiriman</h2>` +
         `<p>Halo ${d.customerName || "Customer"},</p>` +
         `<p>Status pengiriman pesanan <strong>${d.orderNumber}</strong> diperbarui: <strong>${d.shippingStatus || "sedang diproses"}</strong>.</p>` +
+        `<p>No. Resi: <strong>${d.trackingNumber || "-"}</strong></p>` +
+        `<p>Terima kasih,<br/>${d.storeName || "BJS Racing Store"}</p>`,
+    },
+  },
+  shipping_delivered: {
+    whatsapp: (d) =>
+      `Halo ${d.customerName || "Customer"}!\n\n` +
+      `Pesanan ${d.orderNumber} telah diterima.\n` +
+      `No. Resi: ${d.trackingNumber || "-"}\n\n` +
+      `Terima kasih,\n${d.storeName || "BJS Racing Store"}`,
+    email: {
+      subject: (d) => `Pesanan ${d.orderNumber} Diterima - ${d.storeName || "BJS Racing Store"}`,
+      body: (d) =>
+        `<h2>Pesanan Diterima</h2>` +
+        `<p>Halo ${d.customerName || "Customer"},</p>` +
+        `<p>Pesanan <strong>${d.orderNumber}</strong> telah diterima.</p>` +
         `<p>No. Resi: <strong>${d.trackingNumber || "-"}</strong></p>` +
         `<p>Terima kasih,<br/>${d.storeName || "BJS Racing Store"}</p>`,
     },
