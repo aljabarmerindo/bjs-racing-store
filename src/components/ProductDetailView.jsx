@@ -318,7 +318,7 @@ const ProductDetailView = ({ initialProduct, allProductVariants }) => {
                             </span>
                         </button>
                         <div className="mt-3 flex justify-center">
-                            <WishlistButton productId={selectedVariant.id} />
+                            <WishlistButton productId={selectedVariant.id} variant="full" />
                         </div>
                     </div>
                 </div>
