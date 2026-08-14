@@ -120,7 +120,7 @@ const ProductDetailView = ({ initialProduct, allProductVariants }) => {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
             {/* --- KOLOM KIRI: TAMPILAN GAMBAR (SEKARANG DINAMIS) --- */}
-            <div className="relative aspect-square bg-white rounded-lg flex items-center justify-center p-2 shadow-xl">
+            <div className="relative aspect-square bg-white rounded-lg flex items-center justify-center overflow-hidden">
                 {currentImage ? (
                     <img
                         src={currentImage}
@@ -128,7 +128,7 @@ const ProductDetailView = ({ initialProduct, allProductVariants }) => {
                         className="w-full h-full object-contain transition-opacity duration-300"
                     />
                 ) : (
-                    <div className="w-full h-full bg-slate-100 rounded-md"></div>
+                    <div className="w-full h-full bg-slate-100 rounded-lg"></div>
                 )}
 
                 {galleryImages.length > 1 && (

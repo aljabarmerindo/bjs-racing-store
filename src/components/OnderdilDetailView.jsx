@@ -119,7 +119,7 @@ const OnderdilDetailView = ({ initialProduct, allProductVariants }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
             {/* --- KOLOM KIRI: GALERI GAMBAR DINAMIS --- */}
             <div className="relative aspect-square">
-                <div className="bg-white rounded-lg flex items-center justify-center p-2 shadow-xl h-full">
+                <div className="bg-white rounded-lg flex items-center justify-center overflow-hidden h-full">
                     {images.length > 0 ? (
                         <img
                             src={images[currentImageIndex]}
@@ -127,7 +127,7 @@ const OnderdilDetailView = ({ initialProduct, allProductVariants }) => {
                             className="w-full h-full object-contain transition-opacity duration-300"
                         />
                     ) : (
-                        <div className="w-full h-full bg-slate-100 rounded-md"></div>
+                        <div className="w-full h-full bg-slate-100 rounded-lg"></div>
                     )}
                 </div>
                 {images.length > 1 && (
