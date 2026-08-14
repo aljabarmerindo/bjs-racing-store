@@ -105,7 +105,6 @@ import MainLayout from '@/layouts/MainLayout.astro';
       }).join('');
     }
 
-    // @ts-ignore
     async function _removeFromWishlist(productId) {
       try {
         const res = await fetch('/api/wishlist', {
@@ -126,13 +125,16 @@ import MainLayout from '@/layouts/MainLayout.astro';
     }
 
     // Event delegation for delete buttons
-    document.getElementById('wishlist-container').addEventListener('click', async (e) => {
-      const btn = e.target.closest('.wishlist-delete-btn');
-      if (!btn) return;
-      const productId = btn.getAttribute('data-product-id');
-      if (!productId) return;
-      await _removeFromWishlist(productId);
-    });
+    const container = document.getElementById('wishlist-container');
+    if (container) {
+      container.addEventListener('click', async (e) => {
+        const btn = (e.target as HTMLElement).closest('.wishlist-delete-btn');
+        if (!btn) return;
+        const productId = btn.getAttribute('data-product-id');
+        if (!productId) return;
+        await _removeFromWishlist(productId);
+      });
+    }
 
     loadWishlist();
   </script>
