@@ -120,7 +120,7 @@ const ProductDetailView = ({ initialProduct, allProductVariants }) => {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
             {/* --- KOLOM KIRI: TAMPILAN GAMBAR (SEKARANG DINAMIS) --- */}
-            <div className="relative aspect-square bg-white rounded-lg flex items-center justify-center overflow-hidden">
+            <div className="relative aspect-square rounded-lg flex items-center justify-center overflow-hidden">
                 {currentImage ? (
                     <img
                         src={currentImage}
