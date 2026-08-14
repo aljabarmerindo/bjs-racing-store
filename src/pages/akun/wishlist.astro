@@ -128,7 +128,7 @@ import MainLayout from '@/layouts/MainLayout.astro';
     const container = document.getElementById('wishlist-container');
     if (container) {
       container.addEventListener('click', async (e) => {
-        const btn = (e.target as HTMLElement).closest('.wishlist-delete-btn');
+        const btn = e.target.closest('.wishlist-delete-btn');
         if (!btn) return;
         const productId = btn.getAttribute('data-product-id');
         if (!productId) return;
