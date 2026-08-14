@@ -177,12 +177,17 @@ const ProductDetailView = ({ initialProduct, allProductVariants }) => {
                 </div>
 
                 {selectedVariant.color_swatch_url && (
-                    <div className="absolute bottom-8 left-8 w-28 h-28 rounded-full shadow-lg overflow-hidden">
-                        <img
-                            src={selectedVariant.color_swatch_url}
-                            alt={`Warna ${selectedVariant.nama}`}
-                            className="w-full h-full object-cover"
-                        />
+                    <div className="absolute bottom-8 left-8 flex flex-col items-center">
+                        <div className="w-28 h-28 rounded-full shadow-lg overflow-hidden">
+                            <img
+                                src={selectedVariant.color_swatch_url}
+                                alt={`Warna ${selectedVariant.nama}`}
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                        <p className="text-sm font-bold text-slate-900 bg-white/70 px-1 rounded mt-1">
+                            {selectedVariant.sku || ""}
+                        </p>
                     </div>
                 )}
             </div>
