@@ -325,8 +325,11 @@ const ProductDetailView = ({ initialProduct, allProductVariants }) => {
             <div className="md:col-span-2">
                 <RelatedProducts
                     productId={selectedVariant.id}
+                    nama={selectedVariant.nama}
                     merek={selectedVariant.merek}
-                    lini_produk={selectedVariant.lini_produk}
+                    ukuran={selectedVariant.ukuran}
+                    kategori={selectedVariant.kategori}
+                    limit={8}
                 />
             </div>
         </div>

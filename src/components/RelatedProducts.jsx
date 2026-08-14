@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseBrowserClient.ts";
 import ProductCard from "./ProductCard.jsx";
 
-const RelatedProducts = ({ productId, merek, lini_produk, limit = 4 }) => {
+const RelatedProducts = ({ productId, nama, merek, ukuran, kategori, limit = 8 }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -13,8 +13,10 @@ const RelatedProducts = ({ productId, merek, lini_produk, limit = 4 }) => {
       try {
         const { data, error } = await supabase.rpc("get_related_products", {
           p_product_id: productId,
+          p_nama: nama || null,
           p_merek: merek || null,
-          p_lini_produk: lini_produk || null,
+          p_ukuran: ukuran || null,
+          p_kategori: kategori || null,
         });
 
         if (error) throw error;
@@ -32,7 +34,7 @@ const RelatedProducts = ({ productId, merek, lini_produk, limit = 4 }) => {
     if (productId) {
       fetchRelated();
     }
-  }, [productId, merek, lini_produk, limit]);
+  }, [productId, nama, merek, ukuran, kategori, limit]);
 
   if (loading) {
     return (
