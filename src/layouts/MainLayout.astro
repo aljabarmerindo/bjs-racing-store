@@ -22,7 +22,7 @@ const iconSizes = [72, 96, 128, 144, 152, 192, 384, 512];
 // Eruda (debug console) disembunyikan bawaan.
 // Gerbang 1 (build-time): script CDN hanya dimuat jika env PUBLIC_ENABLE_ERUDA="1" atau saat lokal (PROD=false).
 // Gerbang 2 (runtime): tampil hanya jika URL mengandung ?eruda=1. Lihat docs/ERUDA.md.
-const erudaEnabled = true;
+const erudaEnabled = import.meta.env.PUBLIC_ENABLE_ERUDA === "1" || !import.meta.env.PROD;
 ---
 
 <!doctype html>

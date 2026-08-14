@@ -87,7 +87,7 @@ const MapPicker = ({
 
       const map = L.map(containerRef.current, {
         zoomControl: true,
-        attributionControl: false,
+        attributionControl: true,
         dragging: true,
         doubleClickZoom: false,
         touchZoom: false,
