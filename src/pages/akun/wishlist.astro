@@ -15,11 +15,11 @@ import MainLayout from '@/layouts/MainLayout.astro';
     async function loadWishlist() {
       const res = await fetch('/api/wishlist');
       if (!res.ok) {
-        document.getElementById('wishlist-container')!.innerHTML = '<p class="text-red-500 col-span-full text-center py-10">Gagal memuat wishlist.</p>';
+        document.getElementById('wishlist-container').innerHTML = '<p class="text-red-500 col-span-full text-center py-10">Gagal memuat wishlist.</p>';
         return;
       }
-      const items: any[] = await res.json();
-      const container = document.getElementById('wishlist-container')!;
+      const items = await res.json();
+      const container = document.getElementById('wishlist-container');
       if (!items.length) {
         container.innerHTML = `
           <div class="col-span-full flex flex-col items-center justify-center py-12 px-4">
@@ -98,7 +98,7 @@ import MainLayout from '@/layouts/MainLayout.astro';
               </div>
             </a>
             <div class="px-3 pb-3 bg-white">
-              <button onclick="_removeFromWishlist('${p.id}')" class="w-full bg-red-50 text-red-600 border border-red-200 font-semibold py-2 rounded-lg text-sm hover:bg-red-100">Hapus</button>
+              <button data-product-id="${p.id}" class="w-full bg-red-50 text-red-600 border border-red-200 font-semibold py-2 rounded-lg text-sm hover:bg-red-100 wishlist-delete-btn">Hapus</button>
             </div>
           </div>
         `;
@@ -106,14 +106,33 @@ import MainLayout from '@/layouts/MainLayout.astro';
     }
 
     // @ts-ignore
-    async function _removeFromWishlist(productId: string) {
-      const res = await fetch('/api/wishlist', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ product_id: productId })
-      });
-      if (res.ok) loadWishlist();
+    async function _removeFromWishlist(productId) {
+      try {
+        const res = await fetch('/api/wishlist', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ product_id: productId })
+        });
+        if (res.ok) {
+          loadWishlist();
+        } else {
+          const data = await res.json().catch(() => ({}));
+          alert(data.message || 'Gagal menghapus item dari wishlist.');
+        }
+      } catch (err) {
+        alert('Terjadi kesalahan. Silakan coba lagi.');
+        console.error('Remove wishlist error:', err);
+      }
     }
+
+    // Event delegation for delete buttons
+    document.getElementById('wishlist-container').addEventListener('click', async (e) => {
+      const btn = e.target.closest('.wishlist-delete-btn');
+      if (!btn) return;
+      const productId = btn.getAttribute('data-product-id');
+      if (!productId) return;
+      await _removeFromWishlist(productId);
+    });
 
     loadWishlist();
   </script>
