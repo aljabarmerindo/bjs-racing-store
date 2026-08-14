@@ -1,7 +1,6 @@
 // src/components/ProductInfoTabs.jsx
 
 import React, { useState } from "react";
-import RelatedProducts from "./RelatedProducts.jsx";
 import ReviewForm from "./ReviewForm.jsx";
 import ReviewsList from "./ReviewsList.jsx";
 
@@ -12,7 +11,7 @@ const ProductInfoTabs = ({ product }) => {
     { id: "deskripsi", label: "Deskripsi Produk" },
     { id: "spesifikasi", label: "Spesifikasi" },
     { id: "ulasan", label: `Ulasan (${product.jumlah_ulasan || 0})` },
-    { id: "terkait", label: "Produk Terkait" },
+
   ];
 
   return (
@@ -65,13 +64,7 @@ const ProductInfoTabs = ({ product }) => {
             </div>
           </div>
         )}
-        {activeTab === "terkait" && (
-          <RelatedProducts
-            productId={product.id}
-            merek={product.merek}
-            lini_produk={product.lini_produk}
-          />
-        )}
+
       </div>
     </div>
   );
