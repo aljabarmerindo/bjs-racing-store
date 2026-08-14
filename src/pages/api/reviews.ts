@@ -41,9 +41,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const body = await request.json();
     const { product_id, order_id, rating, comment } = body;
 
-    if (!product_id || !order_id || !rating) {
+    if (!product_id || !rating) {
       return new Response(
-        JSON.stringify({ message: "product_id, order_id, dan rating wajib diisi." }),
+        JSON.stringify({ message: "product_id dan rating wajib diisi." }),
         { status: 400 },
       );
     }
@@ -68,19 +68,35 @@ export const POST: APIRoute = async ({ request, locals }) => {
       });
     }
 
-    const { data: existing } = await supabaseAdmin
-      .from("product_reviews")
-      .select("id")
-      .eq("customer_id", customer.id)
-      .eq("product_id", product_id)
-      .eq("order_id", order_id)
-      .maybeSingle();
+    if (order_id) {
+      const { data: existing } = await supabaseAdmin
+        .from("product_reviews")
+        .select("id")
+        .eq("customer_id", customer.id)
+        .eq("product_id", product_id)
+        .eq("order_id", order_id)
+        .maybeSingle();
 
-    if (existing) {
-      return new Response(
-        JSON.stringify({ message: "Anda sudah mengirim ulasan untuk pesanan ini." }),
-        { status: 400 },
-      );
+      if (existing) {
+        return new Response(
+          JSON.stringify({ message: "Anda sudah mengirim ulasan untuk pesanan ini." }),
+          { status: 400 },
+        );
+      }
+    } else {
+      const { data: existing } = await supabaseAdmin
+        .from("product_reviews")
+        .select("id")
+        .eq("customer_id", customer.id)
+        .eq("product_id", product_id)
+        .maybeSingle();
+
+      if (existing) {
+        return new Response(
+          JSON.stringify({ message: "Anda sudah mengirim ulasan untuk produk ini." }),
+          { status: 400 },
+        );
+      }
     }
 
     const { data: review, error } = await supabaseAdmin
@@ -88,7 +104,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       .insert({
         product_id,
         customer_id: customer.id,
-        order_id,
+        order_id: order_id || null,
         rating: numericRating,
         comment: comment || null,
       })
