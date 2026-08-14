@@ -116,7 +116,7 @@ const FeaturedProducts = () => {
         </div>
 
         {/* Product Grid */}
-        <div className="grid grid-cols-2 mobile:grid-cols-3 tablet:grid-cols-4 gap-3 mobile:gap-4 tablet:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {loading
             ? Array.from({ length: LIMIT }).map((_, i) => (
                 <SkeletonCard key={i} />
