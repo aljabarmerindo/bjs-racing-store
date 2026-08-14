@@ -177,6 +177,7 @@ export async function confirmOrderPayment(
         product_id: item.product_id,
         perubahan: -item.quantity,
         keterangan: `Penjualan Online - Order #${orderData.order_number}`,
+        type: 'reserve',
       };
     });
 

@@ -224,6 +224,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
                 product_id: item.product_id,
                 perubahan: item.quantity,
                 keterangan: `Restore Reserve Order #${orderNumber}`,
+                type: 'restore',
               }));
               await supabaseAdmin.from("stock_logs").insert(reverseLogs);
               await supabaseAdmin
@@ -327,6 +328,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
           product_id: item.product_id,
           perubahan: -item.quantity,
           keterangan: `Reserve Order #${orderNumber}`,
+          type: 'reserve',
         }));
 
         const { error: stockReserveError } = await supabaseAdmin

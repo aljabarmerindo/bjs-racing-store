@@ -103,6 +103,7 @@ export const POST: APIRoute = async (context) => {
 
     if (normalizedStatus === "delivered") {
       updatePayload.status = "completed";
+      updatePayload.delivered_at = new Date().toISOString();
     }
 
     await supabaseAdmin
@@ -126,9 +127,28 @@ export const POST: APIRoute = async (context) => {
           product_id: it.product_id,
           perubahan: it.quantity,
           keterangan: `Restore Order #${o.order_number} - Pengiriman ${normalizedStatus}`,
+          type: 'restore',
         }));
 
         await supabaseAdmin.from("stock_logs").insert(restoreLogs);
+      }
+    }
+
+    if (normalizedStatus === "delivered") {
+      const { data: deliveredItems } = await supabaseAdmin
+        .from("order_items")
+        .select("product_id, quantity")
+        .eq("order_id", o.id);
+
+      if (deliveredItems && deliveredItems.length > 0) {
+        const saleLogs = deliveredItems.map((it: any) => ({
+          product_id: it.product_id,
+          perubahan: -it.quantity,
+          keterangan: `Penjualan Dikonfirmasi - Order #${o.order_number}`,
+          type: 'sale',
+        }));
+
+        await supabaseAdmin.from("stock_logs").insert(saleLogs);
       }
     }
 
