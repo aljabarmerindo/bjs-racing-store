@@ -1,6 +1,6 @@
 {
   "name": "BJS Store",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
   "postCreateCommand": "npm install -g opencode-ai supabase vercel uipro-cli && npm install",
   "forwardPorts": [
     4321

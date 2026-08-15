@@ -8,6 +8,7 @@ import ColorSwatchCard from "./ColorSwatchCard.jsx";
 const ProductCatalog = ({ filterConfig, cardType = "product" }) => {
     const [allProducts, setAllProducts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [inactiveCategories, setInactiveCategories] = useState(new Set());
     
     const [filters, setFilters] = useState({
         searchTerm: "",
@@ -22,6 +23,21 @@ const ProductCatalog = ({ filterConfig, cardType = "product" }) => {
         tipe_motor: "semua",
     });
 
+    useEffect(() => {
+        const fetchInactiveCategories = async () => {
+            if (!filterConfig.showVehicleBrandFilter) {
+                setInactiveCategories(new Set());
+                return;
+            }
+            const { data } = await supabase
+                .from("product_categories")
+                .select("kategori")
+                .eq("is_active", false);
+            setInactiveCategories(new Set((data || []).map(r => r.kategori)));
+        };
+        fetchInactiveCategories();
+    }, [filterConfig]);
+
     const fetchProducts = useCallback(async () => {
         setLoading(true);
         let sortBy = filters.sort;
@@ -34,21 +50,17 @@ const ProductCatalog = ({ filterConfig, cardType = "product" }) => {
             ? 'search_onderdil_products' 
             : 'search_and_sort_products';
 
-        // --- PERBAIKAN UTAMA: Logika baru untuk menentukan filter kategori ---
         let finalCategoryFilter = null;
         if (filters.kategori !== "semua") {
-            // Prioritas 1: Gunakan pilihan dari dropdown filter jika ada
             finalCategoryFilter = filters.kategori;
         } else if (filterConfig.category) {
-            // Prioritas 2: Gunakan kategori default dari halaman (e.g., "Pilok")
             finalCategoryFilter = filterConfig.category;
         }
-        // Jika keduanya tidak ada, maka nilainya tetap null (tampilkan semua)
 
         let params = {
             p_sort_by: sortBy,
             p_search_term: filters.searchTerm,
-            p_kategori: finalCategoryFilter, // Gunakan nilai final
+            p_kategori: finalCategoryFilter,
             p_merek: filters.merek === "semua" ? null : filters.merek
         };
 
@@ -65,10 +77,16 @@ const ProductCatalog = ({ filterConfig, cardType = "product" }) => {
 
         if (error)
             console.error(`Gagal memuat produk (${functionName}):`, error.message);
-        else setAllProducts(data || []);
+        else {
+            let filtered = data || [];
+            if (isOnderdilPage && inactiveCategories.size > 0) {
+                filtered = filtered.filter(p => !inactiveCategories.has(p.kategori));
+            }
+            setAllProducts(filtered);
+        }
 
         setLoading(false);
-    }, [filterConfig, filters]);
+    }, [filterConfig, filters, inactiveCategories]);
 
     useEffect(() => {
         fetchProducts();
