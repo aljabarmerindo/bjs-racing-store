@@ -8,8 +8,8 @@ import ColorSwatchCard from "./ColorSwatchCard.jsx";
 const ProductCatalog = ({ filterConfig, cardType = "product" }) => {
     const [allProducts, setAllProducts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [inactiveCategories, setInactiveCategories] = useState(new Set());
     
+
     const [filters, setFilters] = useState({
         searchTerm: "",
         sort: "terlaris",
@@ -23,31 +23,20 @@ const ProductCatalog = ({ filterConfig, cardType = "product" }) => {
         tipe_motor: "semua",
     });
 
-    useEffect(() => {
-        const fetchInactiveCategories = async () => {
-            if (!filterConfig.showVehicleBrandFilter) {
-                setInactiveCategories(new Set());
-                return;
-            }
-            const { data } = await supabase
-                .from("product_categories")
-                .select("kategori")
-                .eq("is_active", false);
-            setInactiveCategories(new Set((data || []).map(r => r.kategori)));
-        };
-        fetchInactiveCategories();
-    }, [filterConfig]);
-
     const fetchProducts = useCallback(async () => {
         setLoading(true);
         const isOnderdilPage = filterConfig.showVehicleBrandFilter;
 
         try {
             let products = [];
+            let inactiveCategories = new Set();
             if (isOnderdilPage) {
                 // Halaman Onderdil: query langsung ke tabel products (bypass RPC
                 // yang rentan error) lalu filter visibility kategori di client.
-                let q = supabase
+                // Fetch produk DAN daftar kategori nonaktif secara bersamaan
+                // agar tidak ada race condition antar effect.
+                // Bangun query produk dengan filter yang relevan
+                let prodQuery = supabase
                     .from("products")
                     .select("*")
                     .eq("status", "Aktif")
@@ -56,18 +45,30 @@ const ProductCatalog = ({ filterConfig, cardType = "product" }) => {
                     .not("kategori", "is", null);
 
                 if (filters.searchTerm) {
-                    q = q.ilike("nama", `%${filters.searchTerm}%`);
+                    prodQuery = prodQuery.ilike("nama", `%${filters.searchTerm}%`);
                 }
                 if (filters.merek !== "semua") {
-                    q = q.eq("merek", filters.merek);
+                    prodQuery = prodQuery.eq("merek", filters.merek);
                 }
                 if (filters.kategori !== "semua") {
-                    q = q.eq("kategori", filters.kategori);
+                    prodQuery = prodQuery.eq("kategori", filters.kategori);
                 }
 
-                const { data, error } = await q;
-                if (error) throw error;
-                products = data || [];
+                const [prodRes, catRes] = await Promise.all([
+                    prodQuery,
+                    supabase
+                        .from("product_categories")
+                        .select("kategori")
+                        .eq("is_active", false),
+                ]);
+
+                if (prodRes.error) throw prodRes.error;
+                if (catRes.error) throw catRes.error;
+
+                products = prodRes.data || [];
+                inactiveCategories = new Set((catRes.data || []).map((r) => r.kategori));
+                // Catatan: filter di bawah memakai variabel lokal `inactiveCategories`
+                // (bukan state) sehingga tidak memicu re-render loop.
             } else {
                 const functionName = "search_and_sort_products";
                 let finalCategoryFilter = null;
@@ -123,7 +124,7 @@ const ProductCatalog = ({ filterConfig, cardType = "product" }) => {
         } finally {
             setLoading(false);
         }
-    }, [filterConfig, filters, inactiveCategories]);
+    }, [filterConfig, filters]);
 
     useEffect(() => {
         fetchProducts();
