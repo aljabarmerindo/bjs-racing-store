@@ -14,19 +14,35 @@ const CatalogFilter = ({ filters, setFilters, filterConfig }) => {
 
     useEffect(() => {
         const fetchFilterData = async () => {
-            // Ambil data produk untuk filter merek/cascade
-            let productQuery = supabase
-                .from("products")
-                .select("merek, lini_produk, color_variant, ukuran")
-                .eq("status", "Aktif");
-            if (filterConfig.category) {
-                productQuery = productQuery.eq("kategori", filterConfig.category);
+            // Ambil data produk untuk filter merek/cascade dengan PAGINATION
+            // (PostgREST membatasi 1000 baris/request; tanpa pagination opsi
+            // merek/lini/ukuran hanya berasal dari 1000 produk pertama).
+            const PAGE = 1000;
+            let from = 0;
+            let allProductData = [];
+            while (true) {
+                let productQuery = supabase
+                    .from("products")
+                    .select("merek, lini_produk, color_variant, ukuran")
+                    .eq("status", "Aktif")
+                    .range(from, from + PAGE - 1);
+                if (filterConfig.category) {
+                    productQuery = productQuery.eq("kategori", filterConfig.category);
+                }
+                if (filterConfig.showVehicleBrandFilter) {
+                    productQuery = productQuery.not("kategori", "in", '("Pilok", "Jasa")');
+                }
+                const { data: productPage, error } = await productQuery;
+                if (error) {
+                    console.error("Gagal memuat data filter:", error.message);
+                    break;
+                }
+                if (!productPage || productPage.length === 0) break;
+                allProductData = allProductData.concat(productPage);
+                if (productPage.length < PAGE) break;
+                from += PAGE;
             }
-            if (filterConfig.showVehicleBrandFilter) {
-                productQuery = productQuery.not("kategori", "in", '("Pilok", "Jasa")');
-            }
-            const { data: productData } = await productQuery;
-            setAllProducts(productData || []);
+            setAllProducts(allProductData);
 
             // PERBAIKAN 1: Ambil data Kategori jika filter diaktifkan
             // Hanya kategori yang AKTIF di product_categories (visibilitas /onderdil)

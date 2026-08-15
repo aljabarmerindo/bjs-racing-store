@@ -58,11 +58,29 @@ const ProductCatalog = ({ filterConfig, cardType = "product" }) => {
             params.p_ukuran = filters.ukuran === "semua" ? null : filters.ukuran;
         }
 
-        const { data, error } = await supabase.rpc(functionName, params);
+        // Ambil semua hasil dengan PAGINATION via parameter RPC
+        // (PostgREST membatasi 1000 baris/request & mengabaikan header Range
+        // pada pemanggilan RPC, sehingga p_limit/p_offset diproses di SQL).
+        const PAGE = 1000;
+        let offset = 0;
+        let allResult = [];
+        while (true) {
+            const { data, error } = await supabase.rpc(functionName, {
+                ...params,
+                p_limit: PAGE,
+                p_offset: offset,
+            });
 
-        if (error)
-            console.error(`Gagal memuat produk (${functionName}):`, error.message);
-        else setAllProducts(data || []);
+            if (error) {
+                console.error(`Gagal memuat produk (${functionName}):`, error.message);
+                break;
+            }
+            if (!data || data.length === 0) break;
+            allResult = allResult.concat(data);
+            if (data.length < PAGE) break;
+            offset += PAGE;
+        }
+        setAllProducts(allResult);
 
         setLoading(false);
     }, [filterConfig, filters]);
