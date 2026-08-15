@@ -249,14 +249,14 @@ const MapPicker = ({
   }, [interactive, handleMapClick, handleMarkerDrag]);
 
   return (
-    <div className="relative" style={{ zIndex: 0 }}>
+    <div className="relative">
       <div
         ref={containerRef}
         style={{
           height: typeof height === "number" ? `${height}px` : height,
           width: "100%",
           borderRadius: 12,
-          zIndex: 0,
+          
           position: "relative",
         }}
       />
