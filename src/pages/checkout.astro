@@ -5,6 +5,14 @@ import CheckoutView from '@/components/CheckoutView.tsx';
 import { supabaseAdmin } from '@/lib/supabaseServer.ts';
 
 const { session } = Astro.locals;
+
+// Guard maintenance: saat CHECKOUT_ENABLED=false, halaman checkout dialihkan ke /cart
+// (pengaman tambahan; redirect utama sudah ditangani middleware).
+const checkoutEnabled = import.meta.env.CHECKOUT_ENABLED !== "false";
+if (!checkoutEnabled) {
+  return Astro.redirect('/cart');
+}
+
 if (!session) {
   return Astro.redirect('/login?redirect=/checkout');
 }

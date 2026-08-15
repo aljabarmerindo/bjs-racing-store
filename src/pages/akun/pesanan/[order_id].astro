@@ -10,6 +10,7 @@ import { formatItemDimsCm, getProductDimsCm, getProductWeightGram, getWeightBasi
 const { session } = Astro.locals;
 const { order_id } = Astro.params;
 const statusParam = Astro.url.searchParams.get('status');
+const checkoutEnabled = import.meta.env.CHECKOUT_ENABLED !== "false";
 
 if (!session) {
   return Astro.redirect('/login');
@@ -296,7 +297,7 @@ if (showShippingLabel) {
       </div>
 
       <div class="text-center mt-12 flex flex-col sm:flex-row items-center justify-center gap-3">
-        {orderStatus === 'awaiting_payment' && (
+        {orderStatus === 'awaiting_payment' && checkoutEnabled && (
           <a href="/checkout" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
             Bayar Sekarang
           </a>

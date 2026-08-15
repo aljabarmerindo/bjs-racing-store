@@ -2,7 +2,7 @@
 import React from "react";
 import { useAppStore } from "../lib/store.ts";
 
-const CartView = () => {
+const CartView = ({ checkoutEnabled = true }) => {
   const { items, removeFromCart, updateQuantity } = useAppStore();
 
   const subtotal = items.reduce(
@@ -165,12 +165,44 @@ const CartView = () => {
           <p className="text-xs text-slate-400 text-right mt-1">
             Pajak dan ongkos kirim dihitung saat checkout.
           </p>
-          <a
-            href="/checkout"
-            className="mt-4 block text-center w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-          >
-            Lanjut ke Checkout
-          </a>
+          {checkoutEnabled ? (
+            <a
+              href="/checkout"
+              className="mt-4 block text-center w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+            >
+              Lanjut ke Checkout
+            </a>
+          ) : (
+            <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <p className="font-bold text-slate-800 mb-2">
+                Checkout Sementara Tidak Tersedia
+              </p>
+              <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                Mohon maaf, saat ini kami sedang melakukan pemeliharaan pada
+                sistem pembayaran dan pengiriman, sehingga proses checkout
+                belum dapat dilakukan. Untuk tetap bisa berbelanja, silakan
+                hubungi tim kami melalui WhatsApp di{" "}
+                <a
+                  href="https://wa.me/62881011669213"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-orange-600 hover:underline"
+                >
+                  0881011669213
+                </a>
+                . Kami akan dengan senang hati membantu Anda memproses pesanan
+                secara manual. Terima kasih atas pengertian dan kesabaran Anda.
+              </p>
+              <a
+                href="https://wa.me/62881011669213?text=Halo%20BJS%20Racing%2C%20saya%20ingin%20memesan%20produk%20berikut..."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-center w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+              >
+                Hubungi via WhatsApp
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </div>

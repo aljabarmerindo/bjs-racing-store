@@ -2,13 +2,15 @@
 // src/pages/cart.astro
 import MainLayout from '../layouts/MainLayout.astro';
 import CartView from '../components/CartView.jsx';
+
+const checkoutEnabled = import.meta.env.CHECKOUT_ENABLED !== "false";
 ---
 
 <MainLayout title="Keranjang Belanja - BJS RACING STORE">
     <div class="container mx-auto px-4 py-8">
         <h1 class="text-3xl font-bold mb-8">Keranjang Belanja</h1>
 
-        <CartView client:only="react" />
+        <CartView client:only="react" checkoutEnabled={checkoutEnabled} />
 
     </div>
 </MainLayout>

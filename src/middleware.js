@@ -27,6 +27,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   const pathname = context.url.pathname;
 
+  // Gerbang 0: Maintenance Checkout — saat CHECKOUT_ENABLED=false, semua akses
+  // ke /checkout diarahkan ke /cart (sebelum gerbang auth, jadi berlaku untuk
+  // pengguna yang login maupun tidak).
+  const checkoutEnabled = import.meta.env.CHECKOUT_ENABLED !== "false";
+  if (!checkoutEnabled && pathname === "/checkout") {
+    return context.redirect("/cart", 302);
+  }
+
   // Gerbang 1: Cek otentikasi (apakah sudah login?)
   if (!session && protectedRoutes.some((route) => pathname.startsWith(route))) {
     return context.redirect("/login?redirect=" + pathname, 302);
