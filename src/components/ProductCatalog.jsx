@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabaseBrowserClient.ts";
 import CatalogFilter from "./CatalogFilter.jsx";
 import ProductCard from "./ProductCard.jsx";
 import ColorSwatchCard from "./ColorSwatchCard.jsx";
+import ErrorBoundary from "./ErrorBoundary.jsx";
 
 const ProductCatalog = ({ filterConfig, cardType = "product" }) => {
     const [allProducts, setAllProducts] = useState([]);
@@ -88,54 +89,56 @@ const ProductCatalog = ({ filterConfig, cardType = "product" }) => {
     }, [allProducts, cardType]);
 
     return (
-        <div>
-            <CatalogFilter
-                filters={filters}
-                setFilters={setFilters}
-                filterConfig={filterConfig}
-            />
+        <ErrorBoundary>
+            <div>
+                <CatalogFilter
+                    filters={filters}
+                    setFilters={setFilters}
+                    filterConfig={filterConfig}
+                />
 
-            {loading ? (
-                <p className="text-center py-20">Memuat produk...</p>
-            ) : cardType === "colorSwatch" ? (
-                Object.keys(groupedProducts).length > 0 ? (
-                    <div className="space-y-12">
-                        {Object.entries(groupedProducts).map(
-                            ([variantName, products]) => (
-                                <div key={variantName}>
-                                    <h2 className="text-xl font-bold border-b-2 border-orange-400 pb-2 mb-6">
-                                        {variantName}
-                                    </h2>
-                                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-x-4 gap-y-8">
-                                        {products.map((product) => (
-                                            <ColorSwatchCard
-                                                key={product.id}
-                                                product={product}
-                                                allProductsInCatalog={allProducts}
-                                            />
-                                        ))}
+                {loading ? (
+                    <p className="text-center py-20">Memuat produk...</p>
+                ) : cardType === "colorSwatch" ? (
+                    Object.keys(groupedProducts).length > 0 ? (
+                        <div className="space-y-12">
+                            {Object.entries(groupedProducts).map(
+                                ([variantName, products]) => (
+                                    <div key={variantName}>
+                                        <h2 className="text-xl font-bold border-b-2 border-orange-400 pb-2 mb-6">
+                                            {variantName}
+                                        </h2>
+                                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-x-4 gap-y-8">
+                                            {products.map((product) => (
+                                                <ColorSwatchCard
+                                                    key={product.id}
+                                                    product={product}
+                                                    allProductsInCatalog={allProducts}
+                                                />
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            ),
-                        )}
+                                ),
+                            )}
+                        </div>
+                    ) : (
+                        <p className="text-center py-20 text-slate-500">
+                            Warna tidak ditemukan.
+                        </p>
+                    )
+                ) : allProducts.length > 0 ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                        {allProducts.map((product) => (
+                            <ProductCard key={product.id} product={product} />
+                        ))}
                     </div>
                 ) : (
                     <p className="text-center py-20 text-slate-500">
-                        Warna tidak ditemukan.
+                        Produk tidak ditemukan.
                     </p>
-                )
-            ) : allProducts.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                    {allProducts.map((product) => (
-                        <ProductCard key={product.id} product={product} />
-                    ))}
-                </div>
-            ) : (
-                <p className="text-center py-20 text-slate-500">
-                    Produk tidak ditemukan.
-                </p>
-            )}
-        </div>
+                )}
+            </div>
+        </ErrorBoundary>
     );
 };
 

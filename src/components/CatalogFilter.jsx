@@ -7,7 +7,7 @@ import { FiSearch, FiRefreshCw } from "react-icons/fi";
 const CatalogFilter = ({ filters, setFilters, filterConfig }) => {
     // State baru untuk menampung data master
     const [categories, setCategories] = useState([]);
-    const [activeMereks, setActiveMereks] = useState([]);
+    const [activeMereks, setActiveMereks] = useState(new Set());
     const [vehicleBrands, setVehicleBrands] = useState([]);
     const [vehicleModels, setVehicleModels] = useState([]);
     const [allProducts, setAllProducts] = useState([]);
