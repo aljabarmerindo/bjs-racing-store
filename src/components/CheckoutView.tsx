@@ -474,14 +474,9 @@ export default function CheckoutView({ orderId, initialItems }: CheckoutViewProp
         // console.error("[Checkout] Biteship rates failed:", biteshipResponse.status, biteshipResult);
       }
 
-      const gojekService = services.find(
-        (s) => s.code === "gojek"
-      );
-      const gojekCost = gojekService?.cost;
-
-      if (gojekCost && selectedAddress.destination) {
+      if (selectedAddress.destination) {
         const checkInternalResponse = await fetch(
-          `/api/shipping/check-local-availability?destination_id=${selectedAddress.destination}&gojek_cost=${gojekCost}`,
+          `/api/shipping/check-local-availability?destination_id=${selectedAddress.destination}&weight=${totalWeight}`,
         );
         const checkInternalResult = await checkInternalResponse.json();
 

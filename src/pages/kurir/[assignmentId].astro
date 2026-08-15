@@ -1,0 +1,11 @@
+---
+// src/pages/kurir/[assignmentId].astro
+import CourierLayout from '../../layouts/CourierLayout.astro';
+import CourierAssignmentDetail from '../../components/CourierAssignmentDetail.tsx';
+
+const { assignmentId } = Astro.params;
+---
+
+<CourierLayout title="Detail Penugasan - BJS Express">
+  <CourierAssignmentDetail client:load assignmentId={assignmentId ?? ''} />
+</CourierLayout>

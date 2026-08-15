@@ -1,0 +1,11 @@
+---
+// src/pages/tracking/[orderNumber].astro
+import MainLayout from '../../layouts/MainLayout.astro';
+import TrackingView from '../../components/TrackingView.tsx';
+
+const orderNumber = (Astro.params.orderNumber || "").trim().toUpperCase();
+---
+
+<MainLayout title={`Lacak Pesanan ${orderNumber} - BJS Racing Store`}>
+  <TrackingView client:load orderNumber={orderNumber} />
+</MainLayout>

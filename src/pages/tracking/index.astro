@@ -1,0 +1,50 @@
+---
+// src/pages/tracking/index.astro
+import MainLayout from '../../layouts/MainLayout.astro';
+---
+
+<MainLayout title="Lacak Pesanan - BJS Racing Store">
+  <div class="container mx-auto px-4 py-12 max-w-xl">
+    <h1 class="text-3xl font-bold mb-2 text-center">Lacak Pesanan</h1>
+    <p class="text-center text-slate-500 mb-8">
+      Masukkan nomor pesanan kamu (contoh: BJS-20260815-XXXXXX) untuk melihat status pengiriman.
+    </p>
+    <form id="tracking-form" class="flex gap-2">
+      <input
+        id="tracking-input"
+        type="text"
+        inputmode="text"
+        autocomplete="off"
+        placeholder="BJS-..."
+        class="flex-1 px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 uppercase"
+      />
+      <button
+        type="submit"
+        class="bg-orange-600 hover:bg-orange-700 text-white font-bold px-6 py-3 rounded-xl"
+      >
+        Lacak
+      </button>
+    </form>
+    <p id="tracking-error" class="hidden text-red-600 text-sm mt-3 text-center"></p>
+  </div>
+
+  <script>
+    const form = document.getElementById("tracking-form") as HTMLFormElement;
+    const input = document.getElementById("tracking-input") as HTMLInputElement;
+    const errorEl = document.getElementById("tracking-error");
+
+    form?.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const value = (input?.value || "").trim().toUpperCase();
+      if (!value) {
+        if (errorEl) {
+          errorEl.textContent = "Nomor pesanan wajib diisi.";
+          errorEl.classList.remove("hidden");
+        }
+        return;
+      }
+      errorEl?.classList.add("hidden");
+      window.location.href = "/tracking/" + encodeURIComponent(value);
+    });
+  </script>
+</MainLayout>

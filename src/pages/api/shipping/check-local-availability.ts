@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseServer.ts";
 
 export const GET: APIRoute = async ({ url }) => {
   const destinationId = url.searchParams.get("destination_id");
-  const gojekCostParam = url.searchParams.get("gojek_cost");
+  const weightParam = url.searchParams.get("weight");
 
   if (!destinationId) {
     return new Response(
@@ -13,50 +13,41 @@ export const GET: APIRoute = async ({ url }) => {
   }
 
   try {
-    let { data: area, error } = await supabaseAdmin
+    const { data: area, error } = await supabaseAdmin
       .from("bjs_express_areas")
-      .select("id, subdistrict_id, postal_code, district_name, city_name, province_name")
+      .select("id, subdistrict_id, postal_code, district_name, city_name, province_name, shipping_cost, etd, max_weight_gram, service_name")
       .eq("subdistrict_id", destinationId)
       .eq("is_active", true)
       .maybeSingle();
 
-    if (!area && error) {
+    if (error) {
       console.error("Supabase error:", error);
     }
 
     if (!area) {
-      const gojekCost = gojekCostParam ? Number(gojekCostParam) : null;
-      if (!gojekCost || gojekCost < 1000) {
-        return new Response(JSON.stringify({ available: false }), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
-      return new Response(JSON.stringify({ available: false, reason: "outside_service_area" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ available: false, reason: "outside_service_area" }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
     }
 
-    const gojekCost = gojekCostParam ? Number(gojekCostParam) : null;
-    if (!gojekCost || gojekCost < 1000) {
-      return new Response(JSON.stringify({ available: false }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
+    if (weightParam && Number(weightParam) > (area.max_weight_gram ?? 5000)) {
+      return new Response(
+        JSON.stringify({ available: false, reason: "over_weight", max_weight_gram: area.max_weight_gram }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
     }
-
-    const bjsCost = gojekCost - 1000;
 
     const responsePayload = {
       available: true,
-      name: "BJS RACING",
+      area_id: area.id,
+      name: area.service_name || "BJS Express",
       code: "internal",
-      cost: bjsCost,
-      service: "BJS Express",
+      cost: area.shipping_cost ?? 0,
+      service: area.service_name || "BJS Express",
       description: "",
-      etd: "6 - 8 Hours",
+      etd: area.etd || "6 - 8 Hours",
+      max_weight_gram: area.max_weight_gram,
     };
 
     return new Response(JSON.stringify(responsePayload), {

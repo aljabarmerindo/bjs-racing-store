@@ -57,7 +57,7 @@ export const POST: APIRoute = async ({ params, locals }) => {
         product_id: item.product_id,
         perubahan: -item.quantity,
         keterangan: `Penjualan Dikonfirmasi - Order #${order.order_number}`,
-        type: "sale",
+        type: "online_sale",
       }));
 
       const { error: logError } = await supabaseAdmin

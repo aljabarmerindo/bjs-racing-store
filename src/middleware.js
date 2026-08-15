@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { defineMiddleware } from "astro:middleware";
 
 const protectedRoutes = ["/cart", "/checkout", "/akun"];
+const courierRoutes = ["/kurir"];
 const authRoutes = ["/login", "/register"];
 // Halaman yang dikecualikan dari pengecekan profil lengkap
 const profileExceptions = ["/akun/lengkapi-profil"];
@@ -41,6 +42,22 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
   if (session && authRoutes.includes(pathname)) {
     return context.redirect("/akun", 302);
+  }
+
+  // Gerbang 1.5: Halaman kurir — wajib login sebagai kurir (profiles.role='courier').
+  // Endpoint /api/kurir/* memakai autentikasi sendiri (requireCourier).
+  if (courierRoutes.some((route) => pathname.startsWith(route))) {
+    if (!session) {
+      return context.redirect("/login?redirect=" + pathname, 302);
+    }
+    const { data: profile, error } = await context.locals.supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", session.user.id)
+      .maybeSingle();
+    if (error || profile?.role !== "courier") {
+      return context.redirect("/", 302);
+    }
   }
 
   // --- PERBAIKAN UTAMA DI SINI ---

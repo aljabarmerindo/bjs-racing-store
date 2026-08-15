@@ -145,7 +145,7 @@ export const POST: APIRoute = async (context) => {
           product_id: it.product_id,
           perubahan: -it.quantity,
           keterangan: `Penjualan Dikonfirmasi - Order #${o.order_number}`,
-          type: 'sale',
+          type: 'online_sale',
         }));
 
         await supabaseAdmin.from("stock_logs").insert(saleLogs);

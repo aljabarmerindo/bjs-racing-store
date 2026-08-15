@@ -86,6 +86,7 @@ const EVENT_TEMPLATES: Record<
       `Pesanan ${d.orderNumber} sudah dikirim via ${d.courierName || "kurir"}. ` +
       `No. Resi: ${d.trackingNumber || "-"}\n` +
       `Estimasi tiba: ${d.etd || "akan diinfokan"}\n\n` +
+      (d.trackingUrl ? `Lacak: ${d.trackingUrl}\n\n` : "") +
       `Terima kasih,\n${d.storeName || "BJS Racing Store"}`,
     email: {
       subject: (d) => `Pesanan ${d.orderNumber} Sudah Dikirim - ${d.storeName || "BJS Racing Store"}`,
@@ -95,6 +96,7 @@ const EVENT_TEMPLATES: Record<
         `<p>Pesanan <strong>${d.orderNumber}</strong> sudah dikirim via <strong>${d.courierName || "kurir"}</strong>.</p>` +
         `<p>No. Resi: <strong>${d.trackingNumber || "-"}</strong></p>` +
         `<p>Estimasi tiba: ${d.etd || "akan diinfokan"}</p>` +
+        (d.trackingUrl ? `<p>Lacak: <a href="${d.trackingUrl}">${d.trackingUrl}</a></p>` : "") +
         `<p>Terima kasih,<br/>${d.storeName || "BJS Racing Store"}</p>`,
     },
   },
@@ -103,6 +105,7 @@ const EVENT_TEMPLATES: Record<
       `Halo ${d.customerName || "Customer"}!\n\n` +
       `Pesanan ${d.orderNumber} telah sampai. ` +
       `Terima kasih telah berbelanja di ${d.storeName || "BJS Racing Store"}.\n\n` +
+      (d.trackingUrl ? `Detail: ${d.trackingUrl}\n\n` : "") +
       `Kami tunggu order Anda selanjutnya!`,
     email: {
       subject: (d) => `Pesanan ${d.orderNumber} Sampai - ${d.storeName || "BJS Racing Store"}`,
@@ -111,6 +114,7 @@ const EVENT_TEMPLATES: Record<
         `<p>Halo ${d.customerName || "Customer"},</p>` +
         `<p>Pesanan <strong>${d.orderNumber}</strong> telah sampai.</p>` +
         `<p>Terima kasih telah berbelanja di ${d.storeName || "BJS Racing Store"}.</p>` +
+        (d.trackingUrl ? `<p>Detail: <a href="${d.trackingUrl}">${d.trackingUrl}</a></p>` : "") +
         `<p>Kami tunggu order Anda selanjutnya!</p>`,
     },
   },
