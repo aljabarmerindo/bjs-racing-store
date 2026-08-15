@@ -7,13 +7,14 @@ import { FiSearch, FiRefreshCw } from "react-icons/fi";
 const CatalogFilter = ({ filters, setFilters, filterConfig }) => {
     // State baru untuk menampung data master
     const [categories, setCategories] = useState([]);
+    const [activeMereks, setActiveMereks] = useState([]);
     const [vehicleBrands, setVehicleBrands] = useState([]);
     const [vehicleModels, setVehicleModels] = useState([]);
     const [allProducts, setAllProducts] = useState([]);
 
     useEffect(() => {
         const fetchFilterData = async () => {
-            // Ambil data produk untuk filter Pilok
+            // Ambil data produk untuk filter merek/cascade
             let productQuery = supabase
                 .from("products")
                 .select("merek, lini_produk, color_variant, ukuran")
@@ -21,21 +22,42 @@ const CatalogFilter = ({ filters, setFilters, filterConfig }) => {
             if (filterConfig.category) {
                 productQuery = productQuery.eq("kategori", filterConfig.category);
             }
+            if (filterConfig.showVehicleBrandFilter) {
+                productQuery = productQuery.not("kategori", "in", '("Pilok", "Jasa")');
+            }
             const { data: productData } = await productQuery;
             setAllProducts(productData || []);
 
             // PERBAIKAN 1: Ambil data Kategori jika filter diaktifkan
+            // Hanya kategori yang AKTIF di product_categories (visibilitas /onderdil)
             if (filterConfig.showCategoryFilter) {
-                const { data: categoryData } = await supabase
+                const { data: activeCatData } = await supabase
+                    .from('product_categories')
+                    .select('kategori')
+                    .eq('is_active', true);
+                const activeCatSet = new Set((activeCatData || []).map(c => c.kategori));
+
+                const { data: productCatData } = await supabase
                     .from('products')
                     .select('kategori')
                     .not('kategori', 'in', '("Pilok", "Jasa")')
                     .not('kategori', 'is', null);
-                
-                if (categoryData) {
-                    const uniqueCategories = [...new Set(categoryData.map(p => p.kategori))].sort();
+
+                if (productCatData) {
+                    const uniqueCategories = [...new Set(productCatData.map(p => p.kategori))]
+                        .filter(k => activeCatSet.has(k))
+                        .sort();
                     setCategories(uniqueCategories);
                 }
+            }
+
+            // Ambil merek yang AKTIF di product_mereks (visibilitas /onderdil)
+            if (filterConfig.showVehicleBrandFilter) {
+                const { data: merekData } = await supabase
+                    .from('product_mereks')
+                    .select('merek')
+                    .eq('is_active', true);
+                setActiveMereks(new Set((merekData || []).map(m => m.merek)));
             }
 
             // Ambil data kendaraan jika filter kendaraan aktif
@@ -52,9 +74,17 @@ const CatalogFilter = ({ filters, setFilters, filterConfig }) => {
     }, [filterConfig]);
 
     const options = useMemo(() => {
-        const merekOptions = [
-            ...new Set(allProducts.map((p) => p.merek).filter(Boolean)),
-        ].sort();
+        // Pada halaman /onderdil, opsi merek dibatasi hanya merek AKTIF
+        // dan nilai kosong/'-' dinormalisasi menjadi 'TANPA MEREK'
+        const merekOptions = filterConfig.showVehicleBrandFilter
+            ? [...new Set(
+                  allProducts.map((p) =>
+                      !p.merek || p.merek === "-" || p.merek === ""
+                          ? "TANPA MEREK"
+                          : p.merek
+                  )
+              )].filter((m) => activeMereks.has(m)).sort()
+            : [...new Set(allProducts.map((p) => p.merek).filter(Boolean))].sort();
         const filteredByMerek =
             filters.merek === "semua"
                 ? allProducts
@@ -101,7 +131,7 @@ const CatalogFilter = ({ filters, setFilters, filterConfig }) => {
             vehicle_brands: vehicleBrands,
             vehicle_models: filteredModels,
         };
-    }, [allProducts, filters, vehicleBrands, vehicleModels]);
+    }, [allProducts, filters, activeMereks, vehicleBrands, vehicleModels]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
