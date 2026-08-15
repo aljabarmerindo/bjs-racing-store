@@ -40,52 +40,89 @@ const ProductCatalog = ({ filterConfig, cardType = "product" }) => {
 
     const fetchProducts = useCallback(async () => {
         setLoading(true);
-        let sortBy = filters.sort;
-        if (filters.price === "terendah") sortBy = "harga_asc";
-        if (filters.price === "tertinggi") sortBy = "harga_desc";
-
         const isOnderdilPage = filterConfig.showVehicleBrandFilter;
-        
-        const functionName = isOnderdilPage 
-            ? 'search_onderdil_products' 
-            : 'search_and_sort_products';
 
-        let finalCategoryFilter = null;
-        if (filters.kategori !== "semua") {
-            finalCategoryFilter = filters.kategori;
-        } else if (filterConfig.category) {
-            finalCategoryFilter = filterConfig.category;
-        }
+        try {
+            let products = [];
+            if (isOnderdilPage) {
+                // Halaman Onderdil: query langsung ke tabel products (bypass RPC
+                // yang rentan error) lalu filter visibility kategori di client.
+                let q = supabase
+                    .from("products")
+                    .select("*")
+                    .eq("status", "Aktif")
+                    .neq("kategori", "Pilok")
+                    .neq("kategori", "Jasa")
+                    .not("kategori", "is", null);
 
-        let params = {
-            p_sort_by: sortBy,
-            p_search_term: filters.searchTerm,
-            p_kategori: finalCategoryFilter,
-            p_merek: filters.merek === "semua" ? null : filters.merek
-        };
+                if (filters.searchTerm) {
+                    q = q.ilike("nama", `%${filters.searchTerm}%`);
+                }
+                if (filters.merek !== "semua") {
+                    q = q.eq("merek", filters.merek);
+                }
+                if (filters.kategori !== "semua") {
+                    q = q.eq("kategori", filters.kategori);
+                }
 
-        if (isOnderdilPage) {
-            params.p_vehicle_brand_id = filters.merek_motor === "semua" ? null : parseInt(filters.merek_motor, 10);
-            params.p_vehicle_model_id = filters.tipe_motor === "semua" ? null : parseInt(filters.tipe_motor, 10);
-        } else {
-            params.p_lini_produk = filters.lini_produk === "semua" ? null : filters.lini_produk;
-            params.p_color_variant = filters.color_variant === "semua" ? null : filters.color_variant;
-            params.p_ukuran = filters.ukuran === "semua" ? null : filters.ukuran;
-        }
+                const { data, error } = await q;
+                if (error) throw error;
+                products = data || [];
+            } else {
+                const functionName = "search_and_sort_products";
+                let finalCategoryFilter = null;
+                if (filters.kategori !== "semua") {
+                    finalCategoryFilter = filters.kategori;
+                } else if (filterConfig.category) {
+                    finalCategoryFilter = filterConfig.category;
+                }
 
-        const { data, error } = await supabase.rpc(functionName, params);
+                let sortBy = filters.sort;
+                if (filters.price === "terendah") sortBy = "harga_asc";
+                if (filters.price === "tertinggi") sortBy = "harga_desc";
 
-        if (error)
-            console.error(`Gagal memuat produk (${functionName}):`, error.message);
-        else {
-            let filtered = data || [];
-            if (isOnderdilPage && inactiveCategories.size > 0) {
-                filtered = filtered.filter(p => !inactiveCategories.has(p.kategori));
+                const params = {
+                    p_sort_by: sortBy,
+                    p_search_term: filters.searchTerm,
+                    p_kategori: finalCategoryFilter,
+                    p_merek: filters.merek === "semua" ? null : filters.merek,
+                    p_lini_produk: filters.lini_produk === "semua" ? null : filters.lini_produk,
+                    p_color_variant: filters.color_variant === "semua" ? null : filters.color_variant,
+                    p_ukuran: filters.ukuran === "semua" ? null : filters.ukuran,
+                };
+
+                const { data, error } = await supabase.rpc(functionName, params);
+                if (error) throw error;
+                products = data || [];
             }
-            setAllProducts(filtered);
-        }
 
-        setLoading(false);
+            // Filter visibility kategori (kategori nonaktif disembunyikan)
+            let filtered = products;
+            if (isOnderdilPage && inactiveCategories.size > 0) {
+                filtered = filtered.filter((p) => !inactiveCategories.has(p.kategori));
+            }
+
+            // Sorting client-side
+            const sortBy = filters.price === "terendah"
+                ? "harga_asc"
+                : filters.price === "tertinggi"
+                    ? "harga_desc"
+                    : filters.sort;
+
+            filtered = [...filtered].sort((a, b) => {
+                if (sortBy === "harga_asc") return (a.harga_jual || 0) - (b.harga_jual || 0);
+                if (sortBy === "harga_desc") return (b.harga_jual || 0) - (a.harga_jual || 0);
+                // terlaris / terbaru -> fallback ke created_at
+                return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+            });
+
+            setAllProducts(filtered);
+        } catch (err) {
+            console.error("Gagal memuat produk:", err.message);
+            setAllProducts([]);
+        } finally {
+            setLoading(false);
+        }
     }, [filterConfig, filters, inactiveCategories]);
 
     useEffect(() => {
