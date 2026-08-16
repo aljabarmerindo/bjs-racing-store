@@ -150,37 +150,6 @@ export async function confirmOrderPayment(
 
     await bookBiteshipIfNeeded(orderData);
 
-    const { data: currentStock, error: stockRecheckError } = await supabaseAdmin
-      .from("products")
-      .select("id, stok")
-      .in("id", orderData.order_items.map((item: any) => item.product_id));
-    if (stockRecheckError) throw stockRecheckError;
-
-    const stockMap = new Map((currentStock || []).map((p: any) => [p.id, p.stok]));
-    const insufficient = orderData.order_items.find((item: any) => {
-      const available = stockMap.get(item.product_id) ?? 0;
-      return available < item.quantity;
-    });
-    if (insufficient) {
-      return {
-        ok: false,
-        error: `Stok tidak cukup untuk "${insufficient.products?.nama || insufficient.product_id}". Tersisa: ${stockMap.get(insufficient.product_id) ?? 0}, diminta: ${insufficient.quantity}`,
-      };
-    }
-
-    const stockLogEntries = orderData.order_items.map((item: any) => {
-      if (!item.products)
-        throw new Error(
-          `Produk dengan ID ${item.product_id} tidak ditemukan untuk item pesanan ${item.id}`,
-        );
-      return {
-        product_id: item.product_id,
-        perubahan: -item.quantity,
-        keterangan: `Penjualan Online - Order #${orderData.order_number}`,
-        type: 'reserve',
-      };
-    });
-
     let total_laba = 0;
     const transactionItemsJson = orderData.order_items.map((item: any) => {
       const laba_item =
@@ -216,43 +185,6 @@ export async function confirmOrderPayment(
       .ignore()
       .select();
     if (transactionError) throw transactionError;
-
-    if (insertedTx && insertedTx.length > 0) {
-      const { error: stockLogError } = await supabaseAdmin
-        .from("stock_logs")
-        .insert(stockLogEntries);
-      if (stockLogError) throw stockLogError;
-      console.log(
-        `[LOGGING] Berhasil mencatat ${stockLogEntries.length} item ke stock_logs.`,
-      );
-    } else {
-      const { data: existingLogs } = await supabaseAdmin
-        .from("stock_logs")
-        .select("product_id")
-        .eq("keterangan", `Penjualan Online - Order #${orderData.order_number}`);
-
-      const existingProductIds = new Set(
-        (existingLogs || []).map((log: any) => log.product_id),
-      );
-
-      const newLogs = stockLogEntries.filter(
-        (entry: any) => !existingProductIds.has(entry.product_id),
-      );
-
-      if (newLogs.length > 0) {
-        const { error: stockLogError } = await supabaseAdmin
-          .from("stock_logs")
-          .insert(newLogs);
-        if (stockLogError) throw stockLogError;
-        console.log(
-          `[LOGGING] Retry: mencatat ${newLogs.length} item baru ke stock_logs.`,
-        );
-      } else {
-        console.log(
-          `[LOGGING] Semua stock_logs untuk ${orderNumber} sudah tercatat.`,
-        );
-      }
-    }
 
     return { ok: true };
   } catch (error) {

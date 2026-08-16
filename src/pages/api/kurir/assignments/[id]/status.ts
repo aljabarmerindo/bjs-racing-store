@@ -92,6 +92,23 @@ export const POST: APIRoute = async (context) => {
 
     await supabaseAdmin.from("orders").update(orderPatch).eq("id", o.id);
 
+    if (isCompleted) {
+      const { data: deliveredItems } = await supabaseAdmin
+        .from("order_items")
+        .select("product_id, quantity")
+        .eq("order_id", assignment.order_id);
+
+      if (deliveredItems && deliveredItems.length > 0) {
+        const saleLogs = deliveredItems.map((item: any) => ({
+          product_id: item.product_id,
+          perubahan: -item.quantity,
+          keterangan: `Penjualan Online - Order #${o.order_number}`,
+          type: "online_sale",
+        }));
+        await supabaseAdmin.from("stock_logs").insert(saleLogs);
+      }
+    }
+
     // 5) Notifikasi WhatsApp saat pesanan selesai (jangan menggagalkan update status)
     if (isCompleted) {
       const customer = Array.isArray(o.customers) ? (o.customers[0] || null) : (o.customers || null);

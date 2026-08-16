@@ -13,6 +13,13 @@ export const GET: APIRoute = async ({ url }) => {
     );
   }
 
+  if (weightParam && (!/^\d+$/.test(weightParam) || Number(weightParam) < 0)) {
+    return new Response(
+      JSON.stringify({ available: false, reason: "invalid_weight" }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
   try {
     const { data: areas, error } = await supabaseAdmin
       .from("bjs_express_areas")
