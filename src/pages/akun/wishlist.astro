@@ -13,7 +13,6 @@ import MainLayout from '@/layouts/MainLayout.astro';
 
   <script>
     let isDeleting = false;
-    let deletingProductId = null;
 
     function showSkeletonGrid() {
       const container = document.getElementById('wishlist-container');
@@ -39,13 +38,14 @@ import MainLayout from '@/layouts/MainLayout.astro';
     }
 
     async function loadWishlist() {
+      const container = document.getElementById('wishlist-container');
+      if (!container) return;
       const res = await fetch('/api/wishlist');
       if (!res.ok) {
-        document.getElementById('wishlist-container').innerHTML = '<p class="text-red-500 col-span-full text-center py-10">Gagal memuat wishlist.</p>';
+        container.innerHTML = '<p class="text-red-500 col-span-full text-center py-10">Gagal memuat wishlist.</p>';
         return;
       }
-      const items = await res.json();
-      const container = document.getElementById('wishlist-container');
+      const items = (await res.json()) as any[];
       if (!items.length) {
         const profileRes = await fetch('/api/profile').catch(() => null);
         const profile = profileRes?.ok ? await profileRes.json().catch(() => null) : null;
@@ -81,7 +81,7 @@ import MainLayout from '@/layouts/MainLayout.astro';
         `;
         return;
       }
-      container.innerHTML = items.map((item) => {
+      container.innerHTML = items.map((item: any) => {
         const p = item.products || {};
         const hasDiscount = p.harga_coret && p.harga_coret > p.harga_jual;
         const discountPercentage = hasDiscount
@@ -142,12 +142,11 @@ import MainLayout from '@/layouts/MainLayout.astro';
       }).join('');
     }
 
-    async function _removeFromWishlist(productId) {
+    async function _removeFromWishlist(productId: string) {
       if (isDeleting) return;
       isDeleting = true;
-      deletingProductId = productId;
 
-      const btn = document.querySelector(`.wishlist-delete-btn[data-product-id="${productId}"]`);
+      const btn = document.querySelector<HTMLButtonElement>(`.wishlist-delete-btn[data-product-id="${productId}"]`);
       if (btn) {
         btn.disabled = true;
         btn.innerHTML = '<span class="inline-flex items-center gap-2"><svg class="animate-spin h-4 w-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Menghapus...</span>';
@@ -179,7 +178,6 @@ import MainLayout from '@/layouts/MainLayout.astro';
         }
       } finally {
         isDeleting = false;
-        deletingProductId = null;
       }
     }
 
@@ -187,7 +185,8 @@ import MainLayout from '@/layouts/MainLayout.astro';
     const container = document.getElementById('wishlist-container');
     if (container) {
       container.addEventListener('click', async (e) => {
-        const btn = e.target.closest('.wishlist-delete-btn');
+        const target = e.target as HTMLElement | null;
+        const btn = target?.closest<HTMLButtonElement>('.wishlist-delete-btn');
         if (!btn) return;
         const productId = btn.getAttribute('data-product-id');
         if (!productId) return;
