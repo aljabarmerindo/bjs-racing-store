@@ -29,12 +29,14 @@ export const POST: APIRoute = async (context) => {
   }
 
   try {
-    const { data: assignment, error: fetchError } = await supabaseAdmin
+    let q = supabaseAdmin
       .from("courier_assignments")
       .select("id, status")
-      .eq("id", assignmentId)
-      .eq("courier_id", auth.courierId)
-      .maybeSingle();
+      .eq("id", assignmentId);
+    if (auth.role === "courier") {
+      q = q.eq("courier_id", auth.courierId);
+    }
+    const { data: assignment, error: fetchError } = await q.maybeSingle();
 
     if (fetchError) throw fetchError;
     if (!assignment) {

@@ -15,7 +15,7 @@ export const GET: APIRoute = async (context) => {
   }
 
   try {
-    const { data: assignment, error } = await supabaseAdmin
+    let query = supabaseAdmin
       .from("courier_assignments")
       .select(`
         id,
@@ -45,9 +45,14 @@ export const GET: APIRoute = async (context) => {
           )
         )
       `)
-      .eq("id", assignmentId)
-      .eq("courier_id", auth.courierId)
-      .maybeSingle();
+      .eq("id", assignmentId);
+
+    // Kurir hanya bisa membuka penugasannya sendiri; admin/owner bisa membuka semua.
+    if (auth.role === "courier") {
+      query = query.eq("courier_id", auth.courierId);
+    }
+
+    const { data: assignment, error } = await query.maybeSingle();
 
     if (error) throw error;
     if (!assignment) {

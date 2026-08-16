@@ -36,13 +36,15 @@ export const POST: APIRoute = async (context) => {
   const photoUrl = body.photo_url ? String(body.photo_url).slice(0, 1000) : null;
 
   try {
-    // 1) Pastikan penugasan milik kurir ini
-    const { data: assignment, error: fetchError } = await supabaseAdmin
+    // 1) Pastikan penugasan milik kurir ini (admin/owner boleh mengubah penugasan apa pun)
+    let q = supabaseAdmin
       .from("courier_assignments")
       .select("id, courier_id, status, order_id")
-      .eq("id", assignmentId)
-      .eq("courier_id", auth.courierId)
-      .maybeSingle();
+      .eq("id", assignmentId);
+    if (auth.role === "courier") {
+      q = q.eq("courier_id", auth.courierId);
+    }
+    const { data: assignment, error: fetchError } = await q.maybeSingle();
 
     if (fetchError) throw fetchError;
     if (!assignment) {

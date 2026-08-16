@@ -4,6 +4,8 @@ import { defineMiddleware } from "astro:middleware";
 
 const protectedRoutes = ["/cart", "/checkout", "/akun"];
 const courierRoutes = ["/kurir"];
+// Role yang diizinkan membuka halaman kurir: kurir + admin/owner (mode monitoring).
+const courierRoles = ["courier", "admin", "owner"];
 const authRoutes = ["/login", "/register"];
 // Halaman yang dikecualikan dari pengecekan profil lengkap
 const profileExceptions = ["/akun/lengkapi-profil"];
@@ -44,7 +46,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return context.redirect("/akun", 302);
   }
 
-  // Gerbang 1.5: Halaman kurir — wajib login sebagai kurir (profiles.role='courier').
+  // Gerbang 1.5: Halaman kurir — wajib login dengan role kurir/admin/owner.
   // Endpoint /api/kurir/* memakai autentikasi sendiri (requireCourier).
   if (courierRoutes.some((route) => pathname.startsWith(route))) {
     if (!session) {
@@ -55,7 +57,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       .select("role")
       .eq("id", session.user.id)
       .maybeSingle();
-    if (error || profile?.role !== "courier") {
+    if (error || !courierRoles.includes(profile?.role)) {
       return context.redirect("/", 302);
     }
   }

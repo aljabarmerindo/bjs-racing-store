@@ -10,7 +10,7 @@ export const GET: APIRoute = async (context) => {
   }
 
   try {
-    const { data, error } = await supabaseAdmin
+    let query = supabaseAdmin
       .from("courier_assignments")
       .select(`
         id,
@@ -29,8 +29,14 @@ export const GET: APIRoute = async (context) => {
           customers (id, nama_pelanggan, telepon),
           order_items (quantity)
         )
-      `)
-      .eq("courier_id", auth.courierId)
+      `);
+
+    // Kurir hanya melihat penugasannya sendiri; admin/owner melihat semua (monitoring).
+    if (auth.role === "courier") {
+      query = query.eq("courier_id", auth.courierId);
+    }
+
+    const { data, error } = await query
       .order("assigned_at", { ascending: false })
       .limit(50);
 
