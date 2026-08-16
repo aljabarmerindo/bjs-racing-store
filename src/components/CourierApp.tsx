@@ -25,9 +25,13 @@ interface Assignment {
   order_number?: string;
   order_status?: string;
   total_amount?: number;
+  item_count?: number;
   customer?: { nama_pelanggan?: string; telepon?: string } | null;
   address?: { full_address?: string; recipient_name?: string; recipient_phone?: string } | null;
 }
+
+const normalizeTel = (phone?: string) =>
+  (phone || "").replace(/[^\d+]/g, "").replace(/^0/, "62");
 
 const CourierApp = () => {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -96,40 +100,60 @@ const CourierApp = () => {
             const meta = STATUS_META[a.status] || STATUS_META.assigned;
             const customer = a.customer;
             const addr = a.address;
+            const phone = addr?.recipient_phone || customer?.telepon || "";
             return (
-              <a
+              <div
                 key={a.assignment_id}
-                href={`/kurir/${a.assignment_id}`}
-                className="block bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow"
+                className="relative bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow"
               >
-                <div className="flex items-center justify-between gap-2">
-                  <div>
-                    <p className="font-bold">{a.order_number}</p>
+                <a href={`/kurir/${a.assignment_id}`} className="absolute inset-0 z-0" aria-label={`Detail ${a.order_number}`} />
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="font-bold flex items-center gap-2">
+                        {a.order_number}
+                        {a.item_count ? (
+                          <span className="px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 text-xs font-semibold">
+                            {a.item_count} item
+                          </span>
+                        ) : null}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {formatWaktu(a.assigned_at)}
+                        {a.completed_at ? ` • selesai ${formatWaktu(a.completed_at)}` : ""}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${meta.color}`}>
+                        {meta.label}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-sm">
+                    <p className="font-medium">{customer?.nama_pelanggan || "Pelanggan"}</p>
                     <p className="text-xs text-slate-500">
-                      {formatWaktu(a.assigned_at)}
-                      {a.completed_at ? ` • selesai ${formatWaktu(a.completed_at)}` : ""}
+                      {customer?.telepon || ""}
+                      {addr?.recipient_phone && addr.recipient_phone !== customer?.telepon
+                        ? ` • ${addr.recipient_phone}`
+                        : ""}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                      {addr?.full_address || "-"}
                     </p>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${meta.color}`}>
-                    {meta.label}
-                  </span>
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <a
+                      href={`tel:${normalizeTel(phone)}`}
+                      className="inline-flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg"
+                    >
+                      📞 Telepon
+                    </a>
+                    <p className="text-right text-sm font-bold text-slate-800">
+                      {formatRupiah(a.total_amount)}
+                    </p>
+                  </div>
                 </div>
-                <div className="mt-2 text-sm">
-                  <p className="font-medium">{customer?.nama_pelanggan || "Pelanggan"}</p>
-                  <p className="text-xs text-slate-500">
-                    {customer?.telepon || ""}
-                    {addr?.recipient_phone && addr.recipient_phone !== customer?.telepon
-                      ? ` • ${addr.recipient_phone}`
-                      : ""}
-                  </p>
-                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                    {addr?.full_address || "-"}
-                  </p>
-                </div>
-                <div className="mt-2 text-right text-sm font-bold text-slate-800">
-                  {formatRupiah(a.total_amount)}
-                </div>
-              </a>
+              </div>
             );
           })}
         </div>

@@ -26,7 +26,8 @@ export const GET: APIRoute = async (context) => {
           total_amount,
           courier_details,
           shipping_address,
-          customers (id, nama_pelanggan, telepon)
+          customers (id, nama_pelanggan, telepon),
+          order_items (quantity)
         )
       `)
       .eq("courier_id", auth.courierId)
@@ -39,6 +40,8 @@ export const GET: APIRoute = async (context) => {
       const order = Array.isArray(a.orders) ? (a.orders[0] || {}) : (a.orders || {});
       const customer = Array.isArray(order.customers) ? (order.customers[0] || null) : (order.customers || null);
       const addr = order.shipping_address || {};
+      const items = Array.isArray(order.order_items) ? order.order_items : [];
+      const itemCount = items.reduce((sum: number, it: any) => sum + Number(it.quantity || 0), 0);
       return {
         assignment_id: a.id,
         status: a.status,
@@ -53,6 +56,7 @@ export const GET: APIRoute = async (context) => {
         courier_details: order.courier_details || {},
         customer,
         address: addr,
+        item_count: itemCount,
       };
     });
 

@@ -33,6 +33,9 @@ const formatRupiah = (n?: number) =>
 const formatWaktu = (iso?: string) =>
   iso ? new Date(iso).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "-";
 
+const normalizeTel = (phone?: string) =>
+  (phone || "").replace(/[^\d+]/g, "").replace(/^0/, "62");
+
 const STATUS_LABEL: Record<string, string> = {
   assigned: "Ditunggu ambil di toko",
   picked: "Barang sudah diambil",
@@ -268,6 +271,24 @@ const CourierAssignmentDetail = ({ assignmentId }: Props) => {
           {addr.recipient_phone || customer?.telepon || "-"}
         </p>
         <p className="text-sm text-slate-600 mt-2">{addr.full_address || "-"}</p>
+        {(addr.recipient_phone || customer?.telepon) ? (
+          <div className="flex items-center gap-2 mt-3">
+            <a
+              href={`tel:${normalizeTel(addr.recipient_phone || customer?.telepon)}`}
+              className="inline-flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded-lg"
+            >
+              📞 Telepon
+            </a>
+            <a
+              href={`https://wa.me/${normalizeTel(addr.recipient_phone || customer?.telepon)}?text=${encodeURIComponent(`Halo ${addr.recipient_name || customer?.nama_pelanggan || "Bapak/Ibu"}, ini kurir BJS Express untuk pesanan ${order.order_number}.`)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-lg"
+            >
+              WhatsApp
+            </a>
+          </div>
+        ) : null}
       </div>
 
       <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
@@ -295,7 +316,14 @@ const CourierAssignmentDetail = ({ assignmentId }: Props) => {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
-        <h2 className="font-bold mb-2">Daftar Barang</h2>
+        <h2 className="font-bold mb-2">
+          Daftar Barang
+          {items.length > 0 && (
+            <span className="ml-2 px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 text-xs font-semibold align-middle">
+              {items.reduce((sum: number, it: any) => sum + Number(it.quantity || 0), 0)} item
+            </span>
+          )}
+        </h2>
         <ul className="divide-y divide-slate-100">
           {items.map((it: any) => (
             <li key={it.id} className="py-2 flex items-center justify-between gap-2">
