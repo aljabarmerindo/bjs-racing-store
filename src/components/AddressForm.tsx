@@ -20,6 +20,7 @@ const initialFormState: FormDataState = {
   recipient_phone: "",
   destination: "",
   destination_text: "",
+  village_name: "",
   full_address: "",
   postal_code: "",
   city_id: "",
@@ -40,6 +41,11 @@ export default function AddressForm({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<BiteshipAreaResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [desas, setDesas] = useState<
+    { village_name: string; shipping_cost: number; etd: string }[]
+  >([]);
+  const [hasAllDesa, setHasAllDesa] = useState(false);
+  const [isLoadingDesas, setIsLoadingDesas] = useState(false);
   const [isMapEditing, setIsMapEditing] = useState(false);
   const [gpsMessage, setGpsMessage] = useState("");
   const [locateKey, setLocateKey] = useState(0);
@@ -60,6 +66,7 @@ export default function AddressForm({
           recipient_phone: addressToEdit.recipient_phone || "",
           destination: addressToEdit.destination || "",
           destination_text: addressToEdit.destination_text || "",
+          village_name: addressToEdit.village_name || "",
           full_address: addressToEdit.full_address || "",
           postal_code: addressToEdit.postal_code || "",
           province_id: addressToEdit.province_id || "",
@@ -126,6 +133,41 @@ export default function AddressForm({
   }, [searchQuery, formData.destination_text, isOpen]);
 
   useEffect(() => {
+    if (!isOpen || !formData.destination) {
+      setDesas([]);
+      setHasAllDesa(false);
+      return;
+    }
+    let cancelled = false;
+    setIsLoadingDesas(true);
+    fetch(
+      `/api/shipping/bjs-express-desas?subdistrict_id=${encodeURIComponent(
+        formData.destination,
+      )}`,
+    )
+      .then(async (res) => {
+        if (!res.ok) return { desas: [], hasAllDesa: false };
+        return res.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+        setDesas(data.desas || []);
+        setHasAllDesa(!!data.hasAllDesa);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setDesas([]);
+        setHasAllDesa(false);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingDesas(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, formData.destination]);
+
+  useEffect(() => {
     if (searchResults.length > 0 && searchInputRef.current) {
       const rect = searchInputRef.current.getBoundingClientRect();
       setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
@@ -148,7 +190,9 @@ export default function AddressForm({
   }, [dropdownPos]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     const { name, value } = e.target;
     if (name === "detail_address") {
@@ -179,6 +223,7 @@ export default function AddressForm({
       ...prev,
       destination: area.id,
       destination_text: fullText || area.name,
+      village_name: "",
       postal_code: area.postalCode || "",
       city_id: area.administrativeLevel2 || "",
       province_id: area.administrativeLevel1 || "",
@@ -456,6 +501,53 @@ export default function AddressForm({
                 document.body
               )}
             </div>
+
+            {(desas.length > 0 || hasAllDesa) && (
+              <div>
+                <label
+                  htmlFor="village_name"
+                  className="block text-sm font-medium text-slate-700 mb-1.5"
+                >
+                  Desa / Kelurahan
+                </label>
+                <select
+                  id="village_name"
+                  name="village_name"
+                  value={formData.village_name}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors bg-white"
+                >
+                  <option value="">
+                    {hasAllDesa
+                      ? "-- Semua Desa (harga kecamatan) --"
+                      : "-- Pilih Desa --"}
+                  </option>
+                  {desas.map((d) => (
+                    <option key={d.village_name} value={d.village_name}>
+                      {d.village_name} (Ongkir{" "}
+                      {new Intl.NumberFormat("id-ID", {
+                        style: "currency",
+                        currency: "IDR",
+                        maximumFractionDigits: 0,
+                      }).format(d.shipping_cost)}
+                      )
+                    </option>
+                  ))}
+                </select>
+                {isLoadingDesas && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Memuat daftar desa...
+                  </p>
+                )}
+                {!isLoadingDesas &&
+                  (desas.length > 0 || hasAllDesa) && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Pilih desa agar ongkir BJS Express dihitung sesuai harga
+                      desa.
+                    </p>
+                  )}
+              </div>
+            )}
 
             <div>
               <label

@@ -475,8 +475,11 @@ export default function CheckoutView({ orderId, initialItems }: CheckoutViewProp
       }
 
       if (selectedAddress.destination) {
+        const villageParam = selectedAddress.village_name
+          ? `&village=${encodeURIComponent(selectedAddress.village_name)}`
+          : "";
         const checkInternalResponse = await fetch(
-          `/api/shipping/check-local-availability?destination_id=${selectedAddress.destination}&weight=${totalWeight}`,
+          `/api/shipping/check-local-availability?destination_id=${selectedAddress.destination}&weight=${totalWeight}${villageParam}`,
         );
         const checkInternalResult = await checkInternalResponse.json();
 

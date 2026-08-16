@@ -38,6 +38,7 @@ export interface Address {
   full_address: string;
   destination: string;
   destination_text: string;
+  village_name?: string;
   postal_code: string;
   is_primary: boolean;
   province_id?: string;
@@ -52,6 +53,7 @@ export interface FormDataState {
   recipient_phone: string;
   destination: string;
   destination_text: string;
+  village_name: string;
   full_address: string;
   postal_code: string;
   province_id?: string;
