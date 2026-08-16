@@ -4,6 +4,7 @@ import MainLayout from '@/layouts/MainLayout.astro';
 import { supabaseAdmin } from '@/lib/supabaseServer.ts';
 import { formatToWIB } from '@/lib/utils.ts';
 import ShippingLabel from '@/components/ShippingLabel.tsx';
+import TrackingView from '@/components/TrackingView.tsx';
 import bwipjs from 'bwip-js';
 import { formatItemDimsCm, getProductDimsCm, getProductWeightGram, getWeightBasis, volumetricWeightGram } from '@/lib/packageDimensions';
 
@@ -90,6 +91,7 @@ const hasCourier = order.courier_details && typeof order.courier_details === 'ob
 const hasCoordinates = hasShipping && Number.isFinite(order.shipping_address.latitude) && Number.isFinite(order.shipping_address.longitude);
 const paidStatuses = ['paid', 'processing', 'shipped', 'completed'];
 const showShippingLabel = hasCourier && paidStatuses.includes(order.status);
+const isInternalCourier = hasCourier && order.courier_details.code === 'internal';
 
 let waybillBarcodeDataUrl = '';
 let orderBarcodeDataUrl = '';
@@ -235,7 +237,13 @@ if (showShippingLabel) {
             )}
           </div>
 
-           {hasCoordinates && (
+            {showShippingLabel && isInternalCourier && (
+              <div class="mt-6">
+                <TrackingView client:load orderNumber={order.order_number} compact />
+              </div>
+            )}
+
+           {hasCoordinates && !isInternalCourier && (
              <div class="mt-6">
                <h3 class="font-bold text-lg mb-2">Rute Pengiriman</h3>
                <div id="map-placeholder" data-lat={order.shipping_address.latitude} data-lng={order.shipping_address.longitude} data-address={order.shipping_address.destination_text || order.shipping_address.full_address} class="h-[420px] w-full rounded-lg border border-slate-200 bg-slate-100 flex items-center justify-center text-slate-500">

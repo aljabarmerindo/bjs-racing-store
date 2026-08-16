@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabaseBrowserClient";
 
 const STORE_LAT = Number(import.meta.env.BITESHIP_ORIGIN_LAT || -6.5244682);
 const STORE_LNG = Number(import.meta.env.BITESHIP_ORIGIN_LNG || 110.7674915);
+const STORE_PHONE = String(import.meta.env.PUBLIC_STORE_PHONE || "62881011669213").replace(/[^0-9]/g, "");
 
 const ORDER_STATUS_META: Record<string, { label: string; color: string }> = {
   awaiting_payment: { label: "Menunggu Pembayaran", color: "bg-slate-100 text-slate-700" },
@@ -43,9 +44,10 @@ const WA_META: Record<string, string> = {
 
 interface Props {
   orderNumber: string;
+  compact?: boolean;
 }
 
-const TrackingView = ({ orderNumber }: Props) => {
+const TrackingView = ({ orderNumber, compact = false }: Props) => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -201,27 +203,31 @@ const TrackingView = ({ orderNumber }: Props) => {
   const asgMeta = ASSIGNMENT_STATUS_META[status] || ASSIGNMENT_STATUS_META.assigned;
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
+    <div className={compact ? "space-y-4" : "container mx-auto px-4 py-8 max-w-2xl"}>
       <div className="flex items-center justify-between gap-2 mb-4">
-        <h1 className="text-2xl font-bold">Lacak Pesanan</h1>
-        <a href="/tracking" className="text-blue-600 hover:underline text-sm">Lacak lainnya</a>
+        <h1 className={`font-bold ${compact ? "text-lg" : "text-2xl"}`}>
+          {compact ? "Lacak Pengiriman BJS Express" : "Lacak Pesanan"}
+        </h1>
+        {!compact && <a href="/tracking" className="text-blue-600 hover:underline text-sm">Lacak lainnya</a>}
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-slate-200">
-        <div className="flex items-center justify-between gap-2">
-          <div>
-            <p className="text-sm text-slate-500">Nomor Pesanan</p>
-            <p className="font-mono font-bold">{data.order_number}</p>
+      {!compact && (
+        <div className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-slate-200">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-sm text-slate-500">Nomor Pesanan</p>
+              <p className="font-mono font-bold">{data.order_number}</p>
+            </div>
+            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${orderMeta.color}`}>
+              {orderMeta.label}
+            </span>
           </div>
-          <span className={`px-3 py-1 rounded-full text-sm font-semibold ${orderMeta.color}`}>
-            {orderMeta.label}
-          </span>
+          <div className="mt-3 text-sm text-slate-600">
+            <p>Dibuat: {formatWaktu(data.created_at)}</p>
+            {data.delivered_at ? <p>Selesai: {formatWaktu(data.delivered_at)}</p> : null}
+          </div>
         </div>
-        <div className="mt-3 text-sm text-slate-600">
-          <p>Dibuat: {formatWaktu(data.created_at)}</p>
-          {data.delivered_at ? <p>Selesai: {formatWaktu(data.delivered_at)}</p> : null}
-        </div>
-      </div>
+      )}
 
       {data.is_internal && asg && (
         <div className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-slate-200">
@@ -278,12 +284,12 @@ const TrackingView = ({ orderNumber }: Props) => {
         </div>
       ) : null}
 
-      {data.is_internal && data.customer?.telepon && (
+      {data.is_internal && (
         <div className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-slate-200">
           <h2 className="font-bold mb-2">Butuh Bantuan?</h2>
           <a
-            href={`https://wa.me/${String(data.customer.telepon).replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
-              `Halo, saya ingin bertanya tentang pesanan ${data.order_number} (${WA_META[status] || "sedang diproses"}).`,
+            href={`https://wa.me/${STORE_PHONE}?text=${encodeURIComponent(
+              `Halo BJS Racing, saya ingin bertanya tentang pesanan ${data.order_number} (${WA_META[status] || "sedang diproses"}).`,
             )}`}
             target="_blank"
             rel="noreferrer"
@@ -294,30 +300,32 @@ const TrackingView = ({ orderNumber }: Props) => {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-slate-200">
-        <h2 className="font-bold mb-2">Daftar Barang</h2>
-        <ul className="divide-y divide-slate-100">
-          {data.items.map((it: any, i: number) => (
-            <li key={i} className="py-2 flex items-center gap-3">
-              {it.image_url ? (
-                <img src={it.image_url} alt={it.nama} className="w-12 h-12 object-cover rounded-lg" />
-              ) : (
-                <div className="w-12 h-12 bg-slate-100 rounded-lg" />
-              )}
-              <div className="flex-1">
-                <p className="font-medium text-sm">{it.nama}</p>
-                <p className="text-xs text-slate-500">{it.quantity} x {formatRupiah(it.price)}</p>
-              </div>
-              <p className="text-sm font-semibold">{formatRupiah(it.price * it.quantity)}</p>
-            </li>
-          ))}
-        </ul>
-        <div className="mt-2 pt-3 border-t border-slate-100 text-sm">
-          <p className="flex justify-between"><span className="text-slate-500">Subtotal</span><span>{formatRupiah(data.subtotal_products)}</span></p>
-          <p className="flex justify-between"><span className="text-slate-500">Ongkir</span><span>{formatRupiah(data.shipping_cost)}</span></p>
-          <p className="flex justify-between font-bold mt-1"><span>Total</span><span>{formatRupiah(data.total_amount)}</span></p>
+      {!compact && (
+        <div className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-slate-200">
+          <h2 className="font-bold mb-2">Daftar Barang</h2>
+          <ul className="divide-y divide-slate-100">
+            {data.items.map((it: any, i: number) => (
+              <li key={i} className="py-2 flex items-center gap-3">
+                {it.image_url ? (
+                  <img src={it.image_url} alt={it.nama} className="w-12 h-12 object-cover rounded-lg" />
+                ) : (
+                  <div className="w-12 h-12 bg-slate-100 rounded-lg" />
+                )}
+                <div className="flex-1">
+                  <p className="font-medium text-sm">{it.nama}</p>
+                  <p className="text-xs text-slate-500">{it.quantity} x {formatRupiah(it.price)}</p>
+                </div>
+                <p className="text-sm font-semibold">{formatRupiah(it.price * it.quantity)}</p>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-2 pt-3 border-t border-slate-100 text-sm">
+            <p className="flex justify-between"><span className="text-slate-500">Subtotal</span><span>{formatRupiah(data.subtotal_products)}</span></p>
+            <p className="flex justify-between"><span className="text-slate-500">Ongkir</span><span>{formatRupiah(data.shipping_cost)}</span></p>
+            <p className="flex justify-between font-bold mt-1"><span>Total</span><span>{formatRupiah(data.total_amount)}</span></p>
+          </div>
         </div>
-      </div>
+      )}
 
       {data.is_internal && Number.isFinite(destLat) && Number.isFinite(destLng) && (
         <div className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-slate-200">
@@ -326,9 +334,11 @@ const TrackingView = ({ orderNumber }: Props) => {
         </div>
       )}
 
-      <div className="text-center text-xs text-slate-400 mt-6">
-        BJS Express • bjs-racing-store
-      </div>
+      {!compact && (
+        <div className="text-center text-xs text-slate-400 mt-6">
+          BJS Express • bjs-racing-store
+        </div>
+      )}
     </div>
   );
 };
