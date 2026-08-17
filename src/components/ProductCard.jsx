@@ -74,6 +74,11 @@ const ProductCard = ({ product }) => {
                     {/* --- LINGKARAN WARNA & SKU (Sekarang Responsif) --- */}
                     {/* Tampilan HP: di Kiri Atas */}
                     <div className="absolute bottom-1 left-4 flex flex-col items-center md:hidden">
+                        {product.kategori === "Pilok" && product.ukuran && (
+                            <p className="text-sm font-bold text-black bg-white/70 px-2 py-0.5 rounded mb-1 shadow">
+                                {product.ukuran}
+                            </p>
+                        )}
                         {product.color_swatch_url && (
                             <div className="w-14 h-14 rounded-full shadow-lg flex items-center justify-center overflow-hidden">
                                 <img
@@ -90,6 +95,11 @@ const ProductCard = ({ product }) => {
 
                     {/* Tampilan Desktop: di Kiri Bawah */}
                     <div className="absolute bottom-1 left-4 hidden md:flex flex-col items-center">
+                        {product.kategori === "Pilok" && product.ukuran && (
+                            <p className="text-lg font-bold text-black bg-white/70 px-2 py-0.5 rounded mb-1 shadow">
+                                {product.ukuran}
+                            </p>
+                        )}
                         {product.color_swatch_url && (
                             <div className="w-16 h-16 rounded-full shadow-lg flex items-center justify-center overflow-hidden">
                                 <img
