@@ -224,7 +224,7 @@ const CartView = ({ checkoutEnabled = true }) => {
     const hasDiscount = item.harga_coret && item.harga_coret > item.harga_jual;
     const isChecked = selectedProductIds.includes(item.product_id);
     return (
-      <div className={`bg-white rounded-xl p-3 shadow-sm border transition-colors ${isChecked ? "border-2 border-orange-400" : "border-slate-100"}`}>
+      <div className={`bg-white rounded-xl p-3 shadow-sm border transition-colors ${isChecked ? "border-2 border-orange-400" : "border-2 border-orange-400/50"}`}>
         {/* Row 0: select all bar (only first item) */}
         {/* Row 1: checkbox + image + info + delete */}
         <div className="flex gap-2.5">
@@ -284,7 +284,7 @@ const CartView = ({ checkoutEnabled = true }) => {
     const hasDiscount = item.harga_coret && item.harga_coret > item.harga_jual;
     const isChecked = selectedProductIds.includes(item.product_id);
     return (
-      <div className={`flex items-center gap-3 py-3 border-b border-slate-100 last:border-b-0 transition-colors ${isChecked ? "bg-orange-50/40 border-l-4 border-orange-400" : "border-l-4 border-transparent"}`}>
+      <div className={`flex items-center gap-3 py-3 border-b border-slate-100 last:border-b-0 transition-colors ${isChecked ? "bg-orange-50/40 border-l-4 border-orange-400" : "border-l-4 border-orange-400/50"}`}>
         <ItemCheckbox checked={isChecked} onChange={() => toggleItemSelection(item.product_id)} />
 
         {/* Image + swatch — clickable */}
