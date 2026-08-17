@@ -177,8 +177,13 @@ const ProductDetailView = ({ initialProduct, allProductVariants }) => {
                     )}
                 </div>
 
-                {selectedVariant.color_swatch_url && (
-                    <div className="absolute bottom-8 left-8 flex flex-col items-center">
+                <div className="absolute bottom-8 left-8 flex flex-col items-center">
+                    {selectedVariant.kategori === "Pilok" && selectedVariant.ukuran && (
+                        <p className="text-lg font-bold text-black bg-white/70 px-3 py-1 rounded mb-1 shadow">
+                            {selectedVariant.ukuran}
+                        </p>
+                    )}
+                    {selectedVariant.color_swatch_url && (
                         <div className="w-28 h-28 rounded-full shadow-lg overflow-hidden">
                             <img
                                 src={selectedVariant.color_swatch_url}
@@ -186,11 +191,11 @@ const ProductDetailView = ({ initialProduct, allProductVariants }) => {
                                 className="w-full h-full object-cover"
                             />
                         </div>
-                        <p className="text-base mobile:text-lg tablet:text-xl desktop:text-2xl font-bold text-slate-900 bg-white/70 px-1 rounded mt-1">
-                            {selectedVariant.sku || ""}
-                        </p>
-                    </div>
-                )}
+                    )}
+                    <p className="text-base mobile:text-lg tablet:text-xl desktop:text-2xl font-bold text-slate-900 bg-white/70 px-1 rounded mt-1">
+                        {selectedVariant.sku || ""}
+                    </p>
+                </div>
             </div>
 
             {/* --- KOLOM KANAN: INFO & AKSI (SEKARANG DINAMIS) --- */}
