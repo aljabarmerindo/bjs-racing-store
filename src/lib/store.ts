@@ -21,7 +21,12 @@ interface Product {
   merek?: string;
   ukuran?: string;
   sku?: string;
-  stok?: number; // PERBAIKAN 1: Tambahkan 'stok' sebagai properti opsional di Product
+  stok?: number;
+  color_swatch_url?: string;
+  kategori?: string;
+  harga_coret?: number;
+  total_terjual?: number;
+  stok_min?: number;
 }
 
 export interface CartItem extends Product {

@@ -1,210 +1,358 @@
 // File: src/components/CartView.jsx
+// Cart view — responsive marketplace-style layout.
 import React from "react";
 import { useAppStore } from "../lib/store.ts";
 
+const formatRupiah = (n) =>
+  new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(n || 0);
+
+/* ── Badge helpers ──────────────────────────────────── */
+function badges(item) {
+  const list = [];
+  const hasDiscount =
+    item.harga_coret && item.harga_coret > item.harga_jual;
+  if (hasDiscount) {
+    const pct = Math.round(
+      ((item.harga_coret - item.harga_jual) / item.harga_coret) * 100,
+    );
+    list.push({ label: `DISKON ${pct}%`, cls: "bg-red-500 text-white" });
+  }
+  if ((item.total_terjual || 0) > 50) {
+    list.push({ label: "TERLARIS", cls: "bg-orange-500 text-white" });
+  }
+  if (
+    item.stok_min &&
+    item.stok > 0 &&
+    item.stok <= item.stok_min
+  ) {
+    list.push({ label: "STOK TERAKHIR", cls: "bg-yellow-400 text-yellow-900" });
+  }
+  return list;
+}
+
+/* ── Inline badge strip (mobile) ────────────────────── */
+function BadgeStrip({ item }) {
+  const b = badges(item);
+  if (!b.length) return null;
+  return (
+    <span className="inline-flex flex-wrap gap-1 mt-0.5">
+      {b.map((b, i) => (
+        <span
+          key={i}
+          className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${b.cls}`}
+        >
+          {b.label}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/* ── Overlay badges (desktop image corner) ──────────── */
+function BadgeOverlay({ item }) {
+  const b = badges(item);
+  if (!b.length) return null;
+  return (
+    <div className="absolute top-1.5 left-1.5 flex flex-col items-start gap-1 z-10">
+      {b.map((b, i) => (
+        <span
+          key={i}
+          className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${b.cls}`}
+        >
+          {b.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/* ── Quantity control ───────────────────────────────── */
+function QtyControl({ item, updateQuantity }) {
+  const qty = item.quantity || 0;
+  const maxed = qty >= item.stok;
+  return (
+    <div className="inline-flex items-center border border-slate-200 rounded-lg overflow-hidden text-sm">
+      <button
+        onClick={() => updateQuantity(item.product_id, qty - 1)}
+        className="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+      </button>
+      <span className="w-10 text-center font-semibold text-slate-800 tabular-nums select-none">
+        {qty}
+      </span>
+      <button
+        onClick={() => updateQuantity(item.product_id, qty + 1)}
+        disabled={maxed}
+        className="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+/* ── Delete button ──────────────────────────────────── */
+function DeleteBtn({ onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="text-slate-300 hover:text-red-500 transition-colors p-1"
+      title="Hapus"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="3 6 5 6 21 6" />
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      </svg>
+    </button>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   CartView
+   ══════════════════════════════════════════════════════ */
 const CartView = ({ checkoutEnabled = true }) => {
   const { items, removeFromCart, updateQuantity } = useAppStore();
 
+  const totalItems = items.reduce((s, i) => s + (i.quantity || 0), 0);
   const subtotal = items.reduce(
-    (total, item) => total + (item.quantity || 0) * (item.harga_jual || 0),
+    (s, i) => s + (i.quantity || 0) * (i.harga_jual || 0),
     0,
   );
 
-  const formatRupiah = (number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(number || 0);
-  };
-
+  /* ── Empty state ────────────────────────────────── */
   if (items.length === 0) {
     return (
       <div className="text-center py-16">
         <div className="mx-auto w-24 h-24 bg-orange-50 rounded-full flex items-center justify-center mb-6">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-12 w-12 text-orange-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"
-            />
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-slate-800 mb-2">
-          Keranjang Belanja Anda Kosong
-        </h2>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">Keranjang Belanja Anda Kosong</h2>
         <p className="text-slate-500 max-w-md mx-auto mb-8">
           Segera isi keranjang dengan produk Pilok pilihan Anda. Gratis ongkir untuk wilayah Jepara dan sekitarnya.
         </p>
-        <a
-          href="/pilok"
-          className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
+        <a href="/pilok" className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-200">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
           </svg>
-          Mulai Belanja Pilok
+          Mulai Belanja
         </a>
       </div>
     );
   }
 
-  return (
-    <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
-      <div className="space-y-4">
-        {items.map((item) => {
-          const quantity = item.quantity || 0;
-          const isPlusDisabled = quantity >= item.stok;
-
-          return (
-            <div
-              key={item.id}
-              className="flex flex-col sm:flex-row items-center gap-4 border-b pb-4 last:border-b-0"
-            >
-              <div className="w-20 h-20 bg-slate-100 rounded-md flex-shrink-0">
-                <img
-                  src={item.image_url}
-                  alt={item.nama}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-
-              <div className="flex-grow text-center sm:text-left">
-                <p className="font-semibold text-slate-800">{item.nama}</p>
-                <p className="text-sm text-slate-500">
-                  {item.merek} - {item.ukuran}
-                </p>
-                <p className="text-xs text-slate-400 mt-1">
-                  Sisa Stok: {item.stok}
-                </p>
-                <p className="font-semibold text-orange-500 mt-1">
-                  {formatRupiah(item.harga_jual)}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2 border rounded-md p-1">
-                <button
-                  onClick={() => updateQuantity(item.product_id, quantity - 1)}
-                  className="w-8 h-8 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded"
-                >
-                  -
-                </button>
-                <input
-                  type="number"
-                  value={quantity}
-                  onChange={(e) =>
-                    updateQuantity(
-                      item.product_id,
-                      parseInt(e.target.value, 10) || 1,
-                    )
-                  }
-                  max={item.stok}
-                  className="w-12 text-center font-semibold border-none focus:ring-0 bg-transparent"
-                />
-                <button
-                  onClick={() => updateQuantity(item.product_id, quantity + 1)}
-                  disabled={isPlusDisabled}
-                  className="w-8 h-8 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  +
-                </button>
-              </div>
-
-              <div className="text-right flex-shrink-0 w-28">
-                <p className="font-bold text-lg">
-                  {formatRupiah(quantity * item.harga_jual)}
-                </p>
-              </div>
-
-              <button
-                onClick={() => removeFromCart(item.product_id)}
-                className="text-slate-400 hover:text-red-500 transition-colors"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polyline points="3 6 5 6 21 6"></polyline>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
-              </button>
-            </div>
-          );
-        })}
+  /* ── Summary content (reused in sidebar + bottom bar) ── */
+  const summaryContent = (
+    <>
+      <div className="flex justify-between text-sm text-slate-600">
+        <span>Subtotal ({totalItems} item)</span>
+        <span className="font-bold text-slate-900">{formatRupiah(subtotal)}</span>
       </div>
-
-      <div className="mt-8 flex flex-col sm:flex-row justify-end">
-        <div className="w-full max-w-sm">
-          <div className="flex justify-between text-lg">
-            <span className="text-slate-600">Subtotal</span>
-            <span className="font-bold text-slate-800">
-              {formatRupiah(subtotal)}
-            </span>
-          </div>
-          <p className="text-xs text-slate-400 text-right mt-1">
-            Pajak dan ongkos kirim dihitung saat checkout.
+      <p className="text-[11px] text-slate-400 mt-1">
+        Pajak &amp; ongkir dihitung saat checkout.
+      </p>
+      {checkoutEnabled ? (
+        <a href="/checkout" className="mt-3 block text-center w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-colors text-sm">
+          Lanjut ke Checkout
+        </a>
+      ) : (
+        <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3">
+          <p className="text-xs font-bold text-slate-800 mb-1">Checkout Tidak Tersedia</p>
+          <p className="text-[11px] text-slate-600 leading-relaxed mb-2">
+            Silakan hubungi kami via WhatsApp untuk pemesanan manual.
           </p>
-          {checkoutEnabled ? (
-            <a
-              href="/checkout"
-              className="mt-4 block text-center w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-            >
-              Lanjut ke Checkout
-            </a>
-          ) : (
-            <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <p className="font-bold text-slate-800 mb-2">
-                Checkout Sementara Tidak Tersedia
-              </p>
-              <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                Mohon maaf, saat ini kami sedang melakukan pemeliharaan pada
-                sistem pembayaran dan pengiriman, sehingga proses checkout
-                belum dapat dilakukan. Untuk tetap bisa berbelanja, silakan
-                hubungi tim kami melalui WhatsApp di{" "}
-                <a
-                  href="https://wa.me/62881011669213"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-orange-600 hover:underline"
-                >
-                  0881011669213
-                </a>
-                . Kami akan dengan senang hati membantu Anda memproses pesanan
-                secara manual. Terima kasih atas pengertian dan kesabaran Anda.
-              </p>
-              <a
-                href="https://wa.me/62881011669213?text=Halo%20BJS%20Racing%2C%20saya%20ingin%20memesan%20produk%20berikut..."
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block text-center w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-              >
-                Hubungi via WhatsApp
-              </a>
+          <a href="https://wa.me/62881011669213?text=Halo%20BJS%20Racing%2C%20saya%20ingin%20memesan..." target="_blank" rel="noopener noreferrer" className="block text-center w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg transition-colors text-xs">
+            Hubungi WhatsApp
+          </a>
+        </div>
+      )}
+    </>
+  );
+
+  /* ── Cart item — MOBILE card ────────────────────── */
+  function MobileCard({ item }) {
+    const qty = item.quantity || 0;
+    const hasDiscount = item.harga_coret && item.harga_coret > item.harga_jual;
+    return (
+      <div className="bg-white rounded-xl p-3 shadow-sm border border-slate-100">
+        {/* Row 1: image + info */}
+        <div className="flex gap-3">
+          {/* Image + overlay badges */}
+          <div className="relative w-16 h-16 flex-shrink-0 bg-slate-50 rounded-lg overflow-hidden">
+            <img src={item.image_url} alt={item.nama} className="w-full h-full object-contain" />
+            <BadgeOverlay item={item} />
+          </div>
+
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-slate-800 leading-tight line-clamp-2">{item.nama}</p>
+            <BadgeStrip item={item} />
+            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+              {item.color_swatch_url && (
+                <img src={item.color_swatch_url} alt="" className="w-4 h-4 rounded-full border border-slate-200 inline-block align-middle" />
+              )}
+              {item.sku && (
+                <span className="text-[11px] text-slate-400 font-medium">{item.sku}</span>
+              )}
             </div>
-          )}
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              {item.merek}{item.ukuran ? ` · ${item.ukuran}` : ""}
+            </p>
+          </div>
+
+          {/* Delete */}
+          <div className="flex-shrink-0 self-start">
+            <DeleteBtn onClick={() => removeFromCart(item.product_id)} />
+          </div>
+        </div>
+
+        {/* Row 2: price + qty */}
+        <div className="flex items-end justify-between mt-2.5 pt-2.5 border-t border-slate-100">
+          <div>
+            {hasDiscount && (
+              <p className="text-[11px] text-slate-400 line-through">{formatRupiah(item.harga_coret)}</p>
+            )}
+            <p className="text-sm font-bold text-orange-500">{formatRupiah(item.harga_jual)}</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <QtyControl item={item} updateQuantity={updateQuantity} />
+            <p className="text-sm font-bold text-slate-800 tabular-nums whitespace-nowrap">
+              {formatRupiah(qty * item.harga_jual)}
+            </p>
+          </div>
         </div>
       </div>
+    );
+  }
+
+  /* ── Cart item — TABLET row ──────────────────────── */
+  function TabletRow({ item }) {
+    const qty = item.quantity || 0;
+    const hasDiscount = item.harga_coret && item.harga_coret > item.harga_jual;
+    return (
+      <div className="flex items-center gap-3 py-3 border-b border-slate-100 last:border-b-0">
+        {/* Image + overlay badges */}
+        <div className="relative w-16 h-16 flex-shrink-0 bg-slate-50 rounded-lg overflow-hidden">
+          <img src={item.image_url} alt={item.nama} className="w-full h-full object-contain" />
+          <BadgeOverlay item={item} />
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-slate-800 line-clamp-1">{item.nama}</p>
+          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+            {item.color_swatch_url && (
+              <img src={item.color_swatch_url} alt="" className="w-3.5 h-3.5 rounded-full border border-slate-200" />
+            )}
+            {item.sku && <span className="text-[11px] text-slate-400">{item.sku}</span>}
+            {item.merek && <span className="text-[11px] text-slate-400">· {item.merek}</span>}
+            {item.ukuran && <span className="text-[11px] text-slate-400">· {item.ukuran}</span>}
+          </div>
+          <BadgeStrip item={item} />
+        </div>
+
+        {/* Price */}
+        <div className="text-right flex-shrink-0 hidden sm:block">
+          {hasDiscount && <p className="text-[11px] text-slate-400 line-through">{formatRupiah(item.harga_coret)}</p>}
+          <p className="text-sm font-semibold text-orange-500">{formatRupiah(item.harga_jual)}</p>
+        </div>
+
+        {/* Qty */}
+        <div className="flex-shrink-0">
+          <QtyControl item={item} updateQuantity={updateQuantity} />
+        </div>
+
+        {/* Total */}
+        <div className="text-right flex-shrink-0 w-24">
+          <p className="text-sm font-bold text-slate-800 tabular-nums">{formatRupiah(qty * item.harga_jual)}</p>
+        </div>
+
+        {/* Delete */}
+        <DeleteBtn onClick={() => removeFromCart(item.product_id)} />
+      </div>
+    );
+  }
+
+  /* ──────────────────────────────────────────────────── */
+  return (
+    <div className="relative">
+      {/* ===== DESKTOP: two-column layout ===== */}
+      <div className="hidden lg:flex gap-6 items-start">
+        {/* Left: item list */}
+        <div className="flex-1 bg-white rounded-xl shadow-sm border border-slate-100 divide-y divide-slate-100">
+          {items.map((item) => (
+            <TabletRow key={item.id} item={item} />
+          ))}
+        </div>
+
+        {/* Right: sticky summary sidebar */}
+        <div className="w-80 flex-shrink-0">
+          <div className="sticky top-24 bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+            <h3 className="text-base font-bold text-slate-800 mb-3">Ringkasan</h3>
+            {summaryContent}
+          </div>
+        </div>
+      </div>
+
+      {/* ===== MOBILE + TABLET: single column ===== */}
+      <div className="lg:hidden">
+        {/* Item list */}
+        <div className="space-y-2.5 sm:space-y-0">
+          {items.map((item) => (
+            <React.Fragment key={item.id}>
+              {/* Mobile card: < sm */}
+              <div className="sm:hidden">
+                <MobileCard item={item} />
+              </div>
+              {/* Tablet row: sm – lg */}
+              <div className="hidden sm:block bg-white rounded-xl shadow-sm border border-slate-100 px-4">
+                <TabletRow item={item} />
+              </div>
+            </React.Fragment>
+          ))}
+        </div>
+
+        {/* Inline summary for sm+ (non-mobile) */}
+        <div className="hidden sm:block lg:hidden mt-6 bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+          <h3 className="text-base font-bold text-slate-800 mb-3">Ringkasan</h3>
+          {summaryContent}
+        </div>
+      </div>
+
+      {/* ===== MOBILE sticky bottom bar ===== */}
+      {items.length > 0 && (
+        <div className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+          <div className="flex items-center gap-3 px-4 py-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] text-slate-500">Subtotal ({totalItems} item)</p>
+              <p className="text-base font-bold text-slate-900 tabular-nums">{formatRupiah(subtotal)}</p>
+            </div>
+            {checkoutEnabled ? (
+              <a href="/checkout" className="flex-shrink-0 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-5 rounded-lg transition-colors text-sm">
+                Checkout
+              </a>
+            ) : (
+              <a href="https://wa.me/62881011669213" target="_blank" rel="noopener noreferrer" className="flex-shrink-0 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-5 rounded-lg transition-colors text-sm">
+                WhatsApp
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Spacer so content isn't hidden behind sticky bottom bar on mobile */}
+      {items.length > 0 && <div className="sm:hidden h-20" />}
     </div>
   );
 };
