@@ -52,24 +52,6 @@ function BadgeStrip({ item }) {
   );
 }
 
-/* ── Overlay badges (desktop image corner) ──────────── */
-function BadgeOverlay({ item }) {
-  const b = badges(item);
-  if (!b.length) return null;
-  return (
-    <div className="absolute top-1.5 left-1.5 flex flex-col items-start gap-1 z-10">
-      {b.map((b, i) => (
-        <span
-          key={i}
-          className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${b.cls}`}
-        >
-          {b.label}
-        </span>
-      ))}
-    </div>
-  );
-}
-
 /* ── Quantity control ───────────────────────────────── */
 function QtyControl({ item, updateQuantity }) {
   const qty = item.quantity || 0;
@@ -188,24 +170,26 @@ const CartView = ({ checkoutEnabled = true }) => {
       <div className="bg-white rounded-xl p-3 shadow-sm border border-slate-100">
         {/* Row 1: image + info */}
         <div className="flex gap-3">
-          {/* Image + swatch */}
-          <div className="relative w-16 h-16 flex-shrink-0 bg-slate-50 rounded-lg overflow-hidden">
+          {/* Image + swatch — clickable */}
+          <a href={`/products/${item.product_id}`} className="relative w-16 h-16 flex-shrink-0 bg-slate-50 rounded-lg overflow-hidden">
             <img src={item.image_url} alt={item.nama} className="w-full h-full object-contain" />
             {item.color_swatch_url && (
-              <img src={item.color_swatch_url} alt="" className="absolute bottom-1 left-1 w-4 h-4 rounded-full border-2 border-white shadow-sm" />
+              <img src={item.color_swatch_url} alt="" className="absolute bottom-1 left-1 w-8 h-8 rounded-full border border-slate-200 shadow-sm" />
             )}
-          </div>
+          </a>
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-slate-800 leading-tight line-clamp-2">{item.nama}</p>
-            <BadgeStrip item={item} />
+            <a href={`/products/${item.product_id}`} className="text-sm font-semibold text-slate-800 leading-tight line-clamp-2 hover:text-orange-500 transition-colors">
+              {item.nama}
+            </a>
             {item.sku && (
               <p className="text-[11px] text-slate-800 font-medium mt-0.5">{item.sku}</p>
             )}
             <p className="text-[11px] text-slate-800 mt-0.5">
               {item.merek}{item.ukuran ? ` · ${item.ukuran}` : ""}
             </p>
+            <BadgeStrip item={item} />
           </div>
 
           {/* Delete */}
@@ -239,17 +223,19 @@ const CartView = ({ checkoutEnabled = true }) => {
     const hasDiscount = item.harga_coret && item.harga_coret > item.harga_jual;
     return (
       <div className="flex items-center gap-3 py-3 border-b border-slate-100 last:border-b-0">
-        {/* Image + swatch */}
-        <div className="relative w-16 h-16 flex-shrink-0 bg-slate-50 rounded-lg overflow-hidden">
+        {/* Image + swatch — clickable */}
+        <a href={`/products/${item.product_id}`} className="relative w-16 h-16 flex-shrink-0 bg-slate-50 rounded-lg overflow-hidden">
           <img src={item.image_url} alt={item.nama} className="w-full h-full object-contain" />
           {item.color_swatch_url && (
-            <img src={item.color_swatch_url} alt="" className="absolute bottom-1 left-1 w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm" />
+            <img src={item.color_swatch_url} alt="" className="absolute bottom-1 left-1 w-7 h-7 rounded-full border border-slate-200 shadow-sm" />
           )}
-        </div>
+        </a>
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-slate-800 line-clamp-1">{item.nama}</p>
+          <a href={`/products/${item.product_id}`} className="text-sm font-semibold text-slate-800 line-clamp-1 hover:text-orange-500 transition-colors">
+            {item.nama}
+          </a>
           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
             {item.sku && <span className="text-[11px] text-slate-800 font-medium">{item.sku}</span>}
             {item.merek && <span className="text-[11px] text-slate-800">· {item.merek}</span>}
