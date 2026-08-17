@@ -174,7 +174,7 @@ const CartView = ({ checkoutEnabled = true }) => {
           <a href={`/products/${item.product_id}`} className="relative w-[100px] h-[100px] flex-shrink-0 bg-slate-50 rounded-lg overflow-hidden">
             <img src={item.image_url} alt={item.nama} className="w-full h-full object-contain" />
             {item.color_swatch_url && (
-              <img src={item.color_swatch_url} alt="" className="absolute bottom-1 left-1 w-[60px] h-[50px] rounded-full border border-slate-200 shadow-sm" />
+              <img src={item.color_swatch_url} alt="" className="absolute bottom-1 left-1 w-[60px] h-[60px] rounded-full border border-slate-200 shadow-sm" />
             )}
           </a>
 
@@ -227,7 +227,7 @@ const CartView = ({ checkoutEnabled = true }) => {
         <a href={`/products/${item.product_id}`} className="relative w-[110px] h-[110px] lg:w-[120px] lg:h-[120px] flex-shrink-0 bg-slate-50 rounded-lg overflow-hidden">
           <img src={item.image_url} alt={item.nama} className="w-full h-full object-contain" />
           {item.color_swatch_url && (
-            <img src={item.color_swatch_url} alt="" className="absolute bottom-1 left-1 w-[60px] h-[50px] rounded-full border border-slate-200 shadow-sm" />
+            <img src={item.color_swatch_url} alt="" className="absolute bottom-1 left-1 w-[60px] h-[60px] rounded-full border border-slate-200 shadow-sm" />
           )}
         </a>
 
