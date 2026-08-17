@@ -188,25 +188,22 @@ const CartView = ({ checkoutEnabled = true }) => {
       <div className="bg-white rounded-xl p-3 shadow-sm border border-slate-100">
         {/* Row 1: image + info */}
         <div className="flex gap-3">
-          {/* Image + overlay badges */}
+          {/* Image + swatch */}
           <div className="relative w-16 h-16 flex-shrink-0 bg-slate-50 rounded-lg overflow-hidden">
             <img src={item.image_url} alt={item.nama} className="w-full h-full object-contain" />
-            <BadgeOverlay item={item} />
+            {item.color_swatch_url && (
+              <img src={item.color_swatch_url} alt="" className="absolute bottom-1 left-1 w-4 h-4 rounded-full border-2 border-white shadow-sm" />
+            )}
           </div>
 
           {/* Info */}
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-slate-800 leading-tight line-clamp-2">{item.nama}</p>
             <BadgeStrip item={item} />
-            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-              {item.color_swatch_url && (
-                <img src={item.color_swatch_url} alt="" className="w-4 h-4 rounded-full border border-slate-200 inline-block align-middle" />
-              )}
-              {item.sku && (
-                <span className="text-[11px] text-slate-400 font-medium">{item.sku}</span>
-              )}
-            </div>
-            <p className="text-[11px] text-slate-400 mt-0.5">
+            {item.sku && (
+              <p className="text-[11px] text-slate-800 font-medium mt-0.5">{item.sku}</p>
+            )}
+            <p className="text-[11px] text-slate-800 mt-0.5">
               {item.merek}{item.ukuran ? ` · ${item.ukuran}` : ""}
             </p>
           </div>
@@ -242,22 +239,21 @@ const CartView = ({ checkoutEnabled = true }) => {
     const hasDiscount = item.harga_coret && item.harga_coret > item.harga_jual;
     return (
       <div className="flex items-center gap-3 py-3 border-b border-slate-100 last:border-b-0">
-        {/* Image + overlay badges */}
+        {/* Image + swatch */}
         <div className="relative w-16 h-16 flex-shrink-0 bg-slate-50 rounded-lg overflow-hidden">
           <img src={item.image_url} alt={item.nama} className="w-full h-full object-contain" />
-          <BadgeOverlay item={item} />
+          {item.color_swatch_url && (
+            <img src={item.color_swatch_url} alt="" className="absolute bottom-1 left-1 w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm" />
+          )}
         </div>
 
         {/* Info */}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-slate-800 line-clamp-1">{item.nama}</p>
           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-            {item.color_swatch_url && (
-              <img src={item.color_swatch_url} alt="" className="w-3.5 h-3.5 rounded-full border border-slate-200" />
-            )}
-            {item.sku && <span className="text-[11px] text-slate-400">{item.sku}</span>}
-            {item.merek && <span className="text-[11px] text-slate-400">· {item.merek}</span>}
-            {item.ukuran && <span className="text-[11px] text-slate-400">· {item.ukuran}</span>}
+            {item.sku && <span className="text-[11px] text-slate-800 font-medium">{item.sku}</span>}
+            {item.merek && <span className="text-[11px] text-slate-800">· {item.merek}</span>}
+            {item.ukuran && <span className="text-[11px] text-slate-800">· {item.ukuran}</span>}
           </div>
           <BadgeStrip item={item} />
         </div>
