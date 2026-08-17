@@ -171,10 +171,10 @@ const CartView = ({ checkoutEnabled = true }) => {
         {/* Row 1: image + info */}
         <div className="flex gap-3">
           {/* Image + swatch — clickable */}
-          <a href={`/products/${item.product_id}`} className="relative w-[100px] h-[100px] flex-shrink-0 bg-slate-50 rounded-lg overflow-hidden">
-            <img src={item.image_url} alt={item.nama} className="w-full h-full object-contain" />
+          <a href={`/products/${item.product_id}`} className="relative w-[100px] h-[100px] flex-shrink-0 bg-slate-50 rounded-lg">
+            <img src={item.image_url} alt={item.nama} className="w-full h-full object-contain rounded-lg" />
             {item.color_swatch_url && (
-              <img src={item.color_swatch_url} alt="" className="absolute bottom-1 left-1 w-[60px] h-[60px] object-cover rounded-lg border border-slate-200 shadow-sm" />
+              <img src={item.color_swatch_url} alt="" className="absolute bottom-2 left-2 w-[60px] h-[60px] object-cover rounded-lg border border-slate-200 shadow-sm" />
             )}
           </a>
 
@@ -224,10 +224,10 @@ const CartView = ({ checkoutEnabled = true }) => {
     return (
       <div className="flex items-center gap-3 py-3 border-b border-slate-100 last:border-b-0">
         {/* Image + swatch — clickable */}
-        <a href={`/products/${item.product_id}`} className="relative w-[110px] h-[110px] lg:w-[120px] lg:h-[120px] flex-shrink-0 bg-slate-50 rounded-lg overflow-hidden">
-          <img src={item.image_url} alt={item.nama} className="w-full h-full object-contain" />
+        <a href={`/products/${item.product_id}`} className="relative w-[110px] h-[110px] lg:w-[120px] lg:h-[120px] flex-shrink-0 bg-slate-50 rounded-lg">
+          <img src={item.image_url} alt={item.nama} className="w-full h-full object-contain rounded-lg" />
           {item.color_swatch_url && (
-            <img src={item.color_swatch_url} alt="" className="absolute bottom-1 left-1 w-[60px] h-[60px] object-cover rounded-lg border border-slate-200 shadow-sm" />
+            <img src={item.color_swatch_url} alt="" className="absolute bottom-2 left-2 w-[60px] h-[60px] object-cover rounded-lg border border-slate-200 shadow-sm" />
           )}
         </a>
 
