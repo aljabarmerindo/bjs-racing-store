@@ -92,6 +92,11 @@ interface StoreState {
   clearLocalCart: () => void;
   calculateTotalWeight: () => number;
 
+  selectedProductIds: string[];
+  toggleItemSelection: (productId: string) => void;
+  toggleAllSelection: () => void;
+  removeItems: (productIds: string[]) => Promise<void>;
+
   addToast: (toast: Omit<Toast, "id">) => void;
   removeToast: (toastId: string) => void;
 
@@ -114,6 +119,7 @@ export const useAppStore = create<StoreState>()(
   devtools((set, get) => ({
     session: null,
     items: [],
+    selectedProductIds: [],
     addresses: [],
     isMobileMenuOpen: false,
     isCartLoading: true,
@@ -183,6 +189,7 @@ export const useAppStore = create<StoreState>()(
 
           set({ items: adjustedItems });
           // --- AKHIR DARI LOGIKA BARU ---
+          set({ selectedProductIds: adjustedItems.map((i) => i.product_id) });
 
           // 3. Beri notifikasi ke pengguna jika keranjangnya disesuaikan
           if (wasCartAdjusted) {
@@ -339,11 +346,45 @@ export const useAppStore = create<StoreState>()(
     },
 
     clearCart: async () => {
-      set({ items: [] });
+      set({ items: [], selectedProductIds: [] });
       const { error } = await supabase.rpc("clear_cart");
       if (error) {
         console.error("Gagal sinkronisasi clearCart:", error);
         get().fetchCart();
+      }
+    },
+
+    toggleItemSelection: (productId) =>
+      set((state) => {
+        const has = state.selectedProductIds.includes(productId);
+        return {
+          selectedProductIds: has
+            ? state.selectedProductIds.filter((id) => id !== productId)
+            : [...state.selectedProductIds, productId],
+        };
+      }),
+
+    toggleAllSelection: () =>
+      set((state) => ({
+        selectedProductIds:
+          state.items.length === state.selectedProductIds.length
+            ? []
+            : state.items.map((i) => i.product_id),
+      })),
+
+    removeItems: async (productIds) => {
+      const { items } = get();
+      set({
+        items: items.filter((i) => !productIds.includes(i.product_id)),
+        selectedProductIds: get().selectedProductIds.filter(
+          (id) => !productIds.includes(id),
+        ),
+      });
+      for (const pid of productIds) {
+        await supabase.rpc("update_cart_item_quantity", {
+          p_product_id: pid,
+          p_quantity: 0,
+        });
       }
     },
 

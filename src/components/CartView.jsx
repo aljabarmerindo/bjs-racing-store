@@ -1,5 +1,5 @@
 // File: src/components/CartView.jsx
-// Cart view — responsive marketplace-style layout.
+// Cart view — responsive marketplace-style layout with item selection.
 import React from "react";
 import { useAppStore } from "../lib/store.ts";
 
@@ -34,7 +34,7 @@ function badges(item) {
   return list;
 }
 
-/* ── Inline badge strip (mobile) ────────────────────── */
+/* ── Inline badge strip ─────────────────────────────── */
 function BadgeStrip({ item }) {
   const b = badges(item);
   if (!b.length) return null;
@@ -99,14 +99,46 @@ function DeleteBtn({ onClick }) {
   );
 }
 
+/* ── Chevron icon for product link ──────────────────── */
+function ChevronIcon() {
+  return (
+    <svg className="w-3.5 h-3.5 text-orange-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 5l7 7-7 7" />
+    </svg>
+  );
+}
+
+/* ── Checkbox component ─────────────────────────────── */
+function ItemCheckbox({ checked, onChange }) {
+  return (
+    <label className="flex-shrink-0 self-center cursor-pointer">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+        className="w-5 h-5 rounded border-slate-300 text-orange-500 focus:ring-orange-400 cursor-pointer"
+      />
+    </label>
+  );
+}
+
 /* ══════════════════════════════════════════════════════
    CartView
    ══════════════════════════════════════════════════════ */
 const CartView = ({ checkoutEnabled = true }) => {
-  const { items, removeFromCart, updateQuantity } = useAppStore();
+  const {
+    items,
+    removeFromCart,
+    updateQuantity,
+    selectedProductIds,
+    toggleItemSelection,
+    toggleAllSelection,
+  } = useAppStore();
 
-  const totalItems = items.reduce((s, i) => s + (i.quantity || 0), 0);
-  const subtotal = items.reduce(
+  const allSelected = items.length > 0 && items.length === selectedProductIds.length;
+  const selectedItems = items.filter((i) => selectedProductIds.includes(i.product_id));
+  const totalSelectedQty = selectedItems.reduce((s, i) => s + (i.quantity || 0), 0);
+  const subtotal = selectedItems.reduce(
     (s, i) => s + (i.quantity || 0) * (i.harga_jual || 0),
     0,
   );
@@ -138,14 +170,21 @@ const CartView = ({ checkoutEnabled = true }) => {
   const summaryContent = (
     <>
       <div className="flex justify-between text-sm text-slate-600">
-        <span>Subtotal ({totalItems} item)</span>
+        <span>Subtotal ({totalSelectedQty} item)</span>
         <span className="font-bold text-slate-900">{formatRupiah(subtotal)}</span>
       </div>
       <p className="text-[11px] text-slate-400 mt-1">
         Pajak &amp; ongkir dihitung saat checkout.
       </p>
       {checkoutEnabled ? (
-        <a href="/checkout" className="mt-3 block text-center w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-colors text-sm">
+        <a
+          href="/checkout"
+          className={`mt-3 block text-center w-full font-bold py-3 rounded-lg transition-colors text-sm ${
+            selectedItems.length === 0
+              ? "bg-slate-300 text-slate-500 pointer-events-none"
+              : "bg-green-600 hover:bg-green-700 text-white"
+          }`}
+        >
           Lanjut ke Checkout
         </a>
       ) : (
@@ -162,14 +201,28 @@ const CartView = ({ checkoutEnabled = true }) => {
     </>
   );
 
+  /* ── Select all bar ─────────────────────────────── */
+  const selectAllBar = (
+    <div className="flex items-center gap-2 px-3 py-2.5 border-b border-slate-100">
+      <ItemCheckbox checked={allSelected} onChange={toggleAllSelection} />
+      <span className="text-sm text-slate-600 select-none">
+        Pilih Semua ({items.length} produk)
+      </span>
+    </div>
+  );
+
   /* ── Cart item — MOBILE card ────────────────────── */
   function MobileCard({ item }) {
     const qty = item.quantity || 0;
     const hasDiscount = item.harga_coret && item.harga_coret > item.harga_jual;
+    const isChecked = selectedProductIds.includes(item.product_id);
     return (
-      <div className="bg-white rounded-xl p-3 shadow-sm border border-slate-100">
-        {/* Row 1: image + info */}
-        <div className="flex gap-3">
+      <div className={`bg-white rounded-xl p-3 shadow-sm border transition-colors ${isChecked ? "border-orange-200" : "border-slate-100"}`}>
+        {/* Row 0: select all bar (only first item) */}
+        {/* Row 1: checkbox + image + info + delete */}
+        <div className="flex gap-2.5">
+          <ItemCheckbox checked={isChecked} onChange={() => toggleItemSelection(item.product_id)} />
+
           {/* Image + swatch — clickable */}
           <a href={`/products/${item.product_id}`} className="relative w-[100px] h-[100px] flex-shrink-0 bg-slate-50 rounded-lg">
             <img src={item.image_url} alt={item.nama} className="w-full h-full object-contain rounded-lg" />
@@ -180,8 +233,9 @@ const CartView = ({ checkoutEnabled = true }) => {
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <a href={`/products/${item.product_id}`} className="text-sm font-semibold text-slate-800 leading-tight line-clamp-2 hover:text-orange-500 transition-colors">
-              {item.nama}
+            <a href={`/products/${item.product_id}`} className="text-sm font-semibold text-slate-800 leading-tight line-clamp-2 hover:text-orange-500 transition-colors inline-flex items-center gap-1">
+              <span className="line-clamp-2">{item.nama}</span>
+              <ChevronIcon />
             </a>
             {item.sku && (
               <p className="text-[11px] text-slate-800 font-medium mt-0.5">{item.sku}</p>
@@ -221,8 +275,11 @@ const CartView = ({ checkoutEnabled = true }) => {
   function TabletRow({ item }) {
     const qty = item.quantity || 0;
     const hasDiscount = item.harga_coret && item.harga_coret > item.harga_jual;
+    const isChecked = selectedProductIds.includes(item.product_id);
     return (
-      <div className="flex items-center gap-3 py-3 border-b border-slate-100 last:border-b-0">
+      <div className={`flex items-center gap-3 py-3 border-b border-slate-100 last:border-b-0 transition-colors ${isChecked ? "bg-orange-50/40" : ""}`}>
+        <ItemCheckbox checked={isChecked} onChange={() => toggleItemSelection(item.product_id)} />
+
         {/* Image + swatch — clickable */}
         <a href={`/products/${item.product_id}`} className="relative w-[110px] h-[110px] lg:w-[120px] lg:h-[120px] flex-shrink-0 bg-slate-50 rounded-lg">
           <img src={item.image_url} alt={item.nama} className="w-full h-full object-contain rounded-lg" />
@@ -233,8 +290,9 @@ const CartView = ({ checkoutEnabled = true }) => {
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <a href={`/products/${item.product_id}`} className="text-sm font-semibold text-slate-800 line-clamp-1 hover:text-orange-500 transition-colors">
-            {item.nama}
+          <a href={`/products/${item.product_id}`} className="text-sm font-semibold text-slate-800 line-clamp-1 hover:text-orange-500 transition-colors inline-flex items-center gap-1">
+            <span className="line-clamp-1">{item.nama}</span>
+            <ChevronIcon />
           </a>
           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
             {item.sku && <span className="text-[11px] text-slate-800 font-medium">{item.sku}</span>}
@@ -272,10 +330,13 @@ const CartView = ({ checkoutEnabled = true }) => {
       {/* ===== DESKTOP: two-column layout ===== */}
       <div className="hidden lg:flex gap-6 items-start">
         {/* Left: item list */}
-        <div className="flex-1 bg-white rounded-xl shadow-sm border border-slate-100 divide-y divide-slate-100">
-          {items.map((item) => (
-            <TabletRow key={item.id} item={item} />
-          ))}
+        <div className="flex-1 bg-white rounded-xl shadow-sm border border-slate-100">
+          {selectAllBar}
+          <div className="divide-y divide-slate-100">
+            {items.map((item) => (
+              <TabletRow key={item.id} item={item} />
+            ))}
+          </div>
         </div>
 
         {/* Right: sticky summary sidebar */}
@@ -289,8 +350,13 @@ const CartView = ({ checkoutEnabled = true }) => {
 
       {/* ===== MOBILE + TABLET: single column ===== */}
       <div className="lg:hidden">
+        {/* Select all bar */}
+        <div className="bg-white rounded-t-xl shadow-sm border border-slate-100 border-b-0">
+          {selectAllBar}
+        </div>
+
         {/* Item list */}
-        <div className="space-y-2.5 sm:space-y-0">
+        <div className="space-y-2.5 sm:space-y-0 sm:bg-white sm:rounded-b-xl sm:shadow-sm sm:border sm:border-t-0 sm:border-slate-100">
           {items.map((item) => (
             <React.Fragment key={item.id}>
               {/* Mobile card: < sm */}
@@ -298,7 +364,7 @@ const CartView = ({ checkoutEnabled = true }) => {
                 <MobileCard item={item} />
               </div>
               {/* Tablet row: sm – lg */}
-              <div className="hidden sm:block bg-white rounded-xl shadow-sm border border-slate-100 px-4">
+              <div className="hidden sm:block px-4">
                 <TabletRow item={item} />
               </div>
             </React.Fragment>
@@ -317,11 +383,18 @@ const CartView = ({ checkoutEnabled = true }) => {
         <div className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
           <div className="flex items-center gap-3 px-4 py-3">
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] text-slate-500">Subtotal ({totalItems} item)</p>
+              <p className="text-[11px] text-slate-500">Subtotal ({totalSelectedQty} item)</p>
               <p className="text-base font-bold text-slate-900 tabular-nums">{formatRupiah(subtotal)}</p>
             </div>
             {checkoutEnabled ? (
-              <a href="/checkout" className="flex-shrink-0 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-5 rounded-lg transition-colors text-sm">
+              <a
+                href="/checkout"
+                className={`flex-shrink-0 font-bold py-3 px-5 rounded-lg transition-colors text-sm ${
+                  selectedItems.length === 0
+                    ? "bg-slate-300 text-slate-500 pointer-events-none"
+                    : "bg-green-600 hover:bg-green-700 text-white"
+                }`}
+              >
                 Checkout
               </a>
             ) : (

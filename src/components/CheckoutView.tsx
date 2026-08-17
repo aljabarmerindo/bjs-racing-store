@@ -90,13 +90,17 @@ interface CheckoutViewProps {
 
 export default function CheckoutView({ orderId, initialItems }: CheckoutViewProps) {
   const {
-    items,
+    items: allItems,
+    selectedProductIds,
     addresses,
     fetchAddresses,
-    calculateTotalWeight,
-    clearCart,
+    removeItems,
     addToast,
   } = useAppStore();
+  const items = useMemo(
+    () => allItems.filter((i) => selectedProductIds.includes(i.product_id)),
+    [allItems, selectedProductIds],
+  );
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
     null,
   );
@@ -187,8 +191,8 @@ export default function CheckoutView({ orderId, initialItems }: CheckoutViewProp
   ];
 
   const totalWeight = useMemo(
-    () => calculateTotalWeight(),
-    [items, calculateTotalWeight],
+    () => items.reduce((t, i) => ((i as any).berat_gram || 1000) * i.quantity + t, 0),
+    [items],
   );
   const packageDims = useMemo(
     () =>
@@ -613,7 +617,7 @@ export default function CheckoutView({ orderId, initialItems }: CheckoutViewProp
           if (data.status === "paid") {
             clearInterval(interval);
             setIsPolling(false);
-            clearCart();
+            removeItems(selectedProductIds);
             window.location.href = `/akun/pesanan/${orderId}?status=success`;
           } else if (["cancelled", "expired", "denied", "failed"].includes(data.status)) {
             clearInterval(interval);
@@ -740,7 +744,7 @@ export default function CheckoutView({ orderId, initialItems }: CheckoutViewProp
       }
       window.snap.pay(snap_token, {
         onSuccess: async function (_result: any) {
-          clearCart();
+          removeItems(selectedProductIds);
           window.location.href = `/akun/pesanan/${order_id}?status=success`;
         },
         onPending: function (_result: any) {
