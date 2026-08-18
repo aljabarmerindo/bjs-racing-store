@@ -1,6 +1,6 @@
 // File: src/components/CartView.jsx
 // Cart view — responsive marketplace-style layout with item selection.
-import React from "react";
+import React, { useMemo } from "react";
 import { useAppStore } from "../lib/store.ts";
 
 const formatRupiah = (n) =>
@@ -138,6 +138,23 @@ const CartView = ({ checkoutEnabled = true }) => {
     0,
   );
 
+  const whatsappUrl = useMemo(() => {
+    const targetItems = selectedItems.length > 0 ? selectedItems : items;
+    if (targetItems.length === 0) return null;
+    let msg = "Halo BJS Racing, saya ingin melakukan pemesanan:\n\n";
+    msg += "*Daftar Barang:*\n";
+    targetItems.forEach((item, i) => {
+      msg += `${i + 1}. ${item.nama}`;
+      if (item.sku) msg += ` (SKU: ${item.sku})`;
+      if (item.merek) msg += `\n   Merek: ${item.merek}`;
+      if (item.ukuran) msg += ` | Ukuran: ${item.ukuran}`;
+      msg += `\n   Qty: ${item.quantity} × ${formatRupiah(item.harga_jual)} = ${formatRupiah(item.quantity * item.harga_jual)}\n`;
+    });
+    msg += `\n*Subtotal:* ${formatRupiah(subtotal)}\n`;
+    msg += `\nTerima kasih.`;
+    return `https://wa.me/62881011669213?text=${encodeURIComponent(msg)}`;
+  }, [selectedItems, items, subtotal]);
+
   /* ── Empty state ────────────────────────────────── */
   if (items.length === 0) {
     return (
@@ -171,27 +188,19 @@ const CartView = ({ checkoutEnabled = true }) => {
       <p className="text-[11px] text-slate-400 mt-1">
         Pajak &amp; ongkir dihitung saat checkout.
       </p>
-      {checkoutEnabled ? (
+      {whatsappUrl && (
         <a
-          href="/checkout"
+          href={whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
           className={`mt-3 block text-center w-full font-bold py-3 rounded-lg transition-colors text-sm ${
             selectedItems.length === 0
               ? "bg-slate-300 text-slate-500 pointer-events-none"
               : "bg-green-600 hover:bg-green-700 text-white"
           }`}
         >
-          Lanjut ke Checkout
+          Checkout via WhatsApp
         </a>
-      ) : (
-        <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3">
-          <p className="text-xs font-bold text-slate-800 mb-1">Checkout Tidak Tersedia</p>
-          <p className="text-[11px] text-slate-600 leading-relaxed mb-2">
-            Silakan hubungi kami via WhatsApp untuk pemesanan manual.
-          </p>
-          <a href="https://wa.me/62881011669213?text=Halo%20BJS%20Racing%2C%20saya%20ingin%20memesan..." target="_blank" rel="noopener noreferrer" className="block text-center w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg transition-colors text-xs">
-            Hubungi WhatsApp
-          </a>
-        </div>
       )}
     </>
   );
@@ -376,22 +385,18 @@ const CartView = ({ checkoutEnabled = true }) => {
               <p className="text-[11px] text-slate-500">Subtotal ({totalSelectedQty} item)</p>
               <p className="text-base font-bold text-slate-900 tabular-nums">{formatRupiah(subtotal)}</p>
             </div>
-            {checkoutEnabled ? (
-              <a
-                href="/checkout"
-                className={`flex-shrink-0 font-bold py-3 px-5 rounded-lg transition-colors text-sm ${
-                  selectedItems.length === 0
-                    ? "bg-slate-300 text-slate-500 pointer-events-none"
-                    : "bg-green-600 hover:bg-green-700 text-white"
-                }`}
-              >
-                Checkout
-              </a>
-            ) : (
-              <a href="https://wa.me/62881011669213" target="_blank" rel="noopener noreferrer" className="flex-shrink-0 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-5 rounded-lg transition-colors text-sm">
-                WhatsApp
-              </a>
-            )}
+            <a
+              href={whatsappUrl || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`flex-shrink-0 font-bold py-3 px-5 rounded-lg transition-colors text-sm ${
+                selectedItems.length === 0
+                  ? "bg-slate-300 text-slate-500 pointer-events-none"
+                  : "bg-green-600 hover:bg-green-700 text-white"
+              }`}
+            >
+              Checkout via WhatsApp
+            </a>
           </div>
         </div>
       )}
