@@ -194,7 +194,7 @@ const CartView = ({ checkoutEnabled = true }) => {
 
   /* ── Select all bar ─────────────────────────────── */
   const selectAllBar = (
-    <div className="flex items-center gap-2 px-3 py-2.5 border-b border-slate-100">
+    <div className="flex items-center gap-2 px-4 py-3">
       <ItemCheckbox checked={allSelected} onChange={toggleAllSelection} />
       <span className="text-sm text-slate-600 select-none">
         Pilih Semua ({items.length} produk)
@@ -263,7 +263,7 @@ const CartView = ({ checkoutEnabled = true }) => {
     const hasDiscount = item.harga_coret && item.harga_coret > item.harga_jual;
     const isChecked = selectedProductIds.includes(item.product_id);
     return (
-      <div className={`flex items-center gap-3 py-3 border-b border-slate-100 last:border-b-0 transition-colors ${isChecked ? "bg-orange-50/40 border-2 border-orange-400/50" : "border-2 border-transparent"}`}>
+      <div className={`flex items-center gap-3 p-4 transition-colors bg-white rounded-xl shadow-sm ${isChecked ? "border-2 border-orange-400/50 bg-orange-50/40" : "border-2 border-transparent"}`}>
         <ItemCheckbox checked={isChecked} onChange={() => toggleItemSelection(item.product_id)} />
 
         {/* Image + swatch — clickable */}
@@ -313,13 +313,11 @@ const CartView = ({ checkoutEnabled = true }) => {
       {/* ===== DESKTOP: two-column layout ===== */}
       <div className="hidden lg:flex gap-6 items-start">
         {/* Left: item list */}
-        <div className="flex-1 bg-white rounded-xl shadow-sm border border-slate-100">
+        <div className="flex-1 space-y-2.5">
           {selectAllBar}
-          <div className="divide-y divide-slate-100">
-            {items.map((item) => (
-              <TabletRow key={item.id} item={item} />
-            ))}
-          </div>
+          {items.map((item) => (
+            <TabletRow key={item.id} item={item} />
+          ))}
         </div>
 
         {/* Right: sticky summary sidebar */}
@@ -332,14 +330,14 @@ const CartView = ({ checkoutEnabled = true }) => {
       </div>
 
       {/* ===== MOBILE + TABLET: single column ===== */}
-      <div className="lg:hidden">
+      <div className="lg:hidden space-y-2.5">
         {/* Select all bar */}
-        <div className="bg-white rounded-t-xl shadow-sm border border-slate-100 border-b-0">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-100">
           {selectAllBar}
         </div>
 
         {/* Item list */}
-        <div className="space-y-2.5 sm:space-y-0 sm:bg-white sm:rounded-b-xl sm:shadow-sm sm:border sm:border-t-0 sm:border-slate-100">
+        <div>
           {items.map((item) => (
             <React.Fragment key={item.id}>
               {/* Mobile card: < sm */}
@@ -347,7 +345,7 @@ const CartView = ({ checkoutEnabled = true }) => {
                 <MobileCard item={item} />
               </div>
               {/* Tablet row: sm – lg */}
-              <div className="hidden sm:block px-4">
+              <div className="hidden sm:block">
                 <TabletRow item={item} />
               </div>
             </React.Fragment>
