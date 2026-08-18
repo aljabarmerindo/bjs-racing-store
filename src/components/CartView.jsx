@@ -337,7 +337,7 @@ const CartView = ({ checkoutEnabled = true }) => {
         </div>
 
         {/* Item list */}
-        <div>
+        <div className="space-y-5">
           {items.map((item) => (
             <React.Fragment key={item.id}>
               {/* Mobile card: < sm */}
