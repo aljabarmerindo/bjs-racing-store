@@ -83,22 +83,6 @@ function QtyControl({ item, updateQuantity }) {
   );
 }
 
-/* ── Delete button ──────────────────────────────────── */
-function DeleteBtn({ onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className="text-slate-300 hover:text-red-500 transition-colors p-1"
-      title="Hapus"
-    >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="3 6 5 6 21 6" />
-        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-      </svg>
-    </button>
-  );
-}
-
 /* ── Chevron icon for product link ──────────────────── */
 function ChevronIcon() {
   return (
@@ -252,11 +236,6 @@ const CartView = ({ checkoutEnabled = true }) => {
             </p>
             <BadgeStrip item={item} />
           </div>
-
-          {/* Delete */}
-          <div className="flex-shrink-0 self-start">
-            <DeleteBtn onClick={() => removeFromCart(item.product_id)} />
-          </div>
         </div>
 
         {/* Row 2: price + qty */}
@@ -284,7 +263,7 @@ const CartView = ({ checkoutEnabled = true }) => {
     const hasDiscount = item.harga_coret && item.harga_coret > item.harga_jual;
     const isChecked = selectedProductIds.includes(item.product_id);
     return (
-      <div className={`flex items-center gap-3 py-3 border-b border-slate-100 last:border-b-0 transition-colors ${isChecked ? "bg-orange-50/40 border-l-4 border-orange-400/50" : "border-l-4 border-transparent"}`}>
+      <div className={`flex items-center gap-3 py-3 border-b border-slate-100 last:border-b-0 transition-colors ${isChecked ? "bg-orange-50/40 border-2 border-orange-400/50" : "border-2 border-transparent"}`}>
         <ItemCheckbox checked={isChecked} onChange={() => toggleItemSelection(item.product_id)} />
 
         {/* Image + swatch — clickable */}
@@ -324,9 +303,6 @@ const CartView = ({ checkoutEnabled = true }) => {
         <div className="text-right flex-shrink-0 w-24">
           <p className="text-sm font-bold text-slate-800 tabular-nums">{formatRupiah(qty * item.harga_jual)}</p>
         </div>
-
-        {/* Delete */}
-        <DeleteBtn onClick={() => removeFromCart(item.product_id)} />
       </div>
     );
   }
