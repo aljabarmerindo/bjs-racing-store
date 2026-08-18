@@ -12,9 +12,10 @@ const { session } = Astro.locals;
 
 interface Props {
   title: string;
+  hideWhatsApp?: boolean;
 }
 
-const { title } = Astro.props;
+const { title, hideWhatsApp = false } = Astro.props;
 
 // Daftar semua ukuran ikon yang diperlukan
 const iconSizes = [72, 96, 128, 144, 152, 192, 384, 512];
@@ -72,7 +73,7 @@ const erudaEnabled = import.meta.env.PUBLIC_ENABLE_ERUDA === "1" || !import.meta
     </main>
 
     <Footer />
-    <WhatsAppChatButton client:visible />
+    {!hideWhatsApp && <WhatsAppChatButton client:visible />}
     <WishlistHelp client:visible />
 
     {/* PWA Registration Script */}
