@@ -122,7 +122,7 @@ const BottomNav = () => {
               : isActive(tab.path);
             const Icon = active ? tab.ActiveIcon : tab.Icon;
 
-            const colorClass = active ? "text-orange-500" : "text-slate-400";
+            const colorClass = active ? "text-orange-500" : "text-slate-800";
             const classes = `flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors ${colorClass}`;
 
             if (tab.action) {
