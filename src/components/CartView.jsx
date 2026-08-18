@@ -224,15 +224,18 @@ const CartView = ({ checkoutEnabled = true }) => {
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <a href={`/products/${item.product_id}`} className="text-sm font-semibold text-slate-800 leading-tight line-clamp-2 hover:text-orange-500 transition-colors inline-flex items-center gap-1">
+            <a href={`/products/${item.product_id}`} className="text-base font-bold text-slate-800 leading-tight line-clamp-2 hover:text-orange-500 transition-colors inline-flex items-center gap-1">
               <span className="line-clamp-2">{item.nama}</span>
               <ChevronIcon />
             </a>
             {item.sku && (
-              <p className="text-[11px] text-slate-800 font-medium mt-0.5">{item.sku}</p>
+              <p className="text-sm text-slate-800 font-medium mt-0.5">{item.sku}</p>
             )}
-            <p className="text-[11px] text-slate-800 mt-0.5">
-              {item.merek}{item.ukuran ? ` · ${item.ukuran}` : ""}
+            <p className="text-sm text-slate-800 mt-0.5">
+              {item.merek}{item.kategori === 'Pilok' && item.lini_produk ? ` - ` : ""}{item.kategori === 'Pilok' && item.lini_produk ? <span className="text-blue-500">{item.lini_produk}</span> : ""}
+            </p>
+            <p className="text-sm text-slate-800 mt-0.5">
+              {item.ukuran}
             </p>
             <BadgeStrip item={item} />
           </div>
@@ -248,7 +251,7 @@ const CartView = ({ checkoutEnabled = true }) => {
           </div>
           <div className="flex items-center gap-3">
             <QtyControl item={item} updateQuantity={updateQuantity} />
-            <p className="text-sm font-bold text-slate-800 tabular-nums whitespace-nowrap">
+            <p className="text-base font-bold text-slate-800 tabular-nums whitespace-nowrap">
               {formatRupiah(qty * item.harga_jual)}
             </p>
           </div>
@@ -276,15 +279,17 @@ const CartView = ({ checkoutEnabled = true }) => {
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <a href={`/products/${item.product_id}`} className="text-sm font-semibold text-slate-800 line-clamp-1 hover:text-orange-500 transition-colors inline-flex items-center gap-1">
+          <a href={`/products/${item.product_id}`} className="text-base font-bold text-slate-800 line-clamp-1 hover:text-orange-500 transition-colors inline-flex items-center gap-1">
             <span className="line-clamp-1">{item.nama}</span>
             <ChevronIcon />
           </a>
-          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-            {item.sku && <span className="text-[11px] text-slate-800 font-medium">{item.sku}</span>}
-            {item.merek && <span className="text-[11px] text-slate-800">· {item.merek}</span>}
-            {item.ukuran && <span className="text-[11px] text-slate-800">· {item.ukuran}</span>}
-          </div>
+          {item.sku && <p className="text-sm text-slate-800 font-medium mt-0.5">{item.sku}</p>}
+          <p className="text-sm text-slate-800 mt-0.5">
+            {item.merek}{item.kategori === 'Pilok' && item.lini_produk ? ` - ` : ""}{item.kategori === 'Pilok' && item.lini_produk ? <span className="text-blue-500">{item.lini_produk}</span> : ""}
+          </p>
+          <p className="text-sm text-slate-800 mt-0.5">
+            {item.ukuran}
+          </p>
           <BadgeStrip item={item} />
         </div>
 
@@ -301,7 +306,7 @@ const CartView = ({ checkoutEnabled = true }) => {
 
         {/* Total */}
         <div className="text-right flex-shrink-0 w-24">
-          <p className="text-sm font-bold text-slate-800 tabular-nums">{formatRupiah(qty * item.harga_jual)}</p>
+          <p className="text-base font-bold text-slate-800 tabular-nums">{formatRupiah(qty * item.harga_jual)}</p>
         </div>
       </div>
     );

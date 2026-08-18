@@ -27,6 +27,7 @@ interface Product {
   harga_coret?: number;
   total_terjual?: number;
   stok_min?: number;
+  lini_produk?: string;
 }
 
 export interface CartItem extends Product {
