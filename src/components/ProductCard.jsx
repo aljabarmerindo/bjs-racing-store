@@ -74,11 +74,6 @@ const ProductCard = ({ product }) => {
                     {/* --- LINGKARAN WARNA & SKU (Sekarang Responsif) --- */}
                     {/* Tampilan HP: di Kiri Atas */}
                     <div className="absolute bottom-1 left-4 flex flex-col items-center md:hidden">
-                        {product.kategori === "Pilok" && product.ukuran && (
-                            <p className="text-xs font-bold text-black bg-white/70 px-1.5 py-0.5 rounded mb-1 shadow">
-                                {product.ukuran}
-                            </p>
-                        )}
                         {product.color_swatch_url && (
                             <div className="w-12 h-12 rounded-full shadow-lg flex items-center justify-center overflow-hidden">
                                 <img
@@ -88,18 +83,22 @@ const ProductCard = ({ product }) => {
                                 />
                             </div>
                         )}
-                        <p className="text-xs font-bold text-slate-900 bg-white/70 px-1 rounded mt-1">
-                            {product.sku || ""}
-                        </p>
+                        <div className="flex items-center gap-1 mt-1">
+                            {product.kategori === "Pilok" && product.ukuran && (
+                                <p className="text-xs font-bold text-slate-900 bg-white/70 px-1 rounded shadow">
+                                    {product.ukuran}
+                                </p>
+                            )}
+                            {product.sku && (
+                                <p className="text-xs font-bold text-slate-900 bg-white/70 px-1 rounded shadow">
+                                    {product.sku}
+                                </p>
+                            )}
+                        </div>
                     </div>
 
                     {/* Tampilan Desktop: di Kiri Bawah */}
                     <div className="absolute bottom-1 left-4 hidden md:flex flex-col items-center">
-                        {product.kategori === "Pilok" && product.ukuran && (
-                            <p className="text-lg font-bold text-black bg-white/70 px-2 py-0.5 rounded mb-1 shadow">
-                                {product.ukuran}
-                            </p>
-                        )}
                         {product.color_swatch_url && (
                             <div className="w-16 h-16 rounded-full shadow-lg flex items-center justify-center overflow-hidden">
                                 <img
@@ -109,9 +108,18 @@ const ProductCard = ({ product }) => {
                                 />
                             </div>
                         )}
-                        <p className="text-base font-bold text-slate-900 bg-white/70 px-1 rounded mt-1">
-                            {product.sku || ""}
-                        </p>
+                        <div className="flex items-center gap-1 mt-1">
+                            {product.kategori === "Pilok" && product.ukuran && (
+                                <p className="text-base font-bold text-slate-900 bg-white/70 px-1 rounded shadow">
+                                    {product.ukuran}
+                                </p>
+                            )}
+                            {product.sku && (
+                                <p className="text-base font-bold text-slate-900 bg-white/70 px-1 rounded shadow">
+                                    {product.sku}
+                                </p>
+                            )}
+                        </div>
                     </div>
                 </div>
 

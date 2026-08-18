@@ -178,11 +178,6 @@ const ProductDetailView = ({ initialProduct, allProductVariants }) => {
                 </div>
 
                 <div className="absolute bottom-8 left-8 flex flex-col items-center">
-                    {selectedVariant.kategori === "Pilok" && selectedVariant.ukuran && (
-                        <p className="text-lg font-bold text-black bg-white/70 px-3 py-1 rounded mb-1 shadow">
-                            {selectedVariant.ukuran}
-                        </p>
-                    )}
                     {selectedVariant.color_swatch_url && (
                         <div className="w-28 h-28 rounded-full shadow-lg overflow-hidden">
                             <img
@@ -192,9 +187,18 @@ const ProductDetailView = ({ initialProduct, allProductVariants }) => {
                             />
                         </div>
                     )}
-                    <p className="text-sm mobile:text-base tablet:text-lg desktop:text-2xl font-bold text-slate-900 bg-white/70 px-1 rounded mt-1">
-                        {selectedVariant.sku || ""}
-                    </p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                        {selectedVariant.kategori === "Pilok" && selectedVariant.ukuran && (
+                            <p className="text-sm mobile:text-base tablet:text-lg desktop:text-2xl font-bold text-slate-900 bg-white/70 px-1 rounded shadow">
+                                {selectedVariant.ukuran}
+                            </p>
+                        )}
+                        {selectedVariant.sku && (
+                            <p className="text-sm mobile:text-base tablet:text-lg desktop:text-2xl font-bold text-slate-900 bg-white/70 px-1 rounded shadow">
+                                {selectedVariant.sku}
+                            </p>
+                        )}
+                    </div>
                 </div>
             </div>
 
