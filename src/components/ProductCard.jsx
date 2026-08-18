@@ -84,14 +84,14 @@ const ProductCard = ({ product }) => {
                             </div>
                         )}
                         <div className="flex items-center gap-1 mt-1">
-                            {product.kategori === "Pilok" && product.ukuran && (
-                                <p className="text-xs font-bold text-slate-900 bg-white/70 px-1 rounded shadow">
-                                    {product.ukuran}
-                                </p>
-                            )}
                             {product.sku && (
                                 <p className="text-xs font-bold text-slate-900 bg-white/70 px-1 rounded shadow">
                                     {product.sku}
+                                </p>
+                            )}
+                            {product.kategori === "Pilok" && product.ukuran && (
+                                <p className="text-xs font-bold text-slate-900 bg-white/70 px-1 rounded shadow">
+                                    {product.ukuran}
                                 </p>
                             )}
                         </div>
@@ -109,14 +109,14 @@ const ProductCard = ({ product }) => {
                             </div>
                         )}
                         <div className="flex items-center gap-1 mt-1">
-                            {product.kategori === "Pilok" && product.ukuran && (
-                                <p className="text-base font-bold text-slate-900 bg-white/70 px-1 rounded shadow">
-                                    {product.ukuran}
-                                </p>
-                            )}
                             {product.sku && (
                                 <p className="text-base font-bold text-slate-900 bg-white/70 px-1 rounded shadow">
                                     {product.sku}
+                                </p>
+                            )}
+                            {product.kategori === "Pilok" && product.ukuran && (
+                                <p className="text-base font-bold text-slate-900 bg-white/70 px-1 rounded shadow">
+                                    {product.ukuran}
                                 </p>
                             )}
                         </div>

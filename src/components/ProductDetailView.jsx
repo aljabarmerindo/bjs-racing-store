@@ -188,14 +188,14 @@ const ProductDetailView = ({ initialProduct, allProductVariants }) => {
                         </div>
                     )}
                     <div className="flex items-center gap-1.5 mt-1">
-                        {selectedVariant.kategori === "Pilok" && selectedVariant.ukuran && (
-                            <p className="text-sm mobile:text-base tablet:text-lg desktop:text-2xl font-bold text-slate-900 bg-white/70 px-1 rounded shadow">
-                                {selectedVariant.ukuran}
-                            </p>
-                        )}
                         {selectedVariant.sku && (
                             <p className="text-sm mobile:text-base tablet:text-lg desktop:text-2xl font-bold text-slate-900 bg-white/70 px-1 rounded shadow">
                                 {selectedVariant.sku}
+                            </p>
+                        )}
+                        {selectedVariant.kategori === "Pilok" && selectedVariant.ukuran && (
+                            <p className="text-sm mobile:text-base tablet:text-lg desktop:text-2xl font-bold text-slate-900 bg-white/70 px-1 rounded shadow">
+                                {selectedVariant.ukuran}
                             </p>
                         )}
                     </div>
