@@ -13,14 +13,6 @@ const formatRupiah = (n) =>
 /* ── Badge helpers ──────────────────────────────────── */
 function badges(item) {
   const list = [];
-  const hasDiscount =
-    item.harga_coret && item.harga_coret > item.harga_jual;
-  if (hasDiscount) {
-    const pct = Math.round(
-      ((item.harga_coret - item.harga_jual) / item.harga_coret) * 100,
-    );
-    list.push({ label: `DISKON ${pct}%`, cls: "bg-red-500 text-white" });
-  }
   if ((item.total_terjual || 0) > 50) {
     list.push({ label: "TERLARIS", cls: "bg-orange-500 text-white" });
   }
@@ -48,6 +40,18 @@ function BadgeStrip({ item }) {
           {b.label}
         </span>
       ))}
+    </span>
+  );
+}
+
+/* ── Discount badge (inline beside price) ─────────── */
+function DiscountBadge({ item }) {
+  const hasDiscount = item.harga_coret && item.harga_coret > item.harga_jual;
+  if (!hasDiscount) return null;
+  const pct = Math.round(((item.harga_coret - item.harga_jual) / item.harga_coret) * 100);
+  return (
+    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500 text-white ml-1.5">
+      DISKON {pct}%
     </span>
   );
 }
@@ -218,7 +222,7 @@ const CartView = ({ checkoutEnabled = true }) => {
           <a href={`/products/${item.product_id}`} className="relative w-[100px] h-[100px] flex-shrink-0 bg-slate-50 rounded-lg">
             <img src={item.image_url} alt={item.nama} className="w-full h-full object-contain rounded-lg" />
             {item.color_swatch_url && (
-              <img src={item.color_swatch_url} alt="" className="absolute bottom-2 left-2 w-[60px] h-[60px] object-cover rounded-full border border-slate-200 shadow-sm" />
+              <img src={item.color_swatch_url} alt="" className="absolute bottom-2 left-2 w-[55px] h-[55px] object-cover rounded-full border border-slate-200 shadow-sm" />
             )}
           </a>
 
@@ -229,7 +233,7 @@ const CartView = ({ checkoutEnabled = true }) => {
               <ChevronIcon />
             </a>
             {item.sku && (
-              <p className="text-sm text-slate-800 font-medium mt-0.5">{item.sku}</p>
+              <p className="text-sm text-slate-800 font-bold mt-0.5">{item.sku}</p>
             )}
             <p className="text-sm text-slate-800 mt-0.5">
               {item.merek}{item.kategori === 'Pilok' && item.lini_produk ? ` - ` : ""}{item.kategori === 'Pilok' && item.lini_produk ? <span className="text-blue-500">{item.lini_produk}</span> : ""}
@@ -247,7 +251,7 @@ const CartView = ({ checkoutEnabled = true }) => {
             {hasDiscount && (
               <p className="text-[11px] text-slate-400 line-through">{formatRupiah(item.harga_coret)}</p>
             )}
-            <p className="text-sm font-bold text-orange-500">{formatRupiah(item.harga_jual)}</p>
+            <p className="text-sm font-bold text-orange-500 inline-flex items-center">{formatRupiah(item.harga_jual)}<DiscountBadge item={item} /></p>
           </div>
           <div className="flex items-center gap-3">
             <QtyControl item={item} updateQuantity={updateQuantity} />
@@ -273,7 +277,7 @@ const CartView = ({ checkoutEnabled = true }) => {
         <a href={`/products/${item.product_id}`} className="relative w-[110px] h-[110px] lg:w-[120px] lg:h-[120px] flex-shrink-0 bg-slate-50 rounded-lg">
           <img src={item.image_url} alt={item.nama} className="w-full h-full object-contain rounded-lg" />
           {item.color_swatch_url && (
-            <img src={item.color_swatch_url} alt="" className="absolute bottom-2 left-2 w-[60px] h-[60px] object-cover rounded-full border border-slate-200 shadow-sm" />
+            <img src={item.color_swatch_url} alt="" className="absolute bottom-2 left-2 w-[55px] h-[55px] object-cover rounded-full border border-slate-200 shadow-sm" />
           )}
         </a>
 
@@ -283,7 +287,7 @@ const CartView = ({ checkoutEnabled = true }) => {
             <span className="line-clamp-1">{item.nama}</span>
             <ChevronIcon />
           </a>
-          {item.sku && <p className="text-sm text-slate-800 font-medium mt-0.5">{item.sku}</p>}
+          {item.sku && <p className="text-sm text-slate-800 font-bold mt-0.5">{item.sku}</p>}
           <p className="text-sm text-slate-800 mt-0.5">
             {item.merek}{item.kategori === 'Pilok' && item.lini_produk ? ` - ` : ""}{item.kategori === 'Pilok' && item.lini_produk ? <span className="text-blue-500">{item.lini_produk}</span> : ""}
           </p>
@@ -296,7 +300,7 @@ const CartView = ({ checkoutEnabled = true }) => {
         {/* Price */}
         <div className="text-right flex-shrink-0 hidden sm:block">
           {hasDiscount && <p className="text-[11px] text-slate-400 line-through">{formatRupiah(item.harga_coret)}</p>}
-          <p className="text-sm font-semibold text-orange-500">{formatRupiah(item.harga_jual)}</p>
+          <p className="text-sm font-semibold text-orange-500 inline-flex items-center">{formatRupiah(item.harga_jual)}<DiscountBadge item={item} /></p>
         </div>
 
         {/* Qty */}
