@@ -92,19 +92,19 @@ const FeaturedProducts = () => {
   }, [activeTab, fetchProducts]);
 
   return (
-    <section className="bg-slate-50 py-12 mobile:py-16 tablet:py-20">
-      <div className="container mx-auto px-3 mobile:px-4 tablet:px-6">
-        <h2 className="text-xl mobile:text-2xl tablet:text-3xl font-bold text-center text-slate-800 mb-6 mobile:mb-8">
+    <section className="bg-slate-50 py-8 mobile:py-10 tablet:py-16">
+      <div className="container mx-auto px-2.5 mobile:px-3 tablet:px-5">
+        <h2 className="text-lg mobile:text-xl tablet:text-3xl font-bold text-center text-slate-800 mb-4 mobile:mb-6">
           Produk Unggulan
         </h2>
 
         {/* Tab Filters */}
-        <div className="flex justify-center gap-2 mb-8 mobile:mb-10">
+        <div className="flex justify-center gap-2 mb-5 mobile:mb-8">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 mobile:px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
+              className={`px-3 mobile:px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
                 activeTab === tab.id
                   ? "bg-orange-500 text-white shadow-md"
                   : "bg-white text-slate-600 hover:bg-orange-50 hover:text-orange-600 border border-slate-200 hover:border-orange-300"
@@ -133,10 +133,10 @@ const FeaturedProducts = () => {
         )}
 
         {/* CTA */}
-        <div className="text-center mt-8 mobile:mt-10">
+        <div className="text-center mt-5 mobile:mt-8">
           <a
               href="/pilok"
-            className="inline-block bg-orange-500 text-white px-6 mobile:px-8 py-3 rounded-full font-semibold shadow-lg hover:bg-orange-600 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 text-sm mobile:text-base"
+            className="inline-block bg-orange-500 text-white px-5 mobile:px-6 py-3 rounded-full font-semibold shadow-lg hover:bg-orange-600 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 text-xs mobile:text-sm"
           >
             Lihat Semua Produk
           </a>

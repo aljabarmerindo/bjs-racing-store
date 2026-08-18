@@ -25,24 +25,24 @@ export default function NewsletterBanner() {
         <rect width="100%" height="100%" fill="url(#newsletter-pattern)"/>
       </svg>
 
-      <div className="relative z-10 container mx-auto px-3 mobile:px-4 tablet:px-6 py-10 mobile:py-14 tablet:py-16">
+      <div className="relative z-10 container mx-auto px-2.5 mobile:px-3 tablet:px-5 py-8 mobile:py-10 tablet:py-14">
         <div className="max-w-2xl mx-auto text-center">
           {/* Floating Badge */}
           <div className="inline-block mb-4">
-            <span className="bg-white/20 text-white px-3 py-1 rounded-full text-xs mobile:text-sm font-semibold backdrop-blur-sm border border-white/30 animate-[fade_3s_ease-in-out_infinite]">
+            <span className="bg-white/20 text-white px-3 py-1 rounded-full text-xs mobile:text-xs font-semibold backdrop-blur-sm border border-white/30 animate-[fade_3s_ease-in-out_infinite]">
               GRATIS
             </span>
           </div>
 
-          <h2 className="text-xl mobile:text-2xl tablet:text-3xl font-bold text-white mb-2 mobile:mb-3">
+          <h2 className="text-lg mobile:text-xl tablet:text-3xl font-bold text-white mb-1.5 mobile:mb-2">
             Dapatkan Promo Eksklusif!
           </h2>
-          <p className="text-orange-100 text-sm mobile:text-base mb-6 mobile:mb-8 max-w-lg mx-auto">
+          <p className="text-orange-100 text-xs mobile:text-sm mb-4 mobile:mb-6 max-w-lg mx-auto">
             Berlangganan newsletter kami untuk mendapatkan diskon dan info promo terbaru
           </p>
 
           {submitted ? (
-            <div className="bg-white/20 backdrop-blur-sm rounded-full px-6 py-3 text-white font-semibold text-sm mobile:text-base">
+            <div className="bg-white/20 backdrop-blur-sm rounded-full px-6 py-3 text-white font-semibold text-xs mobile:text-sm">
               Terima kasih telah berlangganan!
             </div>
           ) : (
@@ -53,11 +53,11 @@ export default function NewsletterBanner() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Masukkan email Anda"
                 required
-                className="flex-1 px-4 py-3 rounded-full text-sm mobile:text-base text-slate-900 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-orange-600"
+                className="flex-1 px-4 py-3 rounded-full text-xs mobile:text-sm text-slate-900 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-orange-600"
               />
               <button
                 type="submit"
-                className="bg-white text-orange-600 px-6 py-3 rounded-full font-bold text-sm mobile:text-base hover:bg-orange-50 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-orange-600"
+                className="bg-white text-orange-600 px-6 py-3 rounded-full font-bold text-xs mobile:text-sm hover:bg-orange-50 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-orange-600"
               >
                 Berlangganan
               </button>

@@ -2,32 +2,32 @@
 // src/components/Footer.astro
 const currentYear = new Date().getFullYear();
 ---
-<footer class="bg-slate-800 text-slate-400 mt-12 mobile:mt-16 tablet:mt-20">
-    <div class="container mx-auto px-3 mobile:px-4 tablet:px-6 py-6 mobile:py-8">
+<footer class="bg-slate-800 text-slate-400 mt-8 mobile:mt-10 tablet:mt-16">
+    <div class="container mx-auto px-2.5 mobile:px-3 tablet:px-5 py-4 mobile:py-6">
         {/* Grid Layout untuk Tablet/Desktop */}
-        <div class="grid grid-cols-1 tablet:grid-cols-3 gap-6 mobile:gap-8 tablet:gap-10 mb-6 mobile:mb-8">
+        <div class="grid grid-cols-1 tablet:grid-cols-3 gap-4 mobile:gap-5 tablet:gap-8 mb-4 mobile:mb-6">
             {/* Company Info */}
             <div class="text-center tablet:text-left">
-                <h3 class="text-base mobile:text-lg tablet:text-xl font-bold text-white mb-3 mobile:mb-4">
+                <h3 class="text-sm mobile:text-base tablet:text-lg font-bold text-white mb-2 mobile:mb-3">
                     BJS RACING STORE
                 </h3>
-                <p class="text-sm mobile:text-base text-slate-400">
+                <p class="text-xs mobile:text-sm text-slate-400">
                     Distributor Spray Paint dan Onderdil Motor Terpercaya
                 </p>
             </div>
 
             {/* Contact Info */}
             <div class="text-center">
-                <h4 class="text-sm mobile:text-base font-semibold text-white mb-2 mobile:mb-3">
+                <h4 class="text-xs mobile:text-sm font-semibold text-white mb-1.5 mobile:mb-2">
                     Kontak Kami
                 </h4>
-                <p class="text-xs mobile:text-sm text-slate-400">Email: bjs.racing.store@gmail.com</p>
-                <p class="text-xs mobile:text-sm text-slate-400">WhatsApp: 0881011669213</p>
+                <p class="text-xs mobile:text-xs text-slate-400">Email: bjs.racing.store@gmail.com</p>
+                <p class="text-xs mobile:text-xs text-slate-400">WhatsApp: 0881011669213</p>
             </div>
 
             {/* Social Media */}
             <div class="text-center tablet:text-right">
-                <h4 class="text-sm mobile:text-base font-semibold text-white mb-2 mobile:mb-3">
+                <h4 class="text-xs mobile:text-sm font-semibold text-white mb-1.5 mobile:mb-2">
                     Follow Kami
                 </h4>
                 <div class="flex justify-center tablet:justify-end space-x-4">
@@ -42,11 +42,11 @@ const currentYear = new Date().getFullYear();
         </div>
 
         {/* Copyright Section */}
-        <div class="border-t border-slate-700 pt-6 mobile:pt-8 text-center">
-            <p class="text-sm mobile:text-base tablet:text-lg">
+        <div class="border-t border-slate-700 pt-4 mobile:pt-6 text-center">
+            <p class="text-xs mobile:text-sm tablet:text-base">
                 &copy; {currentYear} BJS RACING STORE. All rights reserved.
             </p>
-            <p class="text-xs mobile:text-sm mt-2 tablet:mt-3">
+            <p class="text-xs mobile:text-xs mt-2 tablet:mt-3">
                 Developed with ❤️ for the automotive community
             </p>
         </div>

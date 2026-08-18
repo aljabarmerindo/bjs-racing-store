@@ -218,21 +218,21 @@ const PromoBanner = ({ slides: dbSlides = [] }: { slides?: Slide[] }) => {
 
       {/* Content Area — below image */}
       <div className="w-full bg-white">
-        <div className="max-w-6xl mx-auto px-4 md:px-6 py-5 md:py-6">
+        <div className="max-w-6xl mx-auto px-3 md:px-5 py-4 md:py-5">
           <div
             key={index}
             className="animate-[fadeInUp_0.4s_ease-out]"
           >
-            <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-1.5">
+            <h2 className="text-lg md:text-2xl font-bold text-slate-900 mb-1.5">
               {current.title}
             </h2>
-            <p className="text-sm md:text-base text-slate-500 mb-4">
+            <p className="text-xs md:text-base text-slate-500 mb-4">
               {current.subtitle}
             </p>
             <div className="flex items-center justify-between">
               <a
                 href={current.cta_href || "/"}
-                className="inline-block bg-orange-500 text-white font-semibold px-5 py-2.5 md:px-6 md:py-3 rounded-lg hover:bg-orange-600 transition-colors duration-200 cursor-pointer shadow-sm text-sm md:text-base"
+                className="inline-block bg-orange-500 text-white font-semibold px-4 py-2 md:px-5 md:py-2.5 rounded-lg hover:bg-orange-600 transition-colors duration-200 cursor-pointer shadow-sm text-xs md:text-base"
               >
                 {current.cta_text || "Selengkapnya"}
               </a>

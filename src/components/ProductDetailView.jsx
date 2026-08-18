@@ -192,7 +192,7 @@ const ProductDetailView = ({ initialProduct, allProductVariants }) => {
                             />
                         </div>
                     )}
-                    <p className="text-base mobile:text-lg tablet:text-xl desktop:text-2xl font-bold text-slate-900 bg-white/70 px-1 rounded mt-1">
+                    <p className="text-sm mobile:text-base tablet:text-lg desktop:text-2xl font-bold text-slate-900 bg-white/70 px-1 rounded mt-1">
                         {selectedVariant.sku || ""}
                     </p>
                 </div>

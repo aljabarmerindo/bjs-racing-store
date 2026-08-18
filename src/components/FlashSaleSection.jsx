@@ -31,7 +31,7 @@ const formatRupiah = (number) =>
   }).format(number || 0);
 
 const SkeletonCard = () => (
-  <div className="flex-none w-40 mobile:w-44 bg-white rounded-xl shadow-md overflow-hidden border border-slate-200">
+  <div className="flex-none w-36 mobile:w-40 bg-white rounded-xl shadow-md overflow-hidden border border-slate-200">
     <div className="aspect-square bg-slate-200 animate-pulse" />
     <div className="p-2.5 space-y-1.5">
       <div className="h-3 bg-slate-200 animate-pulse rounded w-full" />
@@ -124,15 +124,15 @@ const FlashSaleSection = () => {
   }
 
   return (
-    <section className="bg-gradient-to-r from-orange-500 via-orange-400 to-red-400 py-10 mobile:py-14 tablet:py-16 overflow-hidden">
-      <div className="container mx-auto px-3 mobile:px-4 tablet:px-6">
-        <div className="flex flex-col mobile:flex-row items-center justify-between gap-4 mb-8 mobile:mb-10">
+    <section className="bg-gradient-to-r from-orange-500 via-orange-400 to-red-400 py-7 mobile:py-9 tablet:py-14 overflow-hidden">
+      <div className="container mx-auto px-2.5 mobile:px-3 tablet:px-5">
+        <div className="flex flex-col mobile:flex-row items-center justify-between gap-3 mb-5 mobile:mb-8">
           <div className="flex items-center gap-3">
-            <FiZap className="w-6 h-6 mobile:w-7 mobile:h-7 text-yellow-300" fill="currentColor" />
-            <h2 className="text-xl mobile:text-2xl tablet:text-3xl font-bold text-white">
+            <FiZap className="w-5 h-5 mobile:w-6 mobile:h-6 text-yellow-300" fill="currentColor" />
+            <h2 className="text-lg mobile:text-xl tablet:text-3xl font-bold text-white">
               Flash Sale
             </h2>
-            <span className="bg-white/20 backdrop-blur-sm text-white text-xs mobile:text-sm font-bold px-3 py-1 rounded-full animate-[fadeOutIn_3s_ease-in-out_infinite]">
+            <span className="bg-white/20 backdrop-blur-sm text-white text-xs mobile:text-xs font-bold px-3 py-1 rounded-full animate-[fadeOutIn_3s_ease-in-out_infinite]">
               HARI INI SAJA
             </span>
           </div>
@@ -141,13 +141,13 @@ const FlashSaleSection = () => {
             <div className="flex items-center gap-2">
               {["hours", "minutes", "seconds"].map((unit, i) => (
                 <React.Fragment key={unit}>
-                  <div className="bg-white rounded-lg px-3 py-2 mobile:px-4 mobile:py-2.5 shadow-lg">
-                    <span className="text-xl mobile:text-2xl font-bold text-orange-600 tabular-nums">
+                  <div className="bg-white rounded-lg px-2.5 py-1.5 mobile:px-3 mobile:py-2 shadow-lg">
+                    <span className="text-base mobile:text-lg font-bold text-orange-600 tabular-nums">
                       {pad(time[unit])}
                     </span>
                   </div>
                   {i < 2 && (
-                    <span className="text-white text-xl mobile:text-2xl font-bold animate-pulse">
+                    <span className="text-white text-base mobile:text-lg font-bold animate-pulse">
                       :
                     </span>
                   )}
@@ -161,7 +161,7 @@ const FlashSaleSection = () => {
           <button
             onClick={() => scroll("prev")}
             disabled={!canScrollPrev}
-            className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 mobile:w-10 mobile:h-10 rounded-full bg-white/90 shadow-lg flex items-center justify-center transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white ${
+            className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 mobile:w-9 mobile:h-9 rounded-full bg-white/90 shadow-lg flex items-center justify-center transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white ${
               canScrollPrev
                 ? "hover:bg-white text-slate-700"
                 : "opacity-0 pointer-events-none"
@@ -174,7 +174,7 @@ const FlashSaleSection = () => {
           <button
             onClick={() => scroll("next")}
             disabled={!canScrollNext}
-            className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 mobile:w-10 mobile:h-10 rounded-full bg-white/90 shadow-lg flex items-center justify-center transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white ${
+            className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 mobile:w-9 mobile:h-9 rounded-full bg-white/90 shadow-lg flex items-center justify-center transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white ${
               canScrollNext
                 ? "hover:bg-white text-slate-700"
                 : "opacity-0 pointer-events-none"
@@ -210,7 +210,7 @@ const FlashSaleSection = () => {
                     <a
                       key={flashSale.id}
                       href={`/products/${product.id}`}
-                      className="flex-none w-40 mobile:w-44 bg-white rounded-xl shadow-md overflow-hidden border border-slate-200 hover:border-orange-300 hover:shadow-lg transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white"
+                      className="flex-none w-36 mobile:w-40 bg-white rounded-xl shadow-md overflow-hidden border border-slate-200 hover:border-orange-300 hover:shadow-lg transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white"
                     >
                       <div className="relative aspect-square bg-white">
                         {product.image_url ? (
@@ -229,13 +229,13 @@ const FlashSaleSection = () => {
                         </div>
                       </div>
                       <div className="p-2.5">
-                        <h3 className="text-xs mobile:text-sm font-semibold text-slate-800 line-clamp-2 mb-1">
+                        <h3 className="text-xs mobile:text-xs font-semibold text-slate-800 line-clamp-2 mb-1">
                           {product.nama}
                         </h3>
                         <p className="text-[10px] text-slate-400 line-through">
                           {formatRupiah(flashSale.original_price)}
                         </p>
-                        <p className="text-sm mobile:text-base font-bold text-orange-500">
+                        <p className="text-xs mobile:text-sm font-bold text-orange-500">
                           {formatRupiah(flashSale.flash_price)}
                         </p>
                       </div>

@@ -70,32 +70,32 @@ const { data: brands } = await supabaseAdmin
 
         {/* Floating Promo Badge */}
         <div class="absolute top-4 right-4 tablet:top-6 tablet:right-8 z-20 animate-[pulse_3s_ease-in-out_infinite]">
-            <div class="bg-white text-orange-600 px-4 py-2 rounded-full font-bold text-xs mobile:text-sm shadow-lg border border-orange-100">
+            <div class="bg-white text-orange-600 px-4 py-2 rounded-full font-bold text-xs mobile:text-xs shadow-lg border border-orange-100">
                 <span class="inline-block w-2 h-2 bg-orange-500 rounded-full mr-1.5 animate-pulse"></span>
                 Promo Minggu Ini
             </div>
         </div>
 
-        <div class="relative z-10 container mx-auto px-3 mobile:px-4 tablet:px-6 py-10 mobile:py-14 tablet:py-16 desktop:py-20">
+        <div class="relative z-10 container mx-auto px-2.5 mobile:px-3 tablet:px-5 py-8 mobile:py-10 tablet:py-14 desktop:py-20">
             <div class="grid grid-cols-1 tablet:grid-cols-2 gap-8 tablet:gap-12 items-center">
                 {/* Left: Welcome Text + CTA */}
                 <div class="text-center mobile:text-left">
-                    <h1 class="text-2xl mobile:text-3xl tablet:text-4xl desktop:text-5xl font-bold mb-3 mobile:mb-4 leading-tight">
+                    <h1 class="text-xl mobile:text-2xl tablet:text-4xl desktop:text-5xl font-bold mb-2 mobile:mb-3 leading-tight">
                         {id.home_page.welcome}
                     </h1>
-                    <p class="text-base mobile:text-lg tablet:text-xl text-orange-100 max-w-lg mb-6 mobile:mb-8 mx-auto mobile:mx-0 leading-relaxed">
+                    <p class="text-sm mobile:text-base tablet:text-xl text-orange-100 max-w-lg mb-4 mobile:mb-6 mx-auto mobile:mx-0 leading-relaxed">
                         Distributor terpercaya untuk Pilok, Onderdil &amp; Aksesoris Motor berkualitas tinggi harga terjangkau
                     </p>
-                    <div class="flex flex-col mobile:flex-row gap-3 mobile:gap-4 justify-center mobile:justify-start">
+                    <div class="flex flex-col mobile:flex-row gap-2 mobile:gap-3 justify-center mobile:justify-start">
                         <a
                             href="/pilok"
-                            class="bg-white text-orange-600 px-6 mobile:px-8 py-3 rounded-full font-semibold shadow-lg hover:bg-orange-50 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-orange-500 text-sm mobile:text-base"
+                            class="bg-white text-orange-600 px-5 mobile:px-6 py-2.5 rounded-full font-semibold shadow-lg hover:bg-orange-50 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-orange-500 text-xs mobile:text-sm"
                         >
                             Lihat Produk Pilok
                         </a>
                         <a
                             href="/katalog-warna"
-                            class="border-2 border-white text-white px-6 mobile:px-8 py-3 rounded-full font-semibold hover:bg-white hover:text-orange-600 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-orange-500 text-sm mobile:text-base"
+                            class="border-2 border-white text-white px-5 mobile:px-6 py-2.5 rounded-full font-semibold hover:bg-white hover:text-orange-600 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-orange-500 text-xs mobile:text-sm"
                         >
                             Lihat Katalog Pilok
                         </a>
@@ -103,7 +103,7 @@ const { data: brands } = await supabaseAdmin
                 </div>
 
                 {/* Right: Stats Counters */}
-                <div class="grid grid-cols-3 gap-3 mobile:gap-4">
+                <div class="grid grid-cols-3 gap-2 mobile:gap-3">
                     <StatsCounter client:load endValue={totalProduk ?? 0} suffix="+" label="Produk" icon="package" duration={2000}/>
                     <StatsCounter client:load endValue={totalTerjual} suffix="+" label="Terjual" icon="users" duration={2200}/>
                     <StatsCounter client:load endValue={5} suffix="" label="Rating" icon="star" duration={1800}/>

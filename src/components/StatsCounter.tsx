@@ -106,11 +106,11 @@ const StatsCounter = ({
           <IconComponent className="w-5 h-5 text-white" />
         </div>
       )}
-      <span className="text-3xl mobile:text-4xl font-bold text-white tabular-nums tracking-tight">
+      <span className="text-2xl mobile:text-3xl font-bold text-white tabular-nums tracking-tight">
         {formatNumber(count)}
         {suffix}
       </span>
-      <span className="text-sm mobile:text-base text-white/80 font-medium">
+      <span className="text-xs mobile:text-sm text-white/80 font-medium">
         {label}
       </span>
     </div>

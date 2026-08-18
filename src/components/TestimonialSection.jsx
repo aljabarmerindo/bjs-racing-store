@@ -64,7 +64,7 @@ export default function TestimonialSection() {
 
   return (
     <section
-      className="bg-gradient-to-b from-orange-50 to-white py-12 mobile:py-16 tablet:py-20"
+      className="bg-gradient-to-b from-orange-50 to-white py-8 mobile:py-10 tablet:py-16"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onFocus={() => setIsPaused(true)}
@@ -72,8 +72,8 @@ export default function TestimonialSection() {
       aria-label="Testimonial carousel"
       role="region"
     >
-      <div className="container mx-auto px-3 mobile:px-4 tablet:px-6 max-w-3xl">
-        <h2 className="text-xl mobile:text-2xl tablet:text-3xl font-bold text-center text-slate-800 mb-8 mobile:mb-12">
+      <div className="container mx-auto px-2.5 mobile:px-3 tablet:px-5 max-w-3xl">
+        <h2 className="text-lg mobile:text-xl tablet:text-3xl font-bold text-center text-slate-800 mb-5 mobile:mb-8">
           Apa Kata Pelanggan Kami?
         </h2>
 
@@ -88,7 +88,7 @@ export default function TestimonialSection() {
           </button>
 
           {/* Card */}
-          <div className="bg-white rounded-xl shadow-md border border-slate-100 p-6 mobile:p-8 mx-6 mobile:mx-0 transition-all duration-200">
+          <div className="bg-white rounded-xl shadow-md border border-slate-100 p-4 mobile:p-6 mx-6 mobile:mx-0 transition-all duration-200">
             {/* Stars */}
             <div className="flex gap-1 mb-4 justify-center">
               {[...Array(5)].map((_, i) => (
@@ -102,7 +102,7 @@ export default function TestimonialSection() {
             </div>
 
             {/* Quote */}
-            <p className="text-slate-700 text-center text-sm mobile:text-base leading-relaxed mb-6 italic">
+            <p className="text-slate-700 text-center text-xs mobile:text-sm leading-relaxed mb-6 italic">
               &ldquo;{t.text}&rdquo;
             </p>
 
@@ -111,7 +111,7 @@ export default function TestimonialSection() {
               <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-semibold text-sm">
                 {t.avatar}
               </div>
-              <span className="font-semibold text-slate-800 text-sm mobile:text-base">
+              <span className="font-semibold text-slate-800 text-xs mobile:text-sm">
                 {t.name}
               </span>
             </div>

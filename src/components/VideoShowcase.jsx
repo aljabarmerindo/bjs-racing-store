@@ -119,9 +119,9 @@ const VideoShowcase = () => {
 
   if (loading) {
     return (
-      <section className="bg-white py-12 mobile:py-16 tablet:py-20">
-        <div className="container mx-auto px-3 mobile:px-4 tablet:px-6">
-          <h2 className="text-xl mobile:text-2xl tablet:text-3xl font-bold text-center text-slate-800 mb-8 mobile:mb-12">
+      <section className="bg-white py-8 mobile:py-10 tablet:py-16">
+        <div className="container mx-auto px-2.5 mobile:px-3 tablet:px-5">
+          <h2 className="text-lg mobile:text-xl tablet:text-3xl font-bold text-center text-slate-800 mb-5 mobile:mb-8">
             Video Produk Unggulan
           </h2>
           <div className="flex items-center justify-center py-20">
@@ -134,9 +134,9 @@ const VideoShowcase = () => {
 
   if (videos.length === 0) {
     return (
-      <section className="bg-white py-12 mobile:py-16 tablet:py-20">
-        <div className="container mx-auto px-3 mobile:px-4 tablet:px-6">
-          <h2 className="text-xl mobile:text-2xl tablet:text-3xl font-bold text-center text-slate-800 mb-8 mobile:mb-12">
+      <section className="bg-white py-8 mobile:py-10 tablet:py-16">
+        <div className="container mx-auto px-2.5 mobile:px-3 tablet:px-5">
+          <h2 className="text-lg mobile:text-xl tablet:text-3xl font-bold text-center text-slate-800 mb-5 mobile:mb-8">
             Video Produk Unggulan
           </h2>
           <p className="text-center text-slate-500">Belum ada video yang ditampilkan.</p>
@@ -146,9 +146,9 @@ const VideoShowcase = () => {
   }
 
   return (
-    <section className="bg-white py-12 mobile:py-16 tablet:py-20">
-      <div className="container mx-auto px-3 mobile:px-4 tablet:px-6">
-        <h2 className="text-xl mobile:text-2xl tablet:text-3xl font-bold text-center text-slate-800 mb-8 mobile:mb-12">
+    <section className="bg-white py-8 mobile:py-10 tablet:py-16">
+      <div className="container mx-auto px-2.5 mobile:px-3 tablet:px-5">
+        <h2 className="text-lg mobile:text-xl tablet:text-3xl font-bold text-center text-slate-800 mb-5 mobile:mb-8">
           Video Produk Unggulan
         </h2>
 
@@ -162,28 +162,28 @@ const VideoShowcase = () => {
           <button
             onClick={goPrev}
             disabled={!canScrollPrev}
-            className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-10 w-10 h-10 mobile:w-12 mobile:h-12 rounded-full bg-white shadow-lg border border-slate-200 flex items-center justify-center transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
+            className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-10 w-8 h-8 mobile:w-10 mobile:h-10 rounded-full bg-white shadow-lg border border-slate-200 flex items-center justify-center transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
               canScrollPrev
                 ? "hover:bg-orange-50 hover:border-orange-300 text-slate-700"
                 : "opacity-40 cursor-not-allowed text-slate-400"
             }`}
             aria-label="Video sebelumnya"
           >
-            <FiChevronLeft className="w-5 h-5 mobile:w-6 mobile:h-6" />
+            <FiChevronLeft className="w-4 h-4 mobile:w-5 mobile:h-5" />
           </button>
 
           {/* Arrow Right */}
           <button
             onClick={goNext}
             disabled={!canScrollNext}
-            className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-10 w-10 h-10 mobile:w-12 mobile:h-12 rounded-full bg-white shadow-lg border border-slate-200 flex items-center justify-center transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
+            className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-10 w-8 h-8 mobile:w-10 mobile:h-10 rounded-full bg-white shadow-lg border border-slate-200 flex items-center justify-center transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
               canScrollNext
                 ? "hover:bg-orange-50 hover:border-orange-300 text-slate-700"
                 : "opacity-40 cursor-not-allowed text-slate-400"
             }`}
             aria-label="Video berikutnya"
           >
-            <FiChevronRight className="w-5 h-5 mobile:w-6 mobile:h-6" />
+            <FiChevronRight className="w-4 h-4 mobile:w-5 mobile:h-5" />
           </button>
 
           {/* Carousel Container */}

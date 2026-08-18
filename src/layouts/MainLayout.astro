@@ -61,7 +61,7 @@ const erudaEnabled = import.meta.env.PUBLIC_ENABLE_ERUDA === "1" || !import.meta
     <slot name="head-scripts" />
     
   </head>
-  <body class="bg-slate-100 text-slate-800 text-sm mobile:text-base tablet:text-lg">
+  <body class="bg-slate-100 text-slate-800 text-sm mobile:text-sm tablet:text-base">
 
     {/* --- PERBAIKAN UTAMA DI SINI --- */}
     {/* Mengubah 'client:load' menjadi 'client:idle' untuk menunda eksekusi */}
@@ -71,7 +71,7 @@ const erudaEnabled = import.meta.env.PUBLIC_ENABLE_ERUDA === "1" || !import.meta
     <ToastContainer client:idle />
     <Header session={session} currentPath={Astro.url.pathname} />
 
-    <main class="min-h-screen container mx-auto px-3 mobile:px-4 tablet:px-6 desktop:px-8 py-4 pb-20 lg:pb-4">
+    <main class="min-h-screen container mx-auto px-2.5 mobile:px-3 tablet:px-5 desktop:px-8 py-4 pb-20 lg:pb-4">
       <slot />
     </main>
 

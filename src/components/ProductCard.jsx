@@ -75,12 +75,12 @@ const ProductCard = ({ product }) => {
                     {/* Tampilan HP: di Kiri Atas */}
                     <div className="absolute bottom-1 left-4 flex flex-col items-center md:hidden">
                         {product.kategori === "Pilok" && product.ukuran && (
-                            <p className="text-sm font-bold text-black bg-white/70 px-2 py-0.5 rounded mb-1 shadow">
+                            <p className="text-xs font-bold text-black bg-white/70 px-1.5 py-0.5 rounded mb-1 shadow">
                                 {product.ukuran}
                             </p>
                         )}
                         {product.color_swatch_url && (
-                            <div className="w-14 h-14 rounded-full shadow-lg flex items-center justify-center overflow-hidden">
+                            <div className="w-12 h-12 rounded-full shadow-lg flex items-center justify-center overflow-hidden">
                                 <img
                                     src={product.color_swatch_url}
                                     alt={`Warna ${product.nama}`}
@@ -88,7 +88,7 @@ const ProductCard = ({ product }) => {
                                 />
                             </div>
                         )}
-                        <p className="text-sm font-bold text-slate-900 bg-white/70 px-1 rounded mt-1">
+                        <p className="text-xs font-bold text-slate-900 bg-white/70 px-1 rounded mt-1">
                             {product.sku || ""}
                         </p>
                     </div>
@@ -116,9 +116,9 @@ const ProductCard = ({ product }) => {
                 </div>
 
                 {/* Blok info produk */}
-                <div className="p-3 flex-grow flex flex-col bg-white">
+                <div className="p-2.5 flex-grow flex flex-col bg-white">
                     <h3
-                        className="text-base font-bold text-slate-900 line-clamp-2 mt-1"
+                        className="text-sm font-bold text-slate-900 line-clamp-2 mt-1"
                         title={product.nama}
                     >
                         {product.nama}
@@ -138,7 +138,7 @@ const ProductCard = ({ product }) => {
                                 {formatRupiah(product.harga_coret)}
                             </p>
                         )}
-                        <p className="font-bold text-lg text-orange-500">
+                        <p className="font-bold text-base text-orange-500">
                             {formatRupiah(product.harga_jual)}
                         </p>
                     </div>

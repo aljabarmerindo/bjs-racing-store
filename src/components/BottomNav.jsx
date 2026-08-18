@@ -49,8 +49,8 @@ function LainnyaSheet({ items, onClose }) {
       {/* Card */}
       <div className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl transition-transform duration-200 ease-out ${visible ? "translate-y-0" : "translate-y-full"}`}>
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-          <h3 className="text-base font-bold text-slate-800">Lainnya</h3>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+          <h3 className="text-sm font-bold text-slate-800">Lainnya</h3>
           <button
             onClick={handleClose}
             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600"
@@ -66,7 +66,7 @@ function LainnyaSheet({ items, onClose }) {
             <a
               key={item.path}
               href={item.path}
-              className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-orange-50 transition-colors"
+              className="flex items-center gap-3 px-3.5 py-3 rounded-xl hover:bg-orange-50 transition-colors"
             >
               <item.icon className="w-6 h-6 text-orange-500" />
               <span className="flex-1 text-sm font-semibold text-slate-700">{item.label}</span>

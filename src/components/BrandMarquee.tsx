@@ -17,17 +17,17 @@ const FALLBACK_BRANDS = [
 const DURATION = 50;
 
 const BrandLogo = ({ brand }: { brand: Brand }) => (
-  <div className="flex-none px-6 mobile:px-8 flex flex-col items-center justify-center select-none gap-1.5">
+  <div className="flex-none px-4 mobile:px-6 flex flex-col items-center justify-center select-none gap-1.5">
     {brand.logo_url ? (
       <img
         src={brand.logo_url}
         alt={brand.name}
-        className="h-10 mobile:h-12 tablet:h-14 object-contain"
+        className="h-8 mobile:h-10 tablet:h-12 object-contain"
         loading="lazy"
         decoding="async"
       />
     ) : null}
-    <span className="text-sm mobile:text-base tablet:text-lg font-bold text-slate-400 hover:text-orange-500 transition-colors duration-200 whitespace-nowrap tracking-tight">
+    <span className="text-xs mobile:text-sm tablet:text-base font-bold text-slate-400 hover:text-orange-500 transition-colors duration-200 whitespace-nowrap tracking-tight">
       {brand.name}
     </span>
   </div>
@@ -62,7 +62,7 @@ const BrandMarquee = ({ brands: dbBrands = [] }: { brands?: Brand[] }) => {
 
   return (
     <section
-      className="bg-white border-y border-slate-100 py-6 mobile:py-8 overflow-hidden"
+      className="bg-white border-y border-slate-100 py-4 mobile:py-6 overflow-hidden"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onFocus={handleMouseEnter}
