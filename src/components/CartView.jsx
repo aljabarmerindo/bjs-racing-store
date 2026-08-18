@@ -313,7 +313,7 @@ const CartView = ({ checkoutEnabled = true }) => {
       {/* ===== DESKTOP: two-column layout ===== */}
       <div className="hidden lg:flex gap-6 items-start">
         {/* Left: item list */}
-        <div className="flex-1 space-y-5">
+        <div className="flex-1 space-y-2.5">
           {selectAllBar}
           {items.map((item) => (
             <TabletRow key={item.id} item={item} />
@@ -330,14 +330,14 @@ const CartView = ({ checkoutEnabled = true }) => {
       </div>
 
       {/* ===== MOBILE + TABLET: single column ===== */}
-      <div className="lg:hidden space-y-5">
+      <div className="lg:hidden space-y-2.5">
         {/* Select all bar */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-100">
           {selectAllBar}
         </div>
 
         {/* Item list */}
-        <div className="space-y-5">
+        <div className="space-y-2.5">
           {items.map((item) => (
             <React.Fragment key={item.id}>
               {/* Mobile card: < sm */}
