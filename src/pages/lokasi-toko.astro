@@ -1,5 +1,7 @@
 ---
 // File: src/pages/lokasi-toko.astro
+export const prerender = true;
+
 import MainLayout from '../layouts/MainLayout.astro';
 import StoreLocationMap from '../components/StoreLocationMap.tsx';
 ---
@@ -9,7 +11,7 @@ import StoreLocationMap from '../components/StoreLocationMap.tsx';
     <h1 class="text-3xl font-bold mb-2">Lokasi Toko</h1>
     <p class="text-slate-500 mb-6">Kunjungi BJS Racing Store di lokasi berikut untuk melihat produk langsung.</p>
     <div class="bg-white p-4 rounded-xl shadow-md">
-      <StoreLocationMap height={480} />
+      <StoreLocationMap height={480} client:only="react" />
     </div>
   </div>
 </MainLayout>

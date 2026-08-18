@@ -1,5 +1,7 @@
 ---
 // File: src/pages/jangkauan-pengiriman.astro
+export const prerender = true;
+
 import MainLayout from '../layouts/MainLayout.astro';
 import DeliveryCoverageMap from '../components/DeliveryCoverageMap.tsx';
 ---
@@ -9,7 +11,7 @@ import DeliveryCoverageMap from '../components/DeliveryCoverageMap.tsx';
     <h1 class="text-3xl font-bold mb-2">Jangkauan Pengiriman</h1>
     <p class="text-slate-500 mb-6">Cek apakah alamat Anda terjangkau oleh kurir internal BJS Racing Store.</p>
     <div class="bg-white p-4 rounded-xl shadow-md">
-      <DeliveryCoverageMap height={480} />
+      <DeliveryCoverageMap height={480} client:only="react" />
     </div>
   </div>
 </MainLayout>

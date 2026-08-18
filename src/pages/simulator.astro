@@ -1,10 +1,9 @@
 ---
 // src/pages/simulator.astro
+export const prerender = true;
+
 import MainLayout from '../layouts/MainLayout.astro';
 import ColorSimulator from '../components/ColorSimulator.jsx';
-
-// Ambil ID produk cat dari URL (jika ada)
-const productId = Astro.url.searchParams.get('product_id');
 ---
 
 <MainLayout title="Virtual Garage - BJS RACING STORE">
@@ -12,7 +11,7 @@ const productId = Astro.url.searchParams.get('product_id');
         <h1 class="text-center text-2xl font-bold mb-1">Virtual Garage</h1>
         <p class="text-center text-slate-600 mb-2">Coba dan visualisasikan warna cat semprot pada berbagai objek.</p>
 
-        <ColorSimulator client:load initialProductId={productId} />
+        <ColorSimulator client:load />
 
     </div>
 </MainLayout>

@@ -47,7 +47,7 @@ const hexToHsl = (hex) => {
   return [h * 360, s * 100, l * 100];
 };
 
-const ColorSimulator = ({ initialProductId }) => {
+const ColorSimulator = ({ initialProductId = null }) => {
   const [objects, setObjects] = useState([]);
   const [allColorProducts, setAllColorProducts] = useState([]);
   const [simulationVariants, setSimulationVariants] = useState([]);
@@ -101,8 +101,9 @@ const ColorSimulator = ({ initialProductId }) => {
 
     // Hanya atur produk awal jika belum pernah diatur
     if (!selectedColorProduct) {
+      const urlProductId = initialProductId || new URLSearchParams(window.location.search).get('product_id');
       const product =
-        allColorProducts.find((p) => p.id === initialProductId) ||
+        allColorProducts.find((p) => p.id === urlProductId) ||
         allColorProducts[0];
       if (product) {
         setSelectedColorProduct(product);
