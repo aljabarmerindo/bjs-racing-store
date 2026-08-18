@@ -2,10 +2,7 @@
 // src/components/Header.astro
 const { currentPath = "/" } = Astro.props;
 import CartIcon from './CartIcon.jsx';
-import WishlistIcon from './WishlistIcon.jsx';
 import AuthMenu from './AuthMenu.jsx';
-import MobileMenu from './MobileMenu.jsx';
-import MobileMenuButton from './MobileMenuButton.jsx';
 import id from '../../public/locales/id/common.json';
 
 const navLinks = [
@@ -50,21 +47,16 @@ const navLinks = [
         
         {/* Desktop action icons */}
         <div class="hidden lg:flex items-center gap-4 mobile:gap-5 tablet:gap-6">
-            <WishlistIcon client:visible />
             <CartIcon client:visible />
             <AuthMenu client:load />
         </div>
         
-        {/* Mobile action icons + hamburger */}
+        {/* Mobile action icons */}
         <div class="lg:hidden flex items-center gap-3">
-            <WishlistIcon client:visible />
             <CartIcon client:visible />
-            <MobileMenuButton client:load />
         </div>
     </div>
 </header>
-
-<MobileMenu client:load />
 
 <script>
     function handleHeaderScroll() {

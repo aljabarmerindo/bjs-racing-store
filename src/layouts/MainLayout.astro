@@ -7,15 +7,18 @@ import UpdateNotifier from '../components/UpdateNotifier.jsx';
 import ToastContainer from '../components/ToastContainer.jsx';
 import WhatsAppChatButton from '../components/WhatsAppChatButton.jsx';
 import WishlistHelp from '../components/WishlistHelp.jsx';
+import BottomNav from '../components/BottomNav.jsx';
 
 const { session } = Astro.locals;
 
 interface Props {
   title: string;
   hideWhatsApp?: boolean;
+  hideBottomNav?: boolean;
+  hideFooter?: boolean;
 }
 
-const { title, hideWhatsApp = false } = Astro.props;
+const { title, hideWhatsApp = false, hideBottomNav = false, hideFooter = false } = Astro.props;
 
 // Daftar semua ukuran ikon yang diperlukan
 const iconSizes = [72, 96, 128, 144, 152, 192, 384, 512];
@@ -68,12 +71,13 @@ const erudaEnabled = import.meta.env.PUBLIC_ENABLE_ERUDA === "1" || !import.meta
     <ToastContainer client:idle />
     <Header session={session} currentPath={Astro.url.pathname} />
 
-    <main class="min-h-screen container mx-auto px-3 mobile:px-4 tablet:px-6 desktop:px-8 py-4">
+    <main class="min-h-screen container mx-auto px-3 mobile:px-4 tablet:px-6 desktop:px-8 py-4 pb-20 lg:pb-4">
       <slot />
     </main>
 
-    <Footer />
+    {!hideFooter && <Footer />}
     {!hideWhatsApp && <WhatsAppChatButton client:visible />}
+    {!hideBottomNav && <BottomNav client:load />}
     <WishlistHelp client:visible />
 
     {/* PWA Registration Script */}
