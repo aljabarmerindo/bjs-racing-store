@@ -169,7 +169,19 @@ export const useAppStore = create<StoreState>()(
 
         if (error) {
           console.error("Gagal mengambil data keranjang:", error);
-          set({ items: [] });
+          const isAuthError =
+            error.message?.toLowerCase().includes("jwt") ||
+            error.message?.toLowerCase().includes("token") ||
+            error.message?.toLowerCase().includes("unauthorized") ||
+            error.code === "401";
+          if (isAuthError) {
+            set({ items: [] });
+          } else {
+            get().addToast({
+              type: "error",
+              message: "Gagal memuat keranjang. Menampilkan data cache.",
+            });
+          }
         } else {
           const fetchedItems = (data as CartItem[]) || [];
           let wasCartAdjusted = false;
@@ -203,14 +215,17 @@ export const useAppStore = create<StoreState>()(
         }
       } catch (e) {
         console.error("Terjadi pengecualian saat fetchCart:", e);
-        set({ items: [] });
+        get().addToast({
+          type: "error",
+          message: "Gagal memuat keranjang. Menampilkan data cache.",
+        });
       } finally {
         set({ isCartLoading: false });
       }
     },
 
     addToCart: async (productToAdd, quantity) => {
-      const { items, addToast, fetchCart } = get();
+      const { items, addToast } = get();
 
       // Cek dulu apakah pengguna sudah login dan profilnya lengkap
       const {
@@ -271,13 +286,31 @@ export const useAppStore = create<StoreState>()(
       // Sinkronisasi dengan Database di latar belakang
       const { error } = await supabase.rpc("upsert_cart_item", {
         p_product_id: productToAdd.id,
-        p_quantity: quantity, // Kirim hanya kuantitas yang ditambahkan
+        p_quantity: newQuantity, // Kirim total kuantitas, bukan delta
       });
 
       if (error) {
         console.error("Gagal sinkronisasi addToCart:", error);
-        addToast({ type: "error", message: "Gagal memperbarui keranjang." });
-        fetchCart(); // Jika gagal, kembalikan state sesuai data di DB
+        set((state) => {
+          if (existingItem) {
+            return {
+              items: state.items.map((item) =>
+                item.product_id === productToAdd.id
+                  ? { ...item, quantity: existingItem.quantity }
+                  : item,
+              ),
+            };
+          }
+          return {
+            items: state.items.filter(
+              (item) => item.product_id !== productToAdd.id,
+            ),
+          };
+        });
+        addToast({
+          type: "error",
+          message: "Gagal memperbarui keranjang. Perubahan dibatalkan.",
+        });
       } else {
         addToast({
           type: "success",
@@ -287,13 +320,14 @@ export const useAppStore = create<StoreState>()(
     },
 
     updateQuantity: async (productId, quantity) => {
-      const { items, addToast, fetchCart, removeFromCart } = get();
+      const { items, addToast, removeFromCart } = get();
       if (quantity < 1) {
         return removeFromCart(productId);
       }
 
       const itemToUpdate = items.find((item) => item.product_id === productId);
       if (!itemToUpdate) return;
+      const previousQuantity = itemToUpdate.quantity;
 
       // Logika Validasi Stok Utama
       if (quantity > itemToUpdate.stok) {
@@ -328,7 +362,17 @@ export const useAppStore = create<StoreState>()(
 
       if (error) {
         console.error("Gagal sinkronisasi updateQuantity:", error);
-        fetchCart();
+        set((state) => ({
+          items: state.items.map((item) =>
+            item.product_id === productId
+              ? { ...item, quantity: previousQuantity }
+              : item,
+          ),
+        }));
+        addToast({
+          type: "error",
+          message: "Gagal memperbarui kuantitas. Perubahan dibatalkan.",
+        });
       }
     },
 

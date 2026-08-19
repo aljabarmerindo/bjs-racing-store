@@ -99,6 +99,26 @@ export async function confirmOrderPayment(
   orderNumber: string,
 ): Promise<ConfirmResult> {
   try {
+    const { data: existingOrder, error: preCheckError } = await supabaseAdmin
+      .from("orders")
+      .select("status")
+      .eq("order_number", orderNumber)
+      .single();
+
+    if (preCheckError || !existingOrder) {
+      return {
+        ok: false,
+        error: `Order ${orderNumber} tidak ditemukan.`,
+      };
+    }
+
+    if (existingOrder.status !== "awaiting_payment") {
+      return {
+        ok: true,
+        error: `Order ${orderNumber} sudah diproses (status: ${existingOrder.status}).`,
+      };
+    }
+
     const { error: paymentError } = await supabaseAdmin.rpc(
       "handle_successful_payment",
       { p_order_number: orderNumber },

@@ -10,23 +10,32 @@ export const POST: APIRoute = async ({ request }) => {
         const midtransNotification = await request.json();
         const serverKey = import.meta.env.MIDTRANS_SERVER_KEY;
 
-        const { order_id, status_code, gross_amount, signature_key } =
+        const { order_id, status_code, gross_amount, signature_key, transaction_status, fraud_status } =
             midtransNotification;
+
+        if (!order_id || !signature_key || !serverKey) {
+            console.error("Webhook missing required fields:", { order_id: !!order_id, signature_key: !!signature_key, serverKey: !!serverKey });
+            return new Response("Invalid payload.", { status: 200 });
+        }
+
+        const hashSource = `${order_id}${status_code ?? ""}${gross_amount ?? ""}${serverKey}`;
         const hash = crypto
             .createHash("sha512")
-            .update(`${order_id}${status_code}${gross_amount}${serverKey}`)
+            .update(hashSource)
             .digest("hex");
 
         if (hash !== signature_key) {
-            console.error("Invalid Midtrans signature key received.");
+            console.error("Invalid Midtrans signature key received.", { order_id, status_code, gross_amount });
             return new Response("Invalid signature.", { status: 200 });
         }
-
-        const { transaction_status, fraud_status } = midtransNotification;
 
         const isSettlement =
           transaction_status === "settlement" &&
           (!fraud_status || fraud_status === "accept");
+
+        const isChallenge =
+          transaction_status === "settlement" &&
+          fraud_status === "challenge";
 
         if (isSettlement) {
             const result = await confirmOrderPayment(order_id);
@@ -39,6 +48,19 @@ export const POST: APIRoute = async ({ request }) => {
                     "Critical payment processing failed but acknowledged.",
                     { status: 200 },
                 );
+            }
+        } else if (isChallenge) {
+            const { data: orderData } = await supabaseAdmin
+                .from("orders")
+                .select("id")
+                .eq("order_number", order_id)
+                .single();
+            if (orderData) {
+                await supabaseAdmin
+                    .from("payments")
+                    .update({ status: "challenge" })
+                    .eq("order_id", orderData.id);
+                console.warn(`[Midtrans] Order ${order_id} under fraud challenge.`);
             }
         } else if (["cancel", "expire", "deny"].includes(transaction_status)) {
             const { data: orderData } = await supabaseAdmin

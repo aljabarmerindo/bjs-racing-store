@@ -2,6 +2,7 @@
 import type { APIRoute } from "astro";
 import { verifyBriSignature } from "@/lib/bri.ts";
 import { confirmOrderPayment } from "@/lib/confirmOrderPayment.ts";
+import { supabaseAdmin } from "@/lib/supabaseServer.ts";
 
 export const POST: APIRoute = async ({ request, url }) => {
   try {
@@ -38,6 +39,22 @@ export const POST: APIRoute = async ({ request, url }) => {
     if (!orderNumber) return new Response("OK", { status: 200 });
 
     if (isPaid) {
+      const { data: orderData, error: orderError } = await supabaseAdmin
+        .from("orders")
+        .select("id, status, order_number")
+        .eq("order_number", orderNumber)
+        .single();
+
+      if (orderError || !orderData) {
+        console.error(`[BRI] Order ${orderNumber} tidak ditemukan:`, orderError);
+        return new Response("OK", { status: 200 });
+      }
+
+      if (orderData.status !== "awaiting_payment") {
+        console.log(`[BRI] Order ${orderNumber} sudah diproses (status: ${orderData.status}), skip.`);
+        return new Response("OK", { status: 200 });
+      }
+
       const result = await confirmOrderPayment(orderNumber);
       if (!result.ok) {
         console.error("[BRI] Gagal konfirmasi pembayaran:", result.error);

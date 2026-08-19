@@ -566,9 +566,12 @@ export default function CheckoutView({ orderId, initialItems }: CheckoutViewProp
     courierConfig,
   ]);
 
+  const fetchShippingCostsRef = useRef(fetchShippingCosts);
+  fetchShippingCostsRef.current = fetchShippingCosts;
+
   useEffect(() => {
-    fetchShippingCosts();
-  }, [fetchShippingCosts]);
+    fetchShippingCostsRef.current();
+  }, [selectedAddressId, totalWeight, addresses, subtotal, courierConfig]);
 
   const handleApplyVoucher = async (codeToApply: string) => {
     if (!codeToApply) return;
