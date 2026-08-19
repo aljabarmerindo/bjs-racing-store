@@ -78,6 +78,13 @@ const FlashSaleSection = () => {
 
   useEffect(() => {
     fetchFlashSales();
+    
+    // Periodic refresh every 60 seconds
+    const refreshInterval = setInterval(() => {
+      fetchFlashSales();
+    }, 60000);
+    
+    return () => clearInterval(refreshInterval);
   }, [fetchFlashSales]);
 
   useEffect(() => {
@@ -91,6 +98,13 @@ const FlashSaleSection = () => {
     }, 1000);
     return () => clearInterval(timer);
   }, [flashSales]);
+
+  // Re-fetch when countdown expires
+  useEffect(() => {
+    if (time.expired && flashSales.length > 0) {
+      fetchFlashSales();
+    }
+  }, [time.expired, flashSales.length, fetchFlashSales]);
 
   const checkScroll = useCallback(() => {
     const el = scrollRef.current;

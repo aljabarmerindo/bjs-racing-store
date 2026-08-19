@@ -1,6 +1,7 @@
 // src/components/ProductDetailView.jsx
 import React, { useState, useEffect, useMemo } from "react";
 import { useAppStore } from "@/lib/store.ts";
+import { supabase } from "@/lib/supabaseBrowserClient.ts";
 import { FiShoppingCart, FiStar, FiEye, FiPlus, FiMinus } from "react-icons/fi";
 import ProductInfoTabs from "./ProductInfoTabs.jsx";
 import WishlistButton from "./WishlistButton.jsx";
@@ -17,6 +18,34 @@ const ProductDetailView = ({ initialProduct, allProductVariants }) => {
             setQuantity(1);
         }
     }, [selectedVariant, quantity]);
+
+    // Periodic refresh for stock and price (every 30 seconds)
+    useEffect(() => {
+        const refreshProduct = async () => {
+            try {
+                const { data } = await supabase
+                    .from("products")
+                    .select("stok, harga_jual, harga_coret")
+                    .eq("id", initialProduct.id)
+                    .single();
+                
+                if (data) {
+                    setSelectedVariant((prev) => ({
+                        ...prev,
+                        stok: data.stok,
+                        harga_jual: data.harga_jual,
+                        harga_coret: data.harga_coret,
+                    }));
+                }
+            } catch (err) {
+                // silently fail
+            }
+        };
+        
+        // Refresh every 30 seconds
+        const interval = setInterval(refreshProduct, 30000);
+        return () => clearInterval(interval);
+    }, [initialProduct.id]);
 
     const formatRupiah = (number) =>
         new Intl.NumberFormat("id-ID", {

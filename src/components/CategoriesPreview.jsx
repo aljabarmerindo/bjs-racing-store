@@ -1,13 +1,13 @@
 // src/components/CategoriesPreview.jsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { FiDroplet } from "react-icons/fi";
+import { supabase } from "@/lib/supabaseBrowserClient.ts";
 
 const CATEGORIES = [
   {
     name: "Pilok",
     href: "/pilok",
     icon: FiDroplet,
-    count: "120",
     gradient: "from-orange-400 to-orange-500",
     iconBg: "bg-orange-100",
     iconColor: "text-orange-500",
@@ -15,6 +15,28 @@ const CATEGORIES = [
 ];
 
 const CategoriesPreview = () => {
+  const [counts, setCounts] = useState({ Pilok: "120" });
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const { count } = await supabase
+          .from("products")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "Aktif")
+          .eq("kategori", "Pilok");
+        
+        if (count !== null) {
+          setCounts({ Pilok: count.toString() });
+        }
+      } catch (err) {
+        // silently fail, keep default
+      }
+    };
+
+    fetchCounts();
+  }, []);
+
   return (
     <section className="bg-slate-50 py-8 mobile:py-10 tablet:py-16">
       <div className="container mx-auto px-2.5 mobile:px-3 tablet:px-5">
@@ -42,7 +64,7 @@ const CategoriesPreview = () => {
                   {cat.name}
                 </p>
                 <p className="text-xs mobile:text-xs text-slate-500">
-                  {cat.count} produk
+                  {counts[cat.name]} produk
                 </p>
               </a>
             );

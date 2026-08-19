@@ -30,6 +30,7 @@ const StatsCounter = ({
   dataType = "static",
 }: StatsCounterProps) => {
   const [endValue, setEndValue] = useState(initialEndValue);
+  const endValueRef = useRef(initialEndValue);
   const [count, setCount] = useState(0);
   const [hasAnimated, setHasAnimated] = useState(false);
   const ref = useRef(null);
@@ -46,7 +47,10 @@ const StatsCounter = ({
             .from("products")
             .select("*", { count: "exact", head: true })
             .eq("status", "Aktif");
-          if (count !== null) setEndValue(count);
+          if (count !== null) {
+            setEndValue(count);
+            endValueRef.current = count;
+          }
         } else if (dataType === "terjual") {
           const { data } = await supabase
             .from("products")
@@ -57,6 +61,7 @@ const StatsCounter = ({
               0
             );
             setEndValue(total);
+            endValueRef.current = total;
           }
         }
       } catch (err) {
@@ -79,7 +84,7 @@ const StatsCounter = ({
     ).matches;
 
     if (prefersReducedMotion) {
-      setCount(endValue);
+      setCount(endValueRef.current);
       setHasAnimated(true);
       return;
     }
@@ -89,17 +94,17 @@ const StatsCounter = ({
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(eased * endValue);
+      setCount(eased * endValueRef.current);
 
       if (progress < 1) {
         rafRef.current = requestAnimationFrame(step);
       } else {
-        setCount(endValue);
+        setCount(endValueRef.current);
         setHasAnimated(true);
       }
     };
     rafRef.current = requestAnimationFrame(step);
-  }, [endValue, duration]);
+  }, [duration]);
 
   useEffect(() => {
     const el = ref.current;
@@ -122,6 +127,14 @@ const StatsCounter = ({
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [hasAnimated, animate]);
+
+  // Re-animate when endValue changes significantly after first animation
+  useEffect(() => {
+    if (hasAnimated && endValue !== initialEndValue) {
+      setCount(0);
+      setHasAnimated(false);
+    }
+  }, [endValue, initialEndValue, hasAnimated]);
 
   const IconComponent =
     icon === "package"

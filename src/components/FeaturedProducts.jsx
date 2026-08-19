@@ -89,6 +89,24 @@ const FeaturedProducts = () => {
 
   useEffect(() => {
     fetchProducts(activeTab);
+    
+    // Periodic refresh every 5 minutes
+    const refreshInterval = setInterval(() => {
+      fetchProducts(activeTab);
+    }, 300000);
+    
+    return () => clearInterval(refreshInterval);
+  }, [activeTab, fetchProducts]);
+
+  // Re-fetch when tab becomes visible again
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        fetchProducts(activeTab);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, [activeTab, fetchProducts]);
 
   return (

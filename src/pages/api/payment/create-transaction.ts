@@ -95,15 +95,17 @@ export const POST: APIRoute = async ({ request, locals }) => {
             );
         }
 
-        // Blok validasi stok (tidak berubah)
+        // Blok validasi stok + harga dari database
         const productIds = typedCartItems.map((item) => item.product_id);
         const { data: productsInStock, error: stockCheckError } =
             await supabaseAdmin
                 .from("products")
-                .select("id, nama, stok")
+                .select("id, nama, stok, harga_jual")
                 .in("id", productIds);
         if (stockCheckError)
             throw new Error("Gagal memverifikasi stok produk.");
+
+        // Override harga dari database (server-side validation)
         for (const item of typedCartItems) {
             const product = productsInStock.find(
                 (p) => p.id === item.product_id,
@@ -115,6 +117,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
                     }),
                     { status: 409 },
                 );
+            }
+            // Override harga dari database (prevent stale cart prices)
+            if (product.harga_jual !== undefined) {
+                item.price = product.harga_jual;
             }
         }
 

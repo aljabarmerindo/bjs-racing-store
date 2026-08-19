@@ -112,6 +112,11 @@ const PromoBanner = ({ slides: initialSlides = [] }: { slides?: Slide[] }) => {
     fetchFreshPromos();
   }, []);
 
+  // Clamp index when slides array shrinks (prevents out-of-bounds crash)
+  useEffect(() => {
+    setIndex((prev) => (prev >= slides.length ? 0 : prev));
+  }, [slides.length]);
+
   const goTo = useCallback(
     (next?: number) => {
       setIndex((prev) => {

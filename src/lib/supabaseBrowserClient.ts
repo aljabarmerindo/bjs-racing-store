@@ -16,6 +16,10 @@ export function getSupabase(): SupabaseClient {
 // Backward-compatible export (lazy getter via Proxy)
 export const supabase: SupabaseClient = new Proxy({} as SupabaseClient, {
   get(_, prop) {
-    return (getSupabase() as any)[prop];
+    const client = getSupabase();
+    // @ts-expect-error — dynamic property access on SupabaseClient
+    const value = client[prop];
+    // Bind methods to client instance to preserve `this` context
+    return typeof value === "function" ? value.bind(client) : value;
   },
 });
