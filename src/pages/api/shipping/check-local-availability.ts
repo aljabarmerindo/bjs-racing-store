@@ -36,7 +36,7 @@ export const GET: APIRoute = async ({ url }) => {
 
     if (villageParam) {
       // Harga spesifik desa/kelurahan: harus cocok persis, tanpa fallback.
-      const norm = villageParam.toLowerCase();
+      const norm = villageParam.trim().toLowerCase();
       area = (areas || []).find(
         (a) => a.village_name && a.village_name.trim().toLowerCase() === norm,
       );
@@ -60,7 +60,7 @@ export const GET: APIRoute = async ({ url }) => {
       );
     }
 
-    if (weightParam && Number(weightParam) > (area.max_weight_gram ?? 5000)) {
+    if (weightParam && Number(weightParam) >= (area.max_weight_gram ?? 5000)) {
       return new Response(
         JSON.stringify({ available: false, reason: "over_weight", max_weight_gram: area.max_weight_gram }),
         { status: 200, headers: { "Content-Type": "application/json" } },
