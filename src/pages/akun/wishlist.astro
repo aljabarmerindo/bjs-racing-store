@@ -1,15 +1,16 @@
 ---
 // File: /src/pages/akun/wishlist.astro
-import MainLayout from '@/layouts/MainLayout.astro';
+import AccountLayout from '@/layouts/AccountLayout.astro';
 ---
 
-<MainLayout title="Wishlist Saya">
-  <div class="max-w-6xl mx-auto py-8">
-    <h1 class="text-3xl font-bold mb-6">Wishlist Saya</h1>
-    <div id="wishlist-container" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <p class="text-slate-500 col-span-full text-center py-10">Memuat wishlist...</p>
-    </div>
+<AccountLayout title="Wishlist Saya" currentPage={Astro.url.pathname}>
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <h1 class="text-2xl font-bold text-slate-900">Wishlist Saya</h1>
   </div>
+  <div id="wishlist-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <p class="text-slate-500 col-span-full text-center py-10">Memuat wishlist...</p>
+  </div>
+</AccountLayout>
 
   <script>
     let isDeleting = false;

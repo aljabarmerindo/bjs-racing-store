@@ -1,0 +1,26 @@
+---
+// File: src/components/StatusBadge.astro
+const { status } = Astro.props;
+
+const styles: Record<string, string> = {
+  awaiting_payment: "bg-yellow-100 text-yellow-800",
+  pending: "bg-yellow-100 text-yellow-800",
+  paid: "bg-blue-100 text-blue-800",
+  processing: "bg-blue-100 text-blue-800",
+  shipped: "bg-purple-100 text-purple-800",
+  completed: "bg-green-100 text-green-800",
+  cancelled: "bg-red-100 text-red-800",
+};
+
+const label = status.replace(/_/g, " ");
+const styleClass = styles[status] || "bg-gray-100 text-gray-800";
+---
+
+<span
+  class:list={[
+    "text-xs font-semibold px-2.5 py-1 rounded-full inline-block",
+    styleClass,
+  ]}
+>
+  {label}
+</span>

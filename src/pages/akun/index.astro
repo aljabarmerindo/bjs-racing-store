@@ -1,6 +1,6 @@
 ---
 // File: /src/pages/akun/index.astro
-import MainLayout from '@/layouts/MainLayout.astro';
+import AccountLayout from '@/layouts/AccountLayout.astro';
 import { formatToWIB } from '@/lib/utils.ts';
 import AccountSidebar from '@/components/AccountSidebar.astro';
 
@@ -38,58 +38,86 @@ const { customer_name, latest_order, primary_address } = dashboardData || {};
 
 const formatRupiah = (number: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(number || 0);
 ---
-<MainLayout title="Dashboard Akun - BJS Racing Store">
-  <main class="container mx-auto px-4 py-8">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-      
-      <AccountSidebar currentPage={Astro.url.pathname} />
 
-      <section class="md:col-span-3 space-y-6">
-        {fetchError ? (
-          <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            <strong>Gagal memuat data:</strong> {fetchError}
-          </div>
-        ) : (
-          <>
-            <h1 class="text-2xl font-bold">Selamat Datang, {customer_name || 'Pelanggan'}!</h1>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Widget Pesanan Terakhir */}
-              <div class="bg-white p-6 rounded-xl shadow-sm">
-                <h2 class="font-bold text-lg mb-4">Pesanan Terakhir</h2>
-                {latest_order ? (
-                  <div>
-                    <div class="flex justify-between items-center">
-                      <a href={`/akun/pesanan/${latest_order.id}`} class="font-semibold text-blue-600 hover:underline">{latest_order.order_number}</a>
-                      <span class:list={["capitalize text-xs font-semibold px-2 py-1 rounded-full", { "bg-yellow-100 text-yellow-800": ['awaiting_payment', 'pending'].includes(latest_order.status) }, { "bg-green-100 text-green-800": ['paid', 'processing', 'completed', 'shipped'].includes(latest_order.status) }, { "bg-red-100 text-red-800": latest_order.status === 'cancelled' }]}>
-                        {latest_order.status.replace('_', ' ')}
-                      </span>
-                    </div>
-                    <p class="text-sm text-slate-500 mt-1">{formatToWIB(latest_order.created_at)}</p>
-                    <p class="text-lg font-bold text-slate-800 mt-2">{formatRupiah(latest_order.total_amount)}</p>
-                  </div>
-                ) : (
-                  <p class="text-slate-500">Anda belum memiliki riwayat pesanan.</p>
-                )}
-              </div>
-
-              {/* Widget Alamat Utama */}
-              <div class="bg-white p-6 rounded-xl shadow-sm">
-                <h2 class="font-bold text-lg mb-4">Alamat Utama</h2>
-                {primary_address ? (
-                  <div class="text-slate-600 space-y-1 text-sm">
-                    <p class="font-semibold text-slate-800">{primary_address.recipient_name}</p>
-                    <p>{primary_address.recipient_phone}</p>
-                    <p>{primary_address.full_address}</p>
-                  </div>
-                ) : (
-                  <p class="text-slate-500">Anda belum mengatur alamat utama.</p>
-                )}
-              </div>
-            </div>
-          </>
-        )}
-      </section>
+<AccountLayout title="Dashboard Akun - BJS Racing Store" currentPage={Astro.url.pathname}>
+  {fetchError ? (
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+      <strong>Gagal memuat data:</strong> {fetchError}
     </div>
-  </main>
-</MainLayout>
+  ) : (
+    <>
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <h1 class="text-2xl font-bold text-slate-900">Selamat Datang, {customer_name || 'Pelanggan'}!</h1>
+        <a href="/pilok" class="inline-flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-5 py-2.5 rounded-lg transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          Belanja Sekarang
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/></svg>
+            </div>
+            <p class="text-sm text-slate-500">Total Pesanan</p>
+          </div>
+          <p class="text-2xl font-bold text-slate-900">{latest_order ? '1' : '0'}</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </div>
+            <p class="text-sm text-slate-500">Wishlist</p>
+          </div>
+          <p class="text-2xl font-bold text-slate-900">—</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <p class="text-sm text-slate-500">Loyalty Points</p>
+          </div>
+          <p class="text-2xl font-bold text-slate-900">—</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+          <h2 class="font-bold text-lg mb-4 text-slate-900">Pesanan Terakhir</h2>
+          {latest_order ? (
+            <div>
+              <div class="flex justify-between items-center">
+                <a href={`/akun/pesanan/${latest_order.id}`} class="font-semibold text-blue-600 hover:underline">{latest_order.order_number}</a>
+                <span class:list={["capitalize text-xs font-semibold px-2 py-1 rounded-full", { "bg-yellow-100 text-yellow-800": ['awaiting_payment', 'pending'].includes(latest_order.status) }, { "bg-green-100 text-green-800": ['paid', 'processing', 'completed', 'shipped'].includes(latest_order.status) }, { "bg-red-100 text-red-800": latest_order.status === 'cancelled' }]}>
+                  {latest_order.status.replace('_', ' ')}
+                </span>
+              </div>
+              <p class="text-sm text-slate-500 mt-1">{formatToWIB(latest_order.created_at)}</p>
+              <p class="text-lg font-bold text-slate-800 mt-2">{formatRupiah(latest_order.total_amount)}</p>
+            </div>
+          ) : (
+            <p class="text-slate-500">Anda belum memiliki riwayat pesanan.</p>
+          )}
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+          <h2 class="font-bold text-lg mb-4 text-slate-900">Alamat Utama</h2>
+          {primary_address ? (
+            <div class="text-slate-600 space-y-1 text-sm">
+              <p class="font-semibold text-slate-800">{primary_address.recipient_name}</p>
+              <p>{primary_address.recipient_phone}</p>
+              <p>{primary_address.full_address}</p>
+            </div>
+          ) : (
+            <p class="text-slate-500">Anda belum mengatur alamat utama.</p>
+          )}
+        </div>
+      </div>
+    </>
+  )}
+</AccountLayout>

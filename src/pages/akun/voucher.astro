@@ -1,7 +1,6 @@
 ---
 // File: /src/pages/akun/voucher.astro
-import MainLayout from '@/layouts/MainLayout.astro';
-import AccountSidebar from '@/components/AccountSidebar.astro';
+import AccountLayout from '@/layouts/AccountLayout.astro';
 import MyVouchersView from '@/components/MyVouchersView.jsx';
 
 const { session } = Astro.locals;
@@ -9,17 +8,9 @@ if (!session) {
   return Astro.redirect('/login?redirect=/akun/voucher');
 }
 ---
-<MainLayout title="Voucher Saya - BJS Racing Store">
-  <main class="container mx-auto px-4 py-8">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-
-      <AccountSidebar currentPage={Astro.url.pathname} />
-
-      <section class="md:col-span-3">
-        <h1 class="text-2xl font-bold mb-6">Voucher Saya</h1>
-        <MyVouchersView client:load />
-      </section>
-
-    </div>
-  </main>
-</MainLayout>
+<AccountLayout title="Voucher Saya - BJS Racing Store" currentPage={Astro.url.pathname}>
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <h1 class="text-2xl font-bold text-slate-900">Voucher Saya</h1>
+  </div>
+  <MyVouchersView client:load />
+</AccountLayout>

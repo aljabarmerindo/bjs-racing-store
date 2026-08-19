@@ -1,0 +1,29 @@
+---
+// File: src/components/AccountCard.astro
+const { title, icon, href, badge } = Astro.props;
+
+const cardClasses = href
+  ? "group bg-white p-5 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-orange-200 transition-all cursor-pointer"
+  : "bg-white p-5 rounded-xl shadow-sm border border-slate-100";
+---
+
+<div class={cardClasses}>
+  <div class="flex items-start justify-between gap-4">
+    <div class="flex items-center gap-3">
+      {icon && (
+        <div class="w-10 h-10 rounded-lg bg-slate-50 text-slate-600 flex items-center justify-center flex-shrink-0 group-hover:bg-orange-50 group-hover:text-orange-600 transition-colors">
+          {icon}
+        </div>
+      )}
+      <div>
+        <p class="text-sm text-slate-500">{title}</p>
+        <slot />
+      </div>
+    </div>
+    {badge && (
+      <span class="text-xs font-semibold px-2 py-1 rounded-full bg-slate-100 text-slate-600">
+        {badge}
+      </span>
+    )}
+  </div>
+</div>

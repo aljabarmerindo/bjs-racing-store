@@ -1,8 +1,7 @@
 ---
 // File: /src/pages/akun/pesanan/index.astro
-import MainLayout from '@/layouts/MainLayout.astro';
+import AccountLayout from '@/layouts/AccountLayout.astro';
 import { supabaseAdmin } from '@/lib/supabaseServer.ts';
-import AccountSidebar from '@/components/AccountSidebar.astro';
 
 const { session } = Astro.locals;
 if (!session) {
@@ -23,43 +22,39 @@ const { data: orders } = await supabaseAdmin
 const formatRupiah = (number: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(number || 0);
 const formatTanggal = (dateString: string) => new Date(dateString).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 ---
-<MainLayout title="Riwayat Pesanan - BJS Racing Store">
-  <main class="container mx-auto px-4 py-8">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-      
-      <AccountSidebar currentPage={Astro.url.pathname} />
+<AccountLayout title="Riwayat Pesanan - BJS Racing Store" currentPage={Astro.url.pathname}>
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <h1 class="text-2xl font-bold text-slate-900">Riwayat Pesanan Anda</h1>
+  </div>
 
-      <section class="md:col-span-3">
-        <h1 class="text-2xl font-bold mb-6">Riwayat Pesanan Anda</h1>
-        
-        {orders && orders.length > 0 ? (
-          <div class="space-y-4">
-            {orders.map(order => (
-              <a href={`/akun/pesanan/${order.id}`} class="block bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                <div class="flex justify-between items-center">
-                  <div>
-                    <p class="font-bold text-slate-800">{order.order_number}</p>
-                    <p class="text-sm text-slate-500">{formatTanggal(order.created_at)}</p>
-                  </div>
-                  <div class="text-right">
-                    <p class="font-semibold text-slate-700">{formatRupiah(order.total_amount)}</p>
-                    <span class:list={["text-xs font-semibold px-2 py-1 rounded-full", { "bg-yellow-100 text-yellow-800": ['awaiting_payment', 'pending'].includes(order.status) }, { "bg-green-100 text-green-800": ['paid', 'processing', 'completed', 'shipped'].includes(order.status) }, { "bg-red-100 text-red-800": order.status === 'cancelled' }]}>
-                      {order.status.replace('_', ' ')}
-                    </span>
-                  </div>
-                </div>
-              </a>
-            ))}
+  {orders && orders.length > 0 ? (
+    <div class="space-y-4">
+      {orders.map(order => (
+        <a href={`/akun/pesanan/${order.id}`} class="block bg-white p-4 md:p-5 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-orange-200 transition-all">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <div>
+              <p class="font-bold text-slate-800">{order.order_number}</p>
+              <p class="text-sm text-slate-500">{formatTanggal(order.created_at)}</p>
+            </div>
+            <div class="text-left sm:text-right">
+              <p class="font-semibold text-slate-700">{formatRupiah(order.total_amount)}</p>
+              <span class:list={["text-xs font-semibold px-2 py-1 rounded-full", { "bg-yellow-100 text-yellow-800": ['awaiting_payment', 'pending'].includes(order.status) }, { "bg-green-100 text-green-800": ['paid', 'processing', 'completed', 'shipped'].includes(order.status) }, { "bg-red-100 text-red-800": order.status === 'cancelled' }]}>
+                {order.status.replace('_', ' ')}
+              </span>
+            </div>
           </div>
-        ) : (
-          <div class="text-center py-10 bg-white rounded-lg shadow-sm">
-            <p class="text-slate-600">Anda belum memiliki riwayat pesanan.</p>
-            <a href="/pilok" class="mt-4 inline-block bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg">
-              Mulai Belanja
-            </a>
-          </div>
-        )}
-      </section>
+        </a>
+      ))}
     </div>
-  </main>
-</MainLayout>
+  ) : (
+    <div class="text-center py-10 bg-white rounded-xl shadow-sm border border-slate-100">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-50 flex items-center justify-center text-slate-400">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/></svg>
+      </div>
+      <p class="text-slate-600 mb-4">Anda belum memiliki riwayat pesanan.</p>
+      <a href="/pilok" class="inline-flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 px-5 rounded-lg transition-colors">
+        Mulai Belanja
+      </a>
+    </div>
+  )}
+</AccountLayout>

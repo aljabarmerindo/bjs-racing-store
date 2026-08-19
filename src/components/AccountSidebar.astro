@@ -1,31 +1,53 @@
 ---
 // File: src/components/AccountSidebar.astro
 import LogoutButton from '@/components/LogoutButton.jsx';
+import {
+  FiHome,
+  FiUser,
+  FiShoppingBag,
+  FiHeart,
+  FiAward,
+  FiMapPin,
+  FiTag,
+  FiLock,
+} from "react-icons/fi";
 
 const { currentPage } = Astro.props;
 
 const navLinks = [
-    { href: "/akun", label: "Ringkasan Akun" },
-    { href: "/akun/profil", label: "Profil Saya" },
-    { href: "/akun/pesanan", label: "Riwayat Pesanan" },
-    { href: "/akun/wishlist", label: "Wishlist" },
-    { href: "/akun/loyalty", label: "Loyalty Points" },
-    { href: "/akun/alamat", label: "Buku Alamat" },
-    { href: "/akun/voucher", label: "Voucher Saya" },
-    { href: "/akun/keamanan", label: "Ubah Password" },
+  { href: "/akun", label: "Ringkasan Akun", icon: FiHome },
+  { href: "/akun/profil", label: "Profil Saya", icon: FiUser },
+  { href: "/akun/pesanan", label: "Riwayat Pesanan", icon: FiShoppingBag },
+  { href: "/akun/wishlist", label: "Wishlist", icon: FiHeart },
+  { href: "/akun/loyalty", label: "Loyalty Points", icon: FiAward },
+  { href: "/akun/alamat", label: "Buku Alamat", icon: FiMapPin },
+  { href: "/akun/voucher", label: "Voucher Saya", icon: FiTag },
+  { href: "/akun/keamanan", label: "Ubah Password", icon: FiLock },
 ];
 ---
 
-<aside class="md:col-span-1">
-    <nav class="flex flex-col space-y-2">
-        {navLinks.map(link => {
-            const isActive = currentPage === link.href;
-            const linkClass = isActive
-                ? "font-semibold bg-gray-200 p-3 rounded-lg"
-                : "hover:bg-gray-100 p-3 rounded-lg";
-
-            return <a href={link.href} class={linkClass}>{link.label}</a>;
-        })}
-        <LogoutButton client:load />
-    </nav>
-</aside>
+<div class="md:col-span-1">
+  <nav class="flex flex-col space-y-1">
+    {navLinks.map(link => {
+      const isActive = currentPage === link.href;
+      const Icon = link.icon;
+      return (
+        <a
+          href={link.href}
+          class:list={[
+            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+            isActive
+              ? "bg-orange-50 text-orange-700"
+              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+          ]}
+        >
+          <Icon className="w-4 h-4 flex-shrink-0" />
+          {link.label}
+        </a>
+      );
+    })}
+    <div class="pt-4 mt-2 border-t border-slate-200">
+      <LogoutButton client:load />
+    </div>
+  </nav>
+</div>

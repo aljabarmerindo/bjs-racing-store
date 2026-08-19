@@ -1,14 +1,14 @@
 ---
 // File: /src/pages/akun/loyalty.astro
-import MainLayout from '@/layouts/MainLayout.astro';
+import AccountLayout from '@/layouts/AccountLayout.astro';
 ---
 
-<MainLayout title="Loyalty Points">
-  <div class="max-w-4xl mx-auto py-8">
-    <h1 class="text-3xl font-bold mb-6">Loyalty Points</h1>
-    <div id="loyalty-container">
-      <p class="text-slate-500 text-center py-10">Memuat loyalty points...</p>
-    </div>
+<AccountLayout title="Loyalty Points" currentPage={Astro.url.pathname}>
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <h1 class="text-2xl font-bold text-slate-900">Loyalty Points</h1>
+  </div>
+  <div id="loyalty-container">
+    <p class="text-slate-500 text-center py-10">Memuat loyalty points...</p>
   </div>
 
   <script>
@@ -21,12 +21,12 @@ import MainLayout from '@/layouts/MainLayout.astro';
       const data = await res.json();
       const container = document.getElementById('loyalty-container')!;
       container.innerHTML = `
-        <div class=\"bg-white p-6 rounded-xl shadow-md mb-6\">
+        <div class=\"bg-white p-6 rounded-xl shadow-sm border border-slate-100 mb-6\">
           <p class=\"text-sm text-slate-500\">Total Poin Anda</p>
           <p class=\"text-4xl font-bold text-orange-600\">${data.totalPoints || 0}</p>
           <p class=\"text-xs text-slate-400 mt-1\">100 poin = Rp1.000 diskon</p>
         </div>
-        <div class=\"bg-white p-6 rounded-xl shadow-md mb-6\">
+        <div class=\"bg-white p-6 rounded-xl shadow-sm border border-slate-100 mb-6\">
           <h2 class=\"text-xl font-bold mb-4\">Tukar Poin</h2>
           <div class=\"flex gap-2\">
             <input type=\"number\" id=\"redeem-points\" min=\"100\" step=\"100\" value=\"100\" class=\"border rounded-lg p-2 w-32\" />
@@ -34,7 +34,7 @@ import MainLayout from '@/layouts/MainLayout.astro';
           </div>
           <p id=\"redeem-message\" class=\"text-sm mt-2\"></p>
         </div>
-        <div class=\"bg-white p-6 rounded-xl shadow-md\">
+        <div class=\"bg-white p-6 rounded-xl shadow-sm border border-slate-100\">
           <h2 class=\"text-xl font-bold mb-4\">Riwayat Poin</h2>
           <div class=\"space-y-3\">
             ${(data.points || []).length === 0 ? '<p class=\"text-slate-500\">Belum ada riwayat poin.</p>' : data.points.map((p: any) => `
@@ -80,4 +80,4 @@ import MainLayout from '@/layouts/MainLayout.astro';
 
     loadLoyalty();
   </script>
-</MainLayout>
+</AccountLayout>

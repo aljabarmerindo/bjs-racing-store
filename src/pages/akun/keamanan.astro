@@ -1,25 +1,16 @@
 ---
 // File: /src/pages/akun/keamanan.astro
-import MainLayout from '@/layouts/MainLayout.astro';
-import AccountSidebar from '@/components/AccountSidebar.astro';
-import ChangePasswordView from '@/components/ChangePasswordView.jsx'; // <-- Gunakan komponen yang baru
+import AccountLayout from '@/layouts/AccountLayout.astro';
+import ChangePasswordView from '@/components/ChangePasswordView.jsx';
 
 const { session } = Astro.locals;
 if (!session) {
   return Astro.redirect('/login?redirect=/akun/keamanan');
 }
 ---
-<MainLayout title="Keamanan Akun - BJS Racing Store">
-  <main class="container mx-auto px-4 py-8">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-      <AccountSidebar currentPage={Astro.url.pathname} />
-      <section class="md:col-span-3">
-        <h1 class="text-2xl font-bold mb-6">Ubah Password</h1>
-        
-        {/* Ganti div placeholder dengan komponen React */}
-        <ChangePasswordView client:load />
-
-      </section>
-    </div>
-  </main>
-</MainLayout>
+<AccountLayout title="Keamanan Akun - BJS Racing Store" currentPage={Astro.url.pathname}>
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <h1 class="text-2xl font-bold text-slate-900">Ubah Password</h1>
+  </div>
+  <ChangePasswordView client:load />
+</AccountLayout>

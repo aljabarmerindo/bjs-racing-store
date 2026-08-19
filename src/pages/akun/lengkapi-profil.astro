@@ -4,7 +4,7 @@
 // setelah registrasi.
 
 // 1. IMPORT KOMPONEN LAYOUT (Perbaikan yang hilang)
-import MainLayout from '@/layouts/MainLayout.astro';
+import AccountLayout from '@/layouts/AccountLayout.astro';
 
 // 2. LOGIKA SERVER-SIDE: Perlindungan Halaman
 // Pastikan hanya pengguna yang sudah login yang bisa mengakses halaman ini.
@@ -15,29 +15,31 @@ if (!session) {
 }
 ---
 
-<MainLayout title="Lengkapi Profil - BJS Racing Store">
-  <div class="container mx-auto max-w-md px-4 py-16">
-    <h1 class="text-3xl font-bold text-center mb-2">Selamat Datang!</h1>
-    <p class="text-center text-slate-600 mb-8">Satu langkah lagi. Mohon lengkapi profil Anda.</p>
+<AccountLayout title="Lengkapi Profil - BJS Racing Store" currentPage={Astro.url.pathname}>
+  <div class="max-w-md mx-auto">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-slate-900 mb-2">Selamat Datang!</h1>
+      <p class="text-slate-600">Satu langkah lagi. Mohon lengkapi profil Anda.</p>
+    </div>
 
-    <form id="profile-form" class="space-y-4 bg-white p-6 rounded-lg shadow-md">
+    <form id="profile-form" class="space-y-5 bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-100">
       <div>
-        <label for="nama_pelanggan" class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
-        <input type="text" id="nama_pelanggan" name="nama_pelanggan" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500">
+        <label for="nama_pelanggan" class="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap</label>
+        <input type="text" id="nama_pelanggan" name="nama_pelanggan" required class="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm p-2.5 focus:ring-orange-500 focus:border-orange-500" />
       </div>
 
       <div>
-        <label for="telepon" class="block text-sm font-medium text-gray-700">Nomor Telepon (WhatsApp)</label>
-        <input type="tel" id="telepon" name="telepon" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500">
+        <label for="telepon" class="block text-sm font-medium text-slate-700 mb-1">Nomor Telepon (WhatsApp)</label>
+        <input type="tel" id="telepon" name="telepon" required class="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm p-2.5 focus:ring-orange-500 focus:border-orange-500" />
       </div>
 
-      <button type="submit" id="submit-btn" class="w-full bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600 transition-opacity disabled:opacity-50">
+      <button type="submit" id="submit-btn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 px-4 rounded-lg transition-opacity disabled:opacity-50">
         Simpan Profil & Lanjutkan
       </button>
       <p id="form-error" class="text-red-500 text-sm mt-2 text-center"></p>
     </form>
   </div>
-</MainLayout>
+</AccountLayout>
 
 <script>
   const form = document.getElementById('profile-form') as HTMLFormElement;
@@ -61,12 +63,10 @@ if (!session) {
       });
 
       if (!response.ok) {
-        // Baca pesan error yang dikirim oleh server
         const errorData = await response.json();
         throw new Error(errorData.message || 'Terjadi kesalahan yang tidak diketahui dari server.');
       }
 
-      // Jika sukses, arahkan ke halaman akun utama
       window.location.href = '/akun';
 
     } catch (error) {
