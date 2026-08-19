@@ -106,9 +106,9 @@ const { data: brands } = await supabaseAdmin
 
                 {/* Right: Stats Counters */}
                 <div class="grid grid-cols-3 gap-2 mobile:gap-3">
-                    <StatsCounter client:load endValue={totalProduk ?? 0} suffix="+" label="Produk" icon="package" duration={2000}/>
-                    <StatsCounter client:load endValue={totalTerjual} suffix="+" label="Terjual" icon="users" duration={2200}/>
-                    <StatsCounter client:load endValue={5} suffix="" label="Rating" icon="star" duration={1800}/>
+                    <StatsCounter client:load endValue={totalProduk ?? 0} suffix="+" label="Produk" icon="package" duration={2000} dataType="produk"/>
+                    <StatsCounter client:load endValue={totalTerjual} suffix="+" label="Terjual" icon="users" duration={2200} dataType="terjual"/>
+                    <StatsCounter client:load endValue={5} suffix="" label="Rating" icon="star" duration={1800} dataType="static"/>
                 </div>
             </div>
         </div>

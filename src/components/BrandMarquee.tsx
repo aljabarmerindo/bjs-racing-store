@@ -1,5 +1,6 @@
 // src/components/BrandMarquee.jsx
 import React, { useRef, useState, useEffect, useCallback } from "react";
+import { supabase } from "@/lib/supabaseBrowserClient";
 
 const FALLBACK_BRANDS = [
   { id: "yoshimura", name: "Yoshimura", logo_url: null },
@@ -39,10 +40,33 @@ interface Brand {
   logo_url?: string | null;
 }
 
-const BrandMarquee = ({ brands: dbBrands = [] }: { brands?: Brand[] }) => {
-  const brands = dbBrands.length > 0 ? dbBrands : FALLBACK_BRANDS;
+const BrandMarquee = ({ brands: initialBrands = [] }: { brands?: Brand[] }) => {
+  const [brands, setBrands] = useState<Brand[]>(
+    initialBrands.length > 0 ? initialBrands : FALLBACK_BRANDS
+  );
   const [isPaused, setIsPaused] = useState(false);
   const prefersReduced = useRef(false);
+
+  // Client-side re-fetch: always get fresh brand data
+  useEffect(() => {
+    const fetchFreshBrands = async () => {
+      try {
+        const { data } = await supabase
+          .from("brands")
+          .select("id, name, logo_url")
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true });
+
+        if (data && data.length > 0) {
+          setBrands(data);
+        }
+      } catch (err) {
+        // silently fail, keep prerendered data
+      }
+    };
+
+    fetchFreshBrands();
+  }, []);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");

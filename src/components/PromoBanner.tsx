@@ -1,6 +1,7 @@
 // src/components/PromoBanner.jsx
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { supabase } from "@/lib/supabaseBrowserClient";
 
 const FALLBACK_SLIDES = [
   {
@@ -70,12 +71,46 @@ interface Slide {
   image_url?: string | null;
 }
 
-const PromoBanner = ({ slides: dbSlides = [] }: { slides?: Slide[] }) => {
-  const slides = dbSlides.length > 0 ? dbSlides : FALLBACK_SLIDES;
+const PromoBanner = ({ slides: initialSlides = [] }: { slides?: Slide[] }) => {
+  const [slides, setSlides] = useState<Slide[]>(
+    initialSlides.length > 0 ? initialSlides : FALLBACK_SLIDES
+  );
   const [index, setIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [progressKey, setProgressKey] = useState(0);
   const timerRef = useRef<number | null>(null);
+
+  // Client-side re-fetch: always get fresh promo data
+  useEffect(() => {
+    const fetchFreshPromos = async () => {
+      try {
+        const { data } = await supabase
+          .from("promos")
+          .select(
+            "id, title, subtitle, cta_text, cta_href, image_url, bg_gradient, sort_order, valid_from, valid_until"
+          )
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true })
+          .limit(7);
+
+        if (data) {
+          const now = new Date();
+          const active = data.filter((p) => {
+            const from = p.valid_from ? new Date(p.valid_from) : null;
+            const until = p.valid_until ? new Date(p.valid_until) : null;
+            return (!from || from <= now) && (!until || until >= now);
+          });
+          if (active.length > 0) {
+            setSlides(active);
+          }
+        }
+      } catch (err) {
+        // silently fail, keep prerendered data
+      }
+    };
+
+    fetchFreshPromos();
+  }, []);
 
   const goTo = useCallback(
     (next?: number) => {

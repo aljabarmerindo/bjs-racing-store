@@ -1,6 +1,7 @@
 // src/components/StatsCounter.jsx
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { FiPackage, FiStar, FiUsers } from "react-icons/fi";
+import { supabase } from "@/lib/supabaseBrowserClient";
 
 /**
  * Animated counter that counts up from 0 to endValue when visible.
@@ -17,19 +18,54 @@ interface StatsCounterProps {
   label: string;
   icon?: string;
   duration?: number;
+  dataType?: "produk" | "terjual" | "static";
 }
 
 const StatsCounter = ({
-  endValue,
+  endValue: initialEndValue,
   suffix = "",
   label,
   icon,
   duration = 2000,
+  dataType = "static",
 }: StatsCounterProps) => {
+  const [endValue, setEndValue] = useState(initialEndValue);
   const [count, setCount] = useState(0);
   const [hasAnimated, setHasAnimated] = useState(false);
   const ref = useRef(null);
   const rafRef = useRef<number | null>(null);
+
+  // Client-side re-fetch: always get fresh stats data
+  useEffect(() => {
+    if (dataType === "static") return;
+
+    const fetchFreshStats = async () => {
+      try {
+        if (dataType === "produk") {
+          const { count } = await supabase
+            .from("products")
+            .select("*", { count: "exact", head: true })
+            .eq("status", "Aktif");
+          if (count !== null) setEndValue(count);
+        } else if (dataType === "terjual") {
+          const { data } = await supabase
+            .from("products")
+            .select("total_terjual");
+          if (data) {
+            const total = data.reduce(
+              (sum, p) => sum + (p.total_terjual || 0),
+              0
+            );
+            setEndValue(total);
+          }
+        }
+      } catch (err) {
+        // silently fail, keep prerendered data
+      }
+    };
+
+    fetchFreshStats();
+  }, [dataType]);
 
   const formatNumber = (num: number) => {
     const isFloat = !Number.isInteger(endValue);
