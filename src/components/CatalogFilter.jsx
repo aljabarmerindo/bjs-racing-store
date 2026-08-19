@@ -1,6 +1,6 @@
 // src/components/CatalogFilter.jsx
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabaseBrowserClient.ts";
 import { FiSearch, FiRefreshCw } from "react-icons/fi";
 
@@ -11,6 +11,7 @@ const CatalogFilter = ({ filters, setFilters, filterConfig }) => {
     const [vehicleBrands, setVehicleBrands] = useState([]);
     const [vehicleModels, setVehicleModels] = useState([]);
     const [allProducts, setAllProducts] = useState([]);
+    const debounceTimerRef = useRef(null);
 
     useEffect(() => {
         const fetchFilterData = async () => {
@@ -87,7 +88,12 @@ const CatalogFilter = ({ filters, setFilters, filterConfig }) => {
             }
         };
         fetchFilterData();
+        return () => clearTimeout(debounceTimerRef.current);
     }, [filterConfig]);
+
+    useEffect(() => {
+        return () => clearTimeout(debounceTimerRef.current);
+    }, []);
 
     const options = useMemo(() => {
         // Pada halaman /onderdil, opsi merek dibatasi hanya merek AKTIF
@@ -183,6 +189,14 @@ const CatalogFilter = ({ filters, setFilters, filterConfig }) => {
         }
     };
 
+    const handleSearchChange = useCallback((e) => {
+        const { value } = e.target;
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = setTimeout(() => {
+            setFilters((prev) => ({ ...prev, searchTerm: value }));
+        }, 300);
+    }, [setFilters]);
+
     const handleSortChange = (type, value) => {
         if (type === "sort" && filters.price !== "")
             setFilters((prev) => ({ ...prev, sort: value, price: "" }));
@@ -216,8 +230,8 @@ const CatalogFilter = ({ filters, setFilters, filterConfig }) => {
         <input
           type="text"
           name="searchTerm"
-          value={filters.searchTerm}
-          onChange={handleInputChange}
+          defaultValue={filters.searchTerm}
+          onChange={handleSearchChange}
           className="w-full p-2 pl-10 border rounded-lg text-sm"
           placeholder="Cari di toko ini..."
         />
