@@ -8,6 +8,9 @@ import {
   Squares2X2Icon,
   UserIcon,
   NewspaperIcon,
+  SwatchIcon,
+  HomeModernIcon,
+  CameraIcon,
 } from "@heroicons/react/24/outline";
 import {
   HomeIcon as HomeSolid,
@@ -36,9 +39,9 @@ const tabs = [
 ];
 
 const gridLinks = [
-  { label: "Katalog Pilok", path: "/katalog-warna", Icon: Squares2X2Icon },
-  { label: "Garasi Virtual", path: "/simulator", Icon: Squares2X2Icon },
-  { label: "Scan Warna", path: "/scan-warna", Icon: Squares2X2Icon },
+  { label: "Katalog Pilok", path: "/katalog-warna", Icon: SwatchIcon },
+  { label: "Garasi Virtual", path: "/simulator", Icon: HomeModernIcon },
+  { label: "Scan Warna", path: "/scan-warna", Icon: CameraIcon },
 ];
 
 /* ── BottomNav ─────────────────────────────────────── */
