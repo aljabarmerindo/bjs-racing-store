@@ -3,9 +3,9 @@ import React from "react";
 
 const getYouTubeId = (url) => {
   if (!url) return null;
-  const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+  const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?)|(shorts\/))\??v?=?([^#&?]*).*/;
   const match = url.match(regExp);
-  return match && match[7].length === 11 ? match[7] : null;
+  return match && match[7] && match[7].length === 11 ? match[7] : null;
 };
 
 const formatDate = (dateStr) => {
@@ -20,18 +20,32 @@ const stripHtml = (html) => {
 
 const FeedCard = ({ post }) => {
   const ytId = getYouTubeId(post.youtube_url);
+  const hasMedia = !!post.media_url;
 
   return (
     <article className="group block bg-white rounded-xl border border-slate-200 overflow-hidden hover:-translate-y-1 hover:shadow-lg hover:border-orange-200 transition-all duration-200">
       <a href={`/blog/${post.slug || post.id}`} className="flex flex-col h-full">
-        {post.post_type === 'video' && ytId ? (
-          <div className="relative aspect-video bg-slate-900">
+        <div className="relative aspect-video bg-slate-900">
+          {ytId ? (
             <img
               src={`https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`}
               alt={post.title || 'Video'}
               className="w-full h-full object-cover"
               loading="lazy"
             />
+          ) : hasMedia ? (
+            <img
+              src={post.media_url}
+              alt={post.title || 'Feed image'}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-orange-100 to-orange-50 flex items-center justify-center">
+              <span className="text-4xl">📝</span>
+            </div>
+          )}
+          {ytId && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                 <svg className="w-6 h-6 text-orange-600 ml-1" fill="currentColor" viewBox="0 0 24 24">
@@ -39,21 +53,13 @@ const FeedCard = ({ post }) => {
                 </svg>
               </div>
             </div>
-          </div>
-        ) : post.media_url ? (
-          <div className="relative aspect-video bg-slate-100">
-            <img
-              src={post.media_url}
-              alt={post.title || 'Feed image'}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              loading="lazy"
-            />
-          </div>
-        ) : (
-          <div className="relative aspect-video bg-gradient-to-br from-orange-100 to-orange-50 flex items-center justify-center">
-            <span className="text-4xl">📝</span>
-          </div>
-        )}
+          )}
+          {hasMedia && ytId && (
+            <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
+              GAMBAR
+            </div>
+          )}
+        </div>
 
         <div className="p-4 flex flex-col flex-1">
           <div className="flex items-center gap-2 mb-2">
