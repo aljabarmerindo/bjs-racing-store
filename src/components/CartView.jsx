@@ -139,6 +139,7 @@ const CartView = ({ checkoutEnabled = true }) => {
   );
 
 
+  const checkoutUrl = "/checkout";
   /* ── Empty state ────────────────────────────────── */
   if (items.length === 0) {
     return (
