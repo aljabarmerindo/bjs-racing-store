@@ -74,8 +74,9 @@ export async function getBiteshipRates(params: {
   if (params.destination.latitude && params.destination.longitude) {
     body.destination_latitude = params.destination.latitude;
     body.destination_longitude = params.destination.longitude;
-  } else if (params.destination.postal_code) {
-    body.destination_postal_code = params.destination.postal_code;
+  }
+  if (params.destination.postal_code) {
+    body.destination_postal_code = Number(params.destination.postal_code);
   }
 
   const json = await biteshipRequest("POST", "/v1/rates/couriers", body);
