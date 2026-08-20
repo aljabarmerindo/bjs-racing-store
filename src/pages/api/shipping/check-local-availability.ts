@@ -72,7 +72,7 @@ export const GET: APIRoute = async ({ url }) => {
       area_id: area.id,
       name: area.service_name || "BJS Express",
       code: "internal",
-      cost: area.shipping_cost ?? 0,
+
       service: area.service_name || "BJS Express",
       description: "",
       etd: area.etd || "6 - 8 Hours",

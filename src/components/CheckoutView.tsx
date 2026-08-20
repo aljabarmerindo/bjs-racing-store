@@ -478,6 +478,7 @@ export default function CheckoutView({ orderId, initialItems }: CheckoutViewProp
         // console.error("[Checkout] Biteship rates failed:", biteshipResponse.status, biteshipResult);
       }
 
+      let bjsExpressRate = null;
       if (selectedAddress.destination) {
         const villageParam = selectedAddress.village_name
           ? `&village=${encodeURIComponent(selectedAddress.village_name)}`
@@ -488,15 +489,22 @@ export default function CheckoutView({ orderId, initialItems }: CheckoutViewProp
         const checkInternalResult = await checkInternalResponse.json();
 
         if (checkInternalResult.available) {
-          services.push({
-            service: checkInternalResult.service,
-            code: checkInternalResult.code,
-            name: checkInternalResult.name,
-            courier_service_code: "",
-            cost: checkInternalResult.cost,
-            etd: checkInternalResult.etd,
-            description: checkInternalResult.description,
-          });
+          const gojekInstant = services.find(
+            (s) => s.code === "gojek" && s.courier_service_code === "instant",
+          );
+          if (gojekInstant && gojekInstant.cost) {
+            const discounted = Math.round(gojekInstant.cost * 0.8 / 500) * 500;
+            bjsExpressRate = discounted;
+            services.push({
+              service: checkInternalResult.service || "BJS Express",
+              code: checkInternalResult.code || "internal",
+              name: checkInternalResult.name || "BJS Racing",
+              courier_service_code: "",
+              cost: discounted,
+              etd: checkInternalResult.etd || "6 - 8 Hours",
+              description: checkInternalResult.description || "",
+            });
+          }
         }
       }
 
