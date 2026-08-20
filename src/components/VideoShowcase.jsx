@@ -1,6 +1,5 @@
 // src/components/VideoShowcase.jsx
 import React, { useRef, useState, useEffect, useCallback } from "react";
-import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import YouTubeEmbed from "./YouTubeEmbed";
 import { supabase } from "@/lib/supabaseBrowserClient.ts";
 
@@ -10,8 +9,6 @@ const VideoShowcase = () => {
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeVideoId, setActiveVideoId] = useState(null);
-  const [canScrollPrev, setCanScrollPrev] = useState(false);
-  const [canScrollNext, setCanScrollNext] = useState(true);
 
   useEffect(() => {
     const fetchVideos = async () => {
@@ -32,25 +29,6 @@ const VideoShowcase = () => {
 
     fetchVideos();
   }, []);
-
-  const checkScroll = useCallback(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    setCanScrollPrev(el.scrollLeft > 5);
-    setCanScrollNext(el.scrollLeft < el.scrollWidth - el.clientWidth - 5);
-  }, []);
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    checkScroll();
-    el.addEventListener("scroll", checkScroll, { passive: true });
-    window.addEventListener("resize", checkScroll);
-    return () => {
-      el.removeEventListener("scroll", checkScroll);
-      window.removeEventListener("resize", checkScroll);
-    };
-  }, [checkScroll]);
 
   const getSlideWidth = useCallback(() => {
     const el = containerRef.current;
@@ -78,35 +56,6 @@ const VideoShowcase = () => {
     [getSlideWidth],
   );
 
-  const goPrev = useCallback(() => {
-    setActiveIndex((prev) => {
-      const next = Math.max(0, prev - 1);
-      scrollTo(next);
-      return next;
-    });
-  }, [scrollTo]);
-
-  const goNext = useCallback(() => {
-    setActiveIndex((prev) => {
-      const next = Math.min(videos.length - 1, prev + 1);
-      scrollTo(next);
-      return next;
-    });
-  }, [scrollTo, videos.length]);
-
-  const handleKeyDown = useCallback(
-    (e) => {
-      if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        goPrev();
-      } else if (e.key === "ArrowRight") {
-        e.preventDefault();
-        goNext();
-      }
-    },
-    [goPrev, goNext],
-  );
-
   const updateActiveFromScroll = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -116,6 +65,78 @@ const VideoShowcase = () => {
     setActiveIndex(Math.min(videos.length - 1, Math.max(0, idx)));
     setActiveVideoId(null);
   }, [getSlideWidth, videos.length]);
+
+  // Swipe / drag handlers
+  const dragState = useRef({ startX: 0, startY: 0, isDragging: false });
+
+  const handleDragStart = (clientX, clientY) => {
+    dragState.current = { startX: clientX, startY: clientY, isDragging: true };
+  };
+
+  const handleDragMove = (_clientX, _clientY) => {
+    if (!dragState.current.isDragging) return;
+  };
+
+  const handleDragEnd = (clientX, clientY) => {
+    if (!dragState.current.isDragging) return;
+    const deltaX = clientX - dragState.current.startX;
+    const deltaY = clientY - dragState.current.startY;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    if (absX > absY && absX > 50) {
+      const slideWidth = getSlideWidth();
+      if (slideWidth === 0) return;
+      const el = containerRef.current;
+      if (!el) return;
+      const currentIndex = Math.round(el.scrollLeft / slideWidth);
+      if (deltaX < 0) {
+        const next = Math.min(videos.length - 1, currentIndex + 1);
+        scrollTo(next);
+      } else {
+        const prev = Math.max(0, currentIndex - 1);
+        scrollTo(prev);
+      }
+    }
+
+    dragState.current.isDragging = false;
+  };
+
+  const onTouchStart = (e) => {
+    handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
+  };
+
+  const onTouchMove = (e) => {
+    handleDragMove(e.touches[0].clientX, e.touches[0].clientY);
+  };
+
+  const onTouchEnd = (e) => {
+    handleDragEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+  };
+
+  const onMouseDown = (e) => {
+    handleDragStart(e.clientX, e.clientY);
+  };
+
+  const onMouseMove = (e) => {
+    handleDragMove(e.clientX, e.clientY);
+  };
+
+  const onMouseUp = (e) => {
+    handleDragEnd(e.clientX, e.clientY);
+  };
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    updateActiveFromScroll();
+    el.addEventListener("scroll", updateActiveFromScroll, { passive: true });
+    window.addEventListener("resize", updateActiveFromScroll);
+    return () => {
+      el.removeEventListener("scroll", updateActiveFromScroll);
+      window.removeEventListener("resize", updateActiveFromScroll);
+    };
+  }, [updateActiveFromScroll]);
 
   if (loading) {
     return (
@@ -156,46 +177,24 @@ const VideoShowcase = () => {
           className="relative"
           role="region"
           aria-label="Video carousel"
-          onKeyDown={handleKeyDown}
         >
-          {/* Arrow Left */}
-          <button
-            onClick={goPrev}
-            disabled={!canScrollPrev}
-            className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-10 w-8 h-8 mobile:w-10 mobile:h-10 rounded-full bg-white shadow-lg border border-slate-200 flex items-center justify-center transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
-              canScrollPrev
-                ? "hover:bg-orange-50 hover:border-orange-300 text-slate-700"
-                : "opacity-40 cursor-not-allowed text-slate-400"
-            }`}
-            aria-label="Video sebelumnya"
-          >
-            <FiChevronLeft className="w-4 h-4 mobile:w-5 mobile:h-5" />
-          </button>
-
-          {/* Arrow Right */}
-          <button
-            onClick={goNext}
-            disabled={!canScrollNext}
-            className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-10 w-8 h-8 mobile:w-10 mobile:h-10 rounded-full bg-white shadow-lg border border-slate-200 flex items-center justify-center transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
-              canScrollNext
-                ? "hover:bg-orange-50 hover:border-orange-300 text-slate-700"
-                : "opacity-40 cursor-not-allowed text-slate-400"
-            }`}
-            aria-label="Video berikutnya"
-          >
-            <FiChevronRight className="w-4 h-4 mobile:w-5 mobile:h-5" />
-          </button>
-
           {/* Carousel Container */}
           <div
             ref={containerRef}
             onScroll={updateActiveFromScroll}
-            className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide px-2 py-2"
+            className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide px-2 py-2 select-none"
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
               WebkitOverflowScrolling: "touch",
+              cursor: "grab",
             }}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            onMouseDown={onMouseDown}
+            onMouseMove={onMouseMove}
+            onMouseUp={onMouseUp}
           >
             {videos.map((video) => (
               <div
