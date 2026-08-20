@@ -18,9 +18,18 @@ const stripHtml = (html) => {
   return html.replace(/<[^>]*>/g, '').slice(0, 200);
 };
 
+function getDriveDirectUrl(url) {
+  if (!url || !url.includes('drive.google.com')) return url;
+  const idMatch = url.match(/[-\w]{25,}/);
+  if (idMatch) return `https://drive.google.com/uc?export=view&id=${idMatch[0]}`;
+  return url;
+}
+
 const FeedCard = ({ post }) => {
   const ytId = getYouTubeId(post.youtube_url);
-  const hasMedia = !!post.media_url;
+  const rawMediaUrl = post.media_url;
+  const mediaUrl = getDriveDirectUrl(rawMediaUrl);
+  const hasMedia = !!mediaUrl;
 
   return (
     <article className="group block bg-white rounded-xl border border-slate-200 overflow-hidden hover:-translate-y-1 hover:shadow-lg hover:border-orange-200 transition-all duration-200">
@@ -35,7 +44,7 @@ const FeedCard = ({ post }) => {
             />
           ) : hasMedia ? (
             <img
-              src={post.media_url}
+              src={mediaUrl}
               alt={post.title || 'Feed image'}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               loading="lazy"

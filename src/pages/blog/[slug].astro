@@ -27,11 +27,19 @@ function getDriveDirectUrl(url: string) {
   return url;
 }
 
+function getYouTubeId(url: string) {
+  if (!url) return null;
+  const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?)|(shorts\/))\??v?=?([^#&?]*).*/;
+  const match = url.match(regExp);
+  return match && match[7] && match[7].length === 11 ? match[7] : null;
+}
+
 const relatedProducts = (post.feed_post_products ?? [])
   .map((item: any) => item.products)
   .filter(Boolean);
 
 const ogImage = post.media_url ? getDriveDirectUrl(post.media_url) : null;
+const youtubeVideoId = getYouTubeId(post.youtube_url);
 ---
 
 <MainLayout title={`${post.title} - BJS Racing Blog`}>
@@ -103,11 +111,12 @@ const ogImage = post.media_url ? getDriveDirectUrl(post.media_url) : null;
           {post.content}
         </div>
 
-        {post.youtube_url && (
+        {post.youtube_url && youtubeVideoId && (
           <div class="mb-8">
             <YouTubeEmbed
-              videoId={post.youtube_url}
+              videoId={youtubeVideoId}
               title={post.title}
+              client:load
             />
           </div>
         )}
