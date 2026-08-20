@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from "react";
 import {
   HomeIcon,
-  PaintBrushIcon,
+
   WrenchIcon,
   Squares2X2Icon,
   UserIcon,
@@ -17,11 +17,21 @@ import {
 } from "@heroicons/react/24/outline";
 import {
   HomeIcon as HomeSolid,
-  PaintBrushIcon as PaintBrushSolid,
+
   WrenchIcon as WrenchSolid,
   Squares2X2Icon as Squares2X2Solid,
   UserIcon as UserSolid,
 } from "@heroicons/react/24/solid";
+
+function SprayPaintIcon({ active }) {
+  return (
+    <img
+      src={active ? "/icons/spray-paint-solid.png" : "/icons/spray-paint-outline.png"}
+      alt="Pilok"
+      className="w-6 h-6"
+    />
+  );
+}
 
 /* ── Lainnya Bottom Sheet ──────────────────────────── */
 function LainnyaSheet({ items, onClose }) {
@@ -85,7 +95,7 @@ function LainnyaSheet({ items, onClose }) {
 /* ── Tab config ────────────────────────────────────── */
 const tabs = [
   { label: "Beranda",  path: "/",         Icon: HomeIcon,        ActiveIcon: HomeSolid },
-  { label: "Pilok",    path: "/pilok",    Icon: PaintBrushIcon,  ActiveIcon: PaintBrushSolid },
+  { label: "Pilok",    path: "/pilok",    Icon: SprayPaintIcon,  ActiveIcon: SprayPaintIcon },
   { label: "Onderdil", path: "/onderdil", Icon: WrenchIcon,      ActiveIcon: WrenchSolid },
   { label: "Lainnya",  path: null,        Icon: Squares2X2Icon,  ActiveIcon: Squares2X2Solid, action: true },
   { label: "Akun",     path: "/akun",     Icon: UserIcon,        ActiveIcon: UserSolid },
