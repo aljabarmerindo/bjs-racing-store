@@ -1,6 +1,5 @@
 // src/components/PromoBanner.jsx
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { supabase } from "@/lib/supabaseBrowserClient";
 
 const FALLBACK_SLIDES = [
@@ -34,6 +33,7 @@ const FALLBACK_SLIDES = [
 ];
 
 const SLIDE_DURATION = 5000;
+const SWIPE_THRESHOLD = 50;
 
 const RacingPattern = () => (
   <svg
@@ -79,8 +79,8 @@ const PromoBanner = ({ slides: initialSlides = [] }: { slides?: Slide[] }) => {
   const [isPaused, setIsPaused] = useState(false);
   const [progressKey, setProgressKey] = useState(0);
   const timerRef = useRef<number | null>(null);
+  const dragState = useRef({ startX: 0, startY: 0, isDragging: false });
 
-  // Client-side re-fetch: always get fresh promo data
   useEffect(() => {
     const fetchFreshPromos = async () => {
       try {
@@ -112,7 +112,6 @@ const PromoBanner = ({ slides: initialSlides = [] }: { slides?: Slide[] }) => {
     fetchFreshPromos();
   }, []);
 
-  // Clamp index when slides array shrinks (prevents out-of-bounds crash)
   useEffect(() => {
     setIndex((prev) => (prev >= slides.length ? 0 : prev));
   }, [slides.length]);
@@ -137,6 +136,57 @@ const PromoBanner = ({ slides: initialSlides = [] }: { slides?: Slide[] }) => {
     setIndex((prev) => (prev + 1) % slides.length);
     setProgressKey((k) => k + 1);
   }, [slides.length]);
+
+  const handleDragStart = (clientX: number, clientY: number) => {
+    if (slides.length <= 1) return;
+    dragState.current = { startX: clientX, startY: clientY, isDragging: true };
+  };
+
+  const handleDragMove = (_clientX: number, _clientY: number) => {
+    if (!dragState.current.isDragging) return;
+  };
+
+  const handleDragEnd = (clientX: number, clientY: number) => {
+    if (!dragState.current.isDragging) return;
+    const deltaX = clientX - dragState.current.startX;
+    const deltaY = clientY - dragState.current.startY;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    if (absX > absY && absX > SWIPE_THRESHOLD) {
+      if (deltaX < 0) {
+        goNext();
+      } else {
+        goPrev();
+      }
+    }
+
+    dragState.current.isDragging = false;
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    handleDragMove(e.touches[0].clientX, e.touches[0].clientY);
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    handleDragEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+  };
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    handleDragStart(e.clientX, e.clientY);
+  };
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    handleDragMove(e.clientX, e.clientY);
+  };
+
+  const onMouseUp = (e: React.MouseEvent) => {
+    handleDragEnd(e.clientX, e.clientY);
+  };
 
   useEffect(() => {
     if (isPaused || slides.length <= 1) {
@@ -166,7 +216,15 @@ const PromoBanner = ({ slides: initialSlides = [] }: { slides?: Slide[] }) => {
       aria-roledescription="carousel"
     >
       {/* Image Area */}
-      <div className="relative w-full aspect-video overflow-hidden bg-slate-100">
+      <div
+        className="relative w-full aspect-video overflow-hidden bg-slate-100 select-none"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+      >
         {slides.map((slide, idx) => (
           <div
             key={slide.id}
@@ -187,6 +245,7 @@ const PromoBanner = ({ slides: initialSlides = [] }: { slides?: Slide[] }) => {
                 src={slide.image_url}
                 alt={slide.title}
                 className="absolute inset-0 w-full h-full object-cover"
+                draggable={false}
               />
             ) : (
               <>
@@ -197,47 +256,8 @@ const PromoBanner = ({ slides: initialSlides = [] }: { slides?: Slide[] }) => {
           </div>
         ))}
 
-        {/* Arrow Navigation */}
+        {/* Dots on image */}
         {slides.length > 1 && (
-          <>
-            <button
-              onClick={goPrev}
-              className="absolute left-3 sm:left-5 bottom-3 z-20 w-10 h-10 md:w-11 md:h-11 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors duration-200 cursor-pointer shadow-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-              aria-label="Slide sebelumnya"
-            >
-              <FiChevronLeft className="w-5 h-5 text-slate-700" />
-            </button>
-            <button
-              onClick={goNext}
-              className="absolute right-3 sm:right-5 bottom-3 z-20 w-10 h-10 md:w-11 md:h-11 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors duration-200 cursor-pointer shadow-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-              aria-label="Slide berikutnya"
-            >
-              <FiChevronRight className="w-5 h-5 text-slate-700" />
-            </button>
-          </>
-        )}
-
-        {/* Dots on image (fallback slides only — when no text below) */}
-        {!hasImage && slides.length > 1 && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
-            {slides.map((slide, idx) => (
-              <button
-                key={slide.id}
-                onClick={() => goTo(idx)}
-                className={`rounded-full transition-all duration-200 cursor-pointer ${
-                  idx === index
-                    ? "bg-white w-6 h-2"
-                    : "bg-white/50 hover:bg-white/80 w-2 h-2"
-                }`}
-                aria-label={`Slide ${idx + 1}`}
-                aria-current={idx === index ? "true" : undefined}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Dots on image (image slides — also show here for visual cue) */}
-        {hasImage && slides.length > 1 && (
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
             {slides.map((slide, idx) => (
               <button
