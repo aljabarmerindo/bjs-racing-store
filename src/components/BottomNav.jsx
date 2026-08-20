@@ -1,11 +1,9 @@
 // src/components/BottomNav.jsx
 // Bottom navigation bar — Shopee-style, mobile only (lg:hidden).
-// Icons: @heroicons/react/24/outline (inactive) + /24/solid (active).
 
 import React, { useState, useEffect } from "react";
 import {
   HomeIcon,
-
   WrenchIcon,
   Squares2X2Icon,
   UserIcon,
@@ -17,7 +15,6 @@ import {
 } from "@heroicons/react/24/outline";
 import {
   HomeIcon as HomeSolid,
-
   WrenchIcon as WrenchSolid,
   Squares2X2Icon as Squares2X2Solid,
   UserIcon as UserSolid,
@@ -28,7 +25,8 @@ function SprayPaintIcon({ active }) {
     <img
       src={active ? "/icons/spray-paint-solid.png" : "/icons/spray-paint-outline.png"}
       alt="Pilok"
-      className="w-6 h-6"
+      className={`w-6 h-6 ${!active ? "text-orange-500" : ""}`}
+      style={!active ? { filter: "invert(50%) sepia(80%) saturate(500%) hue-rotate(-5deg) brightness(95%) contrast(105%)" } : undefined}
     />
   );
 }
@@ -55,7 +53,6 @@ function LainnyaSheet({ items, onClose }) {
         onClick={handleClose}
         className={`absolute inset-0 bg-black/40 transition-opacity duration-200 ${visible ? "opacity-100" : "opacity-0"}`}
       />
-
       {/* Card */}
       <div className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl transition-transform duration-200 ease-out ${visible ? "translate-y-0" : "translate-y-full"}`}>
         {/* Header */}
@@ -130,7 +127,7 @@ const BottomNav = () => {
             const active = tab.action
               ? lainnyaPaths.some((p) => currentPath.startsWith(p))
               : isActive(tab.path);
-            const Icon = active ? tab.ActiveIcon : tab.Icon;
+            const IconComponent = active ? tab.ActiveIcon : tab.Icon;
 
             const colorClass = active ? "text-orange-500" : "text-slate-800";
             const classes = `flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors ${colorClass}`;
@@ -143,7 +140,7 @@ const BottomNav = () => {
                   className={`${classes} cursor-pointer`}
                   aria-label={tab.label}
                 >
-                  <Icon className="w-6 h-6" />
+                  <IconComponent active={active} className="w-6 h-6" />
                   <span className="text-[10px] font-semibold leading-tight">{tab.label}</span>
                 </button>
               );
@@ -156,7 +153,7 @@ const BottomNav = () => {
                 className={classes}
                 aria-label={tab.label}
               >
-                <Icon className="w-6 h-6" />
+                <IconComponent active={active} className="w-6 h-6" />
                 <span className="text-[10px] font-semibold leading-tight">{tab.label}</span>
               </a>
             );
