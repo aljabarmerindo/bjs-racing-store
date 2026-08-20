@@ -3,7 +3,7 @@ import React from "react";
 
 const getYouTubeId = (url) => {
   if (!url) return null;
-  const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?)|(shorts\/))\??v?=?([^#&?]*).*/;
+  const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?)|(?:shorts\/))\??v?=?([^#&?]*).*/;
   const match = url.match(regExp);
   return match && match[7] && match[7].length === 11 ? match[7] : null;
 };

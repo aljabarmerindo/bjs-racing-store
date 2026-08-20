@@ -29,7 +29,7 @@ function getDriveDirectUrl(url: string) {
 
 function getYouTubeId(url: string) {
   if (!url) return null;
-  const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?)|(shorts\/))\??v?=?([^#&?]*).*/;
+  const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?)|(?:shorts\/))\??v?=?([^#&?]*).*/;
   const match = url.match(regExp);
   return match && match[7] && match[7].length === 11 ? match[7] : null;
 }
@@ -84,7 +84,15 @@ const youtubeVideoId = getYouTubeId(post.youtube_url);
       </a>
 
     <article class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-      {post.media_url && (
+      {(post.post_type === 'video' && youtubeVideoId) ? (
+        <div class="mb-6">
+          <YouTubeEmbed
+            videoId={youtubeVideoId}
+            title={post.title}
+            client:load
+          />
+        </div>
+      ) : post.media_url && (
         <div class="relative aspect-video bg-slate-100">
           <img src={getDriveDirectUrl(post.media_url)} alt={post.title} class="w-full h-full object-cover" />
         </div>
@@ -111,7 +119,7 @@ const youtubeVideoId = getYouTubeId(post.youtube_url);
           {post.content}
         </div>
 
-        {post.youtube_url && youtubeVideoId && (
+        {(post.post_type !== 'video' || !youtubeVideoId) && post.youtube_url && youtubeVideoId && (
           <div class="mb-8">
             <YouTubeEmbed
               videoId={youtubeVideoId}
