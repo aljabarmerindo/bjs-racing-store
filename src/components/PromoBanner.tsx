@@ -202,14 +202,14 @@ const PromoBanner = ({ slides: initialSlides = [] }: { slides?: Slide[] }) => {
           <>
             <button
               onClick={goPrev}
-              className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-11 md:h-11 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors duration-200 cursor-pointer shadow-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="absolute left-3 sm:left-5 bottom-3 z-20 w-10 h-10 md:w-11 md:h-11 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors duration-200 cursor-pointer shadow-md focus:outline-none focus:ring-2 focus:ring-orange-500"
               aria-label="Slide sebelumnya"
             >
               <FiChevronLeft className="w-5 h-5 text-slate-700" />
             </button>
             <button
               onClick={goNext}
-              className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-11 md:h-11 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors duration-200 cursor-pointer shadow-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="absolute right-3 sm:right-5 bottom-3 z-20 w-10 h-10 md:w-11 md:h-11 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors duration-200 cursor-pointer shadow-md focus:outline-none focus:ring-2 focus:ring-orange-500"
               aria-label="Slide berikutnya"
             >
               <FiChevronRight className="w-5 h-5 text-slate-700" />
