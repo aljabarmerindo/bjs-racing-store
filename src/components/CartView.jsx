@@ -1,6 +1,6 @@
 // File: src/components/CartView.jsx
 // Cart view — responsive marketplace-style layout with item selection.
-import React, { useMemo } from "react";
+import React from "react";
 import { useAppStore } from "../lib/store.ts";
 
 const formatRupiah = (n) =>
@@ -138,22 +138,6 @@ const CartView = ({ checkoutEnabled = true }) => {
     0,
   );
 
-  const whatsappUrl = useMemo(() => {
-    const targetItems = selectedItems.length > 0 ? selectedItems : items;
-    if (targetItems.length === 0) return null;
-    let msg = "Halo BJS Racing, saya ingin melakukan pemesanan:\n\n";
-    msg += "*Daftar Barang:*\n";
-    targetItems.forEach((item, i) => {
-      msg += `${i + 1}. ${item.nama}`;
-      if (item.sku) msg += ` (SKU: ${item.sku})`;
-      if (item.merek) msg += `\n   Merek: ${item.merek}`;
-      if (item.ukuran) msg += ` | Ukuran: ${item.ukuran}`;
-      msg += `\n   Qty: ${item.quantity} × ${formatRupiah(item.harga_jual)} = ${formatRupiah(item.quantity * item.harga_jual)}\n`;
-    });
-    msg += `\n*Subtotal:* ${formatRupiah(subtotal)}\n`;
-    msg += `\nTerima kasih.`;
-    return `https://wa.me/62881011669213?text=${encodeURIComponent(msg)}`;
-  }, [selectedItems, items, subtotal]);
 
   /* ── Empty state ────────────────────────────────── */
   if (items.length === 0) {
@@ -188,20 +172,16 @@ const CartView = ({ checkoutEnabled = true }) => {
       <p className="text-[11px] text-slate-400 mt-1">
         Pajak &amp; ongkir dihitung saat checkout.
       </p>
-      {whatsappUrl && (
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`mt-3 block text-center w-full font-bold py-3 rounded-lg transition-colors text-sm ${
-            selectedItems.length === 0
-              ? "bg-slate-300 text-slate-500 pointer-events-none"
-              : "bg-green-600 hover:bg-green-700 text-white"
-          }`}
-        >
-          Checkout via WhatsApp
-        </a>
-      )}
+      <a
+        href={checkoutUrl}
+        className={`mt-3 block text-center w-full font-bold py-3 rounded-lg transition-colors text-sm ${
+          selectedItems.length === 0
+            ? "bg-slate-300 text-slate-500 pointer-events-none"
+            : "bg-orange-500 hover:bg-orange-600 text-white"
+        }`}
+      >
+        Lanjut ke Checkout
+      </a>
     </>
   );
 
@@ -386,16 +366,14 @@ const CartView = ({ checkoutEnabled = true }) => {
               <p className="text-sm font-bold text-slate-900 tabular-nums">{formatRupiah(subtotal)}</p>
             </div>
             <a
-              href={whatsappUrl || "#"}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={checkoutUrl}
               className={`flex-shrink-0 font-bold py-2.5 px-4 rounded-lg transition-colors text-sm ${
                 selectedItems.length === 0
                   ? "bg-slate-300 text-slate-500 pointer-events-none"
-                  : "bg-green-600 hover:bg-green-700 text-white"
+                  : "bg-orange-500 hover:bg-orange-600 text-white"
               }`}
             >
-              Checkout via WhatsApp
+              Lanjut ke Checkout
             </a>
           </div>
         </div>
