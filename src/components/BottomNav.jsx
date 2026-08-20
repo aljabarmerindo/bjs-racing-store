@@ -23,7 +23,7 @@ import {
 function SprayPaintIcon({ active }) {
   return (
     <img
-      src={active ? "/icons/spray-paint-solid.png" : "/icons/spray-paint-outline.png"}
+      src={active ? "/icons/spray-paint-solid.png" : "/icons/spray-paint-outline-black.png"}
       alt="Pilok"
       className="w-6 h-6"
     />
