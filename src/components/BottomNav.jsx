@@ -1,7 +1,7 @@
 // src/components/BottomNav.jsx
 // Bottom navigation bar — Shopee-style, mobile only (lg:hidden).
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   HomeIcon,
   WrenchIcon,
@@ -33,16 +33,41 @@ const tabs = [
   { label: "Pilok",    path: "/pilok",     Icon: SprayPaintIcon, ActiveIcon: SprayPaintIcon },
   { label: "Onderdil", path: "/onderdil",  Icon: WrenchIcon,    ActiveIcon: WrenchSolid },
   { label: "Feed",     path: "/blog",      Icon: NewspaperIcon, ActiveIcon: NewspaperSolid },
-  { label: "Akun",     path: "/akun",      Icon: UserIcon,      ActiveIcon: UserSolid },
+];
+
+const gridLinks = [
+  { label: "Katalog Pilok", path: "/katalog-warna", Icon: Squares2X2Icon },
+  { label: "Garasi Virtual", path: "/simulator", Icon: Squares2X2Icon },
+  { label: "Scan Warna", path: "/scan-warna", Icon: Squares2X2Icon },
 ];
 
 /* ── BottomNav ─────────────────────────────────────── */
 const BottomNav = () => {
   const [currentPath, setCurrentPath] = useState("/");
+  const [showGridMenu, setShowGridMenu] = useState(false);
+  const gridMenuRef = useRef(null);
 
   useEffect(() => {
     setCurrentPath(window.location.pathname);
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (gridMenuRef.current && !gridMenuRef.current.contains(event.target)) {
+        setShowGridMenu(false);
+      }
+    };
+
+    if (showGridMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [showGridMenu]);
 
   const isActive = (path) =>
     path === "/" ? currentPath === "/" : currentPath.startsWith(path);
@@ -69,6 +94,52 @@ const BottomNav = () => {
             </a>
           );
         })}
+
+        {/* Grid Menu */}
+        <div className="relative flex flex-col items-center justify-center flex-1 h-full" ref={gridMenuRef}>
+          <button
+            type="button"
+            onClick={() => setShowGridMenu((prev) => !prev)}
+            className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors ${showGridMenu ? "text-orange-500" : "text-slate-800"}`}
+            aria-label="Menu lainnya"
+          >
+            <Squares2X2Icon className="w-6 h-6" />
+            <span className="text-[10px] font-semibold leading-tight">Lainnya</span>
+          </button>
+
+          {showGridMenu && (
+            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 bg-white rounded-xl border border-slate-200 shadow-xl py-2 z-50">
+              {gridLinks.map((link) => {
+                const active = isActive(link.path);
+                return (
+                  <a
+                    key={link.path}
+                    href={link.path}
+                    onClick={() => setShowGridMenu(false)}
+                    className={`flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors ${active ? "text-orange-600 bg-orange-50" : "text-slate-700 hover:bg-slate-50"}`}
+                  >
+                    <link.Icon className={`w-5 h-5 ${active ? "text-orange-500" : "text-slate-400"}`} />
+                    {link.label}
+                  </a>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Akun */}
+        {(() => {
+          const active = isActive("/akun");
+          const IconComponent = active ? UserSolid : UserIcon;
+          const colorClass = active ? "text-orange-500" : "text-slate-800";
+          const classes = `flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors ${colorClass}`;
+          return (
+            <a href="/akun" className={classes} aria-label="Akun">
+              <IconComponent active={active} className="w-6 h-6" />
+              <span className="text-[10px] font-semibold leading-tight">Akun</span>
+            </a>
+          );
+        })()}
       </nav>
     </div>
   );
