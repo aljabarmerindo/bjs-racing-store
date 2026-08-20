@@ -25,8 +25,7 @@ function SprayPaintIcon({ active }) {
     <img
       src={active ? "/icons/spray-paint-solid.png" : "/icons/spray-paint-outline.png"}
       alt="Pilok"
-      className={`w-6 h-6 ${!active ? "text-orange-500" : ""}`}
-      style={!active ? { filter: "invert(50%) sepia(80%) saturate(500%) hue-rotate(-5deg) brightness(95%) contrast(105%)" } : undefined}
+      className="w-6 h-6"
     />
   );
 }
