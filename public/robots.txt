@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /blog/
+Disallow: /akun/
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: https://bjsracing.com/sitemap.xml

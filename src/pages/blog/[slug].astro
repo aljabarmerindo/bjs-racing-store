@@ -1,0 +1,115 @@
+---
+// File: /src/pages/blog/[slug].astro
+import MainLayout from '../../layouts/MainLayout.astro';
+import { supabaseAdmin } from '../../lib/supabaseServer';
+import CommentSection from '../../components/feed/CommentSection.jsx';
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+
+const { data: post } = await supabaseAdmin
+  .from('feed_posts')
+  .select('*, products(id, nama, harga_jual, image_url)')
+  .eq('slug', slug)
+  .eq('is_published', true)
+  .single();
+
+if (!post) {
+  return Astro.redirect('/blog');
+}
+---
+
+<MainLayout title={`${post.title} - BJS Racing Blog`}>
+  <meta name="description" content={post.content?.replace(/<[^>]*>/g, '').slice(0, 160)} slot="head-scripts" />
+  <meta property="og:title" content={post.title} slot="head-scripts" />
+  <meta property="og:description" content={post.content?.replace(/<[^>]*>/g, '').slice(0, 160)} slot="head-scripts" />
+  <meta property="og:type" content="article" slot="head-scripts" />
+  {post.media_url && <meta property="og:image" content={post.media_url} slot="head-scripts" />}
+  <link rel="canonical" href={`https://bjsracing.com/blog/${post.slug}`} slot="head-scripts" />
+  <script type="application/ld+json" slot="head-scripts">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "{post.title}",
+      "datePublished": "{post.published_at}",
+      "dateModified": "{post.updated_at}",
+      "author": {
+        "@type": "Organization",
+        "name": "BJS Racing Store"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "BJS Racing Store",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://bjsracing.com/favicon.svg"
+        }
+      },
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://bjsracing.com/blog/{post.slug}"
+      }
+    }
+  </script>
+
+  <div class="max-w-4xl mx-auto px-4 py-8">
+      <a href="/blog" class="inline-flex items-center text-sm text-slate-500 hover:text-orange-500 mb-4 transition-colors">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Kembali ke Blog
+      </a>
+
+    <article class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      {post.media_url && (
+        <div class="relative aspect-video bg-slate-100">
+          <img src={post.media_url} alt={post.title} class="w-full h-full object-cover" />
+        </div>
+      )}
+
+      <div class="p-6 md:p-8">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-md">
+            {post.category || post.post_type}
+          </span>
+          {post.is_featured && (
+            <span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
+              Unggulan
+            </span>
+          )}
+          <span class="text-xs text-slate-400">
+            {post.published_at ? new Date(post.published_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
+          </span>
+        </div>
+
+        <h1 class="text-2xl md:text-3xl font-bold text-slate-900 mb-4">{post.title}</h1>
+
+        <div class="prose prose-slate max-w-none mb-8 text-slate-700 leading-relaxed">
+          {post.content}
+        </div>
+
+        {post.products && (
+          <div class="border-t border-slate-100 pt-6 mb-6">
+            <h3 class="text-lg font-bold text-slate-800 mb-3">Produk Terkait</h3>
+            <a href={`/products/${post.products.id}`} class="flex items-center gap-3 p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
+              {post.products.image_url && (
+                <img src={post.products.image_url} alt={post.products.nama} class="w-16 h-16 object-contain rounded-md bg-white" />
+              )}
+              <div>
+                <p class="font-semibold text-slate-800">{post.products.nama}</p>
+                <p class="text-sm text-orange-600 font-bold">
+                  {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(post.products.harga_jual || 0)}
+                </p>
+              </div>
+            </a>
+          </div>
+        )}
+      </div>
+    </article>
+
+    <div class="mt-8">
+      <CommentSection postId={post.id} />
+    </div>
+  </div>
+</MainLayout>
