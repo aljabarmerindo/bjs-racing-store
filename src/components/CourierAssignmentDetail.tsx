@@ -298,12 +298,6 @@ const CourierAssignmentDetail = ({ assignmentId }: Props) => {
         {(addr.recipient_phone || customer?.telepon) ? (
           <div className="flex items-center gap-2 mt-3">
             <a
-              href={`tel:${normalizeTel(addr.recipient_phone || customer?.telepon)}`}
-              className="inline-flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded-lg"
-            >
-              📞 Telepon
-            </a>
-            <a
               href={`https://wa.me/${normalizeTel(addr.recipient_phone || customer?.telepon)}?text=${encodeURIComponent(`Halo ${addr.recipient_name || customer?.nama_pelanggan || "Bapak/Ibu"}, ini kurir BJS Express untuk pesanan ${order.order_number}.`)}`}
               target="_blank"
               rel="noreferrer"

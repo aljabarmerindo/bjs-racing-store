@@ -11,6 +11,15 @@ const STATUS_META: Record<string, { label: string; color: string }> = {
   cancelled: { label: "Dibatalkan", color: "bg-red-100 text-red-800" },
 };
 
+const NEXT_STEP: Record<string, { status: string; label: string } | null> = {
+  assigned: { status: "picked", label: "Ambil Barang" },
+  picked: { status: "in_transit", label: "Mulai Antar" },
+  in_transit: { status: "dropping_off", label: "Tiba di Lokasi" },
+  dropping_off: { status: "completed", label: "Tandai Selesai" },
+  completed: null,
+  cancelled: null,
+};
+
 const formatRupiah = (n?: number) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n || 0);
 
@@ -37,6 +46,7 @@ const CourierApp = () => {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const load = async () => {
     try {
@@ -60,6 +70,26 @@ const CourierApp = () => {
 
   const activeCount = assignments.filter((a) => a.status !== "completed" && a.status !== "cancelled").length;
   const completedCount = assignments.filter((a) => a.status === "completed").length;
+
+  const handleQuickUpdate = async (e: React.MouseEvent, assignmentId: string, nextStatus: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setUpdatingId(assignmentId);
+    try {
+      const res = await fetch(`/api/kurir/assignments/${assignmentId}/status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || "Gagal memperbarui status");
+      await load();
+    } catch (err: any) {
+      alert(err.message || "Gagal memperbarui status");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -100,7 +130,9 @@ const CourierApp = () => {
             const meta = STATUS_META[a.status] || STATUS_META.assigned;
             const customer = a.customer;
             const addr = a.address;
-            const phone = addr?.recipient_phone || customer?.telepon || "";
+            const phone = normalizeTel(addr?.recipient_phone || customer?.telepon || "");
+            const next = NEXT_STEP[a.status] || null;
+            const isUpdating = updatingId === a.assignment_id;
             return (
               <div
                 key={a.assignment_id}
@@ -141,13 +173,29 @@ const CourierApp = () => {
                       {addr?.full_address || "-"}
                     </p>
                   </div>
-                  <div className="mt-2 flex items-center justify-between gap-2">
-                    <a
-                      href={`tel:${normalizeTel(phone)}`}
-                      className="inline-flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg"
-                    >
-                      📞 Telepon
-                    </a>
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      {next ? (
+                        <button
+                          type="button"
+                          onClick={(e) => handleQuickUpdate(e, a.assignment_id, next.status)}
+                          disabled={isUpdating}
+                          className="inline-flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg disabled:bg-slate-400"
+                        >
+                          {isUpdating ? "Menyimpan..." : next.label}
+                        </button>
+                      ) : null}
+                      {phone ? (
+                        <a
+                          href={`https://wa.me/${phone}?text=${encodeURIComponent(`Halo ${addr?.recipient_name || customer?.nama_pelanggan || "Bapak/Ibu"}, ini kurir BJS Express untuk pesanan ${a.order_number}.`)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg"
+                        >
+                          WhatsApp
+                        </a>
+                      ) : null}
+                    </div>
                     <p className="text-right text-sm font-bold text-slate-800">
                       {formatRupiah(a.total_amount)}
                     </p>
