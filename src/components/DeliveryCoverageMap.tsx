@@ -1,7 +1,5 @@
 // File: src/components/DeliveryCoverageMap.tsx
 import React, { useEffect, useRef } from "react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 
 const STORE_LAT = Number(import.meta.env.BITESHIP_ORIGIN_LAT || -6.5244682);
 const STORE_LNG = Number(import.meta.env.BITESHIP_ORIGIN_LNG || 110.7674915);
@@ -15,52 +13,73 @@ interface DeliveryCoverageMapProps {
 
 const DeliveryCoverageMap = ({ height = 420 }: DeliveryCoverageMapProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
+  const mapRef = useRef<any>(null);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
+    if (typeof window === "undefined") return;
 
-    const map = L.map(containerRef.current, {
-      zoomControl: true,
-      attributionControl: true,
-    }).setView([STORE_LAT, STORE_LNG], 13);
+    let map: any = null;
+    let destroyed = false;
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19,
-    }).addTo(map);
+    const init = async () => {
+      const L = (await import("leaflet")).default;
+      await import("leaflet/dist/leaflet.css");
 
-    const storeMarker = L.marker([STORE_LAT, STORE_LNG], {
-      icon: L.divIcon({
-        html: storeIconHtml,
-        className: "",
-        iconSize: [22, 22],
-        iconAnchor: [11, 11],
-      }),
-    }).addTo(map);
+      map = L.map(containerRef.current!, {
+        zoomControl: true,
+        attributionControl: true,
+      }).setView([STORE_LAT, STORE_LNG], 13);
 
-    storeMarker.bindPopup(`<b>${STORE_NAME}</b><br/>Lokasi Toko`);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      }).addTo(map);
 
-    const coverageCenter: [number, number] = [STORE_LAT, STORE_LNG];
-    const coverageRadiusMeters = 8000;
+      const storeMarker = L.marker([STORE_LAT, STORE_LNG], {
+        icon: L.divIcon({
+          html: storeIconHtml,
+          className: "",
+          iconSize: [22, 22],
+          iconAnchor: [11, 11],
+        }),
+      }).addTo(map);
 
-    const coverageCircle = L.circle(coverageCenter, {
-      radius: coverageRadiusMeters,
-      color: "#ea580c",
-      fillColor: "#fdba74",
-      fillOpacity: 0.25,
-      weight: 2,
-      dashArray: "6 4",
-    }).addTo(map);
+      storeMarker.bindPopup(`<b>${STORE_NAME}</b><br/>Lokasi Toko`);
 
-    coverageCircle.bindPopup("<b>Zona Pengiriman Internal</b><br/>Radius ~8 km");
+      const coverageCenter: [number, number] = [STORE_LAT, STORE_LNG];
+      const coverageRadiusMeters = 8000;
 
-    mapRef.current = map;
+      const coverageCircle = L.circle(coverageCenter, {
+        radius: coverageRadiusMeters,
+        color: "#ea580c",
+        fillColor: "#fdba74",
+        fillOpacity: 0.25,
+        weight: 2,
+        dashArray: "6 4",
+      }).addTo(map);
+
+      coverageCircle.bindPopup("<b>Zona Pengiriman Internal</b><br/>Radius ~8 km");
+
+      mapRef.current = map;
+
+      return () => {
+        if (map) {
+          map.remove();
+          mapRef.current = null;
+        }
+      };
+    };
+
+    let cleanupFn: (() => void) | undefined;
+    init().then((cleanup) => {
+      cleanupFn = cleanup;
+    });
 
     return () => {
-      map.remove();
-      mapRef.current = null;
+      destroyed = true;
+      if (cleanupFn) cleanupFn();
     };
   }, []);
 

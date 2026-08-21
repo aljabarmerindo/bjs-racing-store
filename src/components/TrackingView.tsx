@@ -1,8 +1,6 @@
 // File: src/components/TrackingView.tsx
 // Tracking pesanan publik untuk pelanggan (khusus BJS Express internal).
 import React, { useEffect, useRef, useState } from "react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import { getOsrmRoute } from "@/lib/osrm";
 import { supabase } from "@/lib/supabaseBrowserClient";
 
@@ -53,10 +51,10 @@ const TrackingView = ({ orderNumber, compact = false }: Props) => {
   const [error, setError] = useState("");
   const [courierLoc, setCourierLoc] = useState<{ lat: number; lng: number; t: string } | null>(null);
   const mapContainer = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const courierMarkerRef = useRef<L.Marker | null>(null);
-  const courierLineRef = useRef<L.Polyline | null>(null);
-  const destLineRef = useRef<L.Polyline | null>(null);
+  const mapRef = useRef<any>(null);
+  const courierMarkerRef = useRef<any>(null);
+  const courierLineRef = useRef<any>(null);
+  const destLineRef = useRef<any>(null);
 
   const load = async () => {
     try {
@@ -118,42 +116,67 @@ const TrackingView = ({ orderNumber, compact = false }: Props) => {
     if (!mapContainer.current) return;
     if (!Number.isFinite(destLat) || !Number.isFinite(destLng)) return;
     if (!data?.is_internal) return;
+    if (typeof window === "undefined") return;
 
-    const map = L.map(mapContainer.current, { zoomControl: true }).setView(
-      [(STORE_LAT + destLat) / 2, (STORE_LNG + destLng) / 2],
-      13,
-    );
-    mapRef.current = map;
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19,
-    }).addTo(map);
+    let map: any = null;
+    let destroyed = false;
 
-    L.marker([STORE_LAT, STORE_LNG], {
-      icon: L.divIcon({ html: `<div style="background:#ea580c;width:14px;height:14px;border-radius:50%;border:3px solid white"></div>`, className: "", iconSize: [14, 14], iconAnchor: [7, 7] }),
-    }).addTo(map).bindPopup("<b>Toko BJS Racing</b>");
+    const init = async () => {
+      const L = (await import("leaflet")).default;
+      await import("leaflet/dist/leaflet.css");
 
-    L.marker([destLat, destLng], {
-      icon: L.divIcon({ html: `<div style="background:#2563eb;width:14px;height:14px;border-radius:50%;border:3px solid white"></div>`, className: "", iconSize: [14, 14], iconAnchor: [7, 7] }),
-    }).addTo(map).bindPopup("<b>Alamat Kamu</b>");
+      map = L.map(mapContainer.current!, { zoomControl: true }).setView(
+        [(STORE_LAT + destLat) / 2, (STORE_LNG + destLng) / 2],
+        13,
+      );
+      mapRef.current = map;
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      }).addTo(map);
 
-    getOsrmRoute([STORE_LNG, STORE_LAT], [destLng, destLat]).then((route) => {
-      const latlngs = route.geometry.map(([lng, lat]) => [lat, lng] as [number, number]);
-      destLineRef.current = L.polyline(latlngs, { color: "#f97316", weight: 4, opacity: 0.8, dashArray: route.fallback ? "8 10" : undefined }).addTo(map);
-      if (!courierLoc) {
-        map.fitBounds(L.latLngBounds(latlngs), { padding: [40, 40] });
-      }
+      L.marker([STORE_LAT, STORE_LNG], {
+        icon: L.divIcon({ html: `<div style="background:#ea580c;width:14px;height:14px;border-radius:50%;border:3px solid white"></div>`, className: "", iconSize: [14, 14], iconAnchor: [7, 7] }),
+      }).addTo(map).bindPopup("<b>Toko BJS Racing</b>");
+
+      L.marker([destLat, destLng], {
+        icon: L.divIcon({ html: `<div style="background:#2563eb;width:14px;height:14px;border-radius:50%;border:3px solid white"></div>`, className: "", iconSize: [14, 14], iconAnchor: [7, 7] }),
+      }).addTo(map).bindPopup("<b>Alamat Kamu</b>");
+
+      const handleResize = () => map.invalidateSize();
+      window.addEventListener("resize", handleResize);
+
+      const cleanup = () => {
+        window.removeEventListener("resize", handleResize);
+        if (map) {
+          map.remove();
+          mapRef.current = null;
+          courierMarkerRef.current = null;
+          courierLineRef.current = null;
+          destLineRef.current = null;
+        }
+      };
+
+      getOsrmRoute([STORE_LNG, STORE_LAT], [destLng, destLat]).then((route) => {
+        if (destroyed || !map) return;
+        const latlngs = route.geometry.map(([lng, lat]) => [lat, lng] as [number, number]);
+        destLineRef.current = L.polyline(latlngs, { color: "#f97316", weight: 4, opacity: 0.8, dashArray: route.fallback ? "8 10" : undefined }).addTo(map);
+        if (!courierLoc) {
+          map.fitBounds(L.latLngBounds(latlngs), { padding: [40, 40] });
+        }
+      });
+
+      return cleanup;
+    };
+
+    let cleanupFn: (() => void) | undefined;
+    init().then((cleanup) => {
+      cleanupFn = cleanup;
     });
 
-    const handleResize = () => map.invalidateSize();
-    window.addEventListener("resize", handleResize);
     return () => {
-      window.removeEventListener("resize", handleResize);
-      map.remove();
-      mapRef.current = null;
-      courierMarkerRef.current = null;
-      courierLineRef.current = null;
-      destLineRef.current = null;
+      destroyed = true;
+      if (cleanupFn) cleanupFn();
     };
   }, [destLat, destLng, data?.is_internal]);
 
@@ -162,6 +185,9 @@ const TrackingView = ({ orderNumber, compact = false }: Props) => {
     const map = mapRef.current;
     if (!map || !courierLoc) return;
     if (!Number.isFinite(destLat) || !Number.isFinite(destLng)) return;
+
+    const L = (window as any).L;
+    if (!L) return;
 
     if (!courierMarkerRef.current) {
       courierMarkerRef.current = L.marker([courierLoc.lat, courierLoc.lng], {
@@ -172,8 +198,10 @@ const TrackingView = ({ orderNumber, compact = false }: Props) => {
     }
 
     getOsrmRoute([courierLoc.lng, courierLoc.lat], [destLng, destLat]).then((route) => {
+      if (!map) return;
       const latlngs = route.geometry.map(([lng, lat]) => [lat, lng] as [number, number]);
       if (!courierLineRef.current) {
+        const L = (window as any).L;
         courierLineRef.current = L.polyline(latlngs, { color: "#16a34a", weight: 4, opacity: 0.9 }).addTo(map);
       } else {
         courierLineRef.current.setLatLngs(latlngs);

@@ -1,8 +1,6 @@
 // File: src/components/CourierAssignmentDetail.tsx
 // Detail penugasan kurir BJS Express — info order, peta rute, update status, foto bukti.
 import React, { useEffect, useRef, useState } from "react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import { getOsrmRoute, formatDistance, formatDuration } from "@/lib/osrm";
 import { supabase } from "@/lib/supabaseBrowserClient";
 
@@ -149,37 +147,63 @@ const CourierAssignmentDetail = ({ assignmentId }: Props) => {
   useEffect(() => {
     if (!mapContainer.current) return;
     if (!Number.isFinite(destLat) || !Number.isFinite(destLng)) return;
+    if (typeof window === "undefined") return;
 
-    const map = L.map(mapContainer.current, { zoomControl: true }).setView(
-      [(STORE_LAT + destLat) / 2, (STORE_LNG + destLng) / 2],
-      13,
-    );
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19,
-    }).addTo(map);
+    let map: any = null;
+    let destroyed = false;
 
-    L.marker([STORE_LAT, STORE_LNG], {
-      icon: L.divIcon({ html: `<div style="background:#ea580c;width:16px;height:16px;border-radius:50%;border:3px solid white"></div>`, className: "", iconSize: [16, 16], iconAnchor: [8, 8] }),
-    }).addTo(map).bindPopup("<b>Toko BJS Racing</b>");
+    const init = async () => {
+      const L = (await import("leaflet")).default;
+      await import("leaflet/dist/leaflet.css");
 
-    L.marker([destLat, destLng], {
-      icon: L.divIcon({ html: `<div style="background:#2563eb;width:16px;height:16px;border-radius:50%;border:3px solid white"></div>`, className: "", iconSize: [16, 16], iconAnchor: [8, 8] }),
-    }).addTo(map).bindPopup("<b>Alamat Pelanggan</b>");
+      map = L.map(mapContainer.current!, { zoomControl: true }).setView(
+        [(STORE_LAT + destLat) / 2, (STORE_LNG + destLng) / 2],
+        13,
+      );
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      }).addTo(map);
 
-    getOsrmRoute([STORE_LNG, STORE_LAT], [destLng, destLat]).then((route) => {
-      const latlngs = route.geometry.map(([lng, lat]) => [lat, lng] as [number, number]);
-      L.polyline(latlngs, { color: route.fallback ? "#f97316" : "#2563eb", weight: 5, opacity: 0.85, dashArray: route.fallback ? "8 10" : undefined }).addTo(map);
-      map.fitBounds(L.latLngBounds(latlngs), { padding: [40, 40] });
-      const el = document.getElementById("kurir-route-info");
-      if (el) el.textContent = `Jarak: ${formatDistance(route.distanceMeters)} • Estimasi: ${formatDuration(route.durationSeconds)}`;
+      L.marker([STORE_LAT, STORE_LNG], {
+        icon: L.divIcon({ html: `<div style="background:#ea580c;width:16px;height:16px;border-radius:50%;border:3px solid white"></div>`, className: "", iconSize: [16, 16], iconAnchor: [8, 8] }),
+      }).addTo(map).bindPopup("<b>Toko BJS Racing</b>");
+
+      L.marker([destLat, destLng], {
+        icon: L.divIcon({ html: `<div style="background:#2563eb;width:16px;height:16px;border-radius:50%;border:3px solid white"></div>`, className: "", iconSize: [16, 16], iconAnchor: [8, 8] }),
+      }).addTo(map).bindPopup("<b>Alamat Pelanggan</b>");
+
+      const handleResize = () => map.invalidateSize();
+      window.addEventListener("resize", handleResize);
+
+      const cleanup = () => {
+        window.removeEventListener("resize", handleResize);
+        if (map) {
+          map.remove();
+          map = null;
+        }
+      };
+
+      getOsrmRoute([STORE_LNG, STORE_LAT], [destLng, destLat]).then((route) => {
+        if (destroyed || !map) return;
+        const latlngs = route.geometry.map(([lng, lat]) => [lat, lng] as [number, number]);
+        L.polyline(latlngs, { color: route.fallback ? "#f97316" : "#2563eb", weight: 5, opacity: 0.85, dashArray: route.fallback ? "8 10" : undefined }).addTo(map);
+        map.fitBounds(L.latLngBounds(latlngs), { padding: [40, 40] });
+        const el = document.getElementById("kurir-route-info");
+        if (el) el.textContent = `Jarak: ${formatDistance(route.distanceMeters)} • Estimasi: ${formatDuration(route.durationSeconds)}`;
+      });
+
+      return cleanup;
+    };
+
+    let cleanupFn: (() => void) | undefined;
+    init().then((cleanup) => {
+      cleanupFn = cleanup;
     });
 
-    const handleResize = () => map.invalidateSize();
-    window.addEventListener("resize", handleResize);
     return () => {
-      window.removeEventListener("resize", handleResize);
-      map.remove();
+      destroyed = true;
+      if (cleanupFn) cleanupFn();
     };
   }, [destLat, destLng]);
 
