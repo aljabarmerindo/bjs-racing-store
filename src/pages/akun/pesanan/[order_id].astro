@@ -29,33 +29,44 @@ try {
     .single();
 
   if (customerError || !customerData) {
+    console.error('[order detail] customer not found:', customerError);
     return Astro.redirect('/404');
   }
   customer = customerData;
 
-  const { data: orderData, error: orderError } = await supabaseAdmin
-    .from('orders')
-    .select(`
-      *,
-      order_items (
+  let orderData = null;
+  let orderError = null;
+  try {
+    const result = await supabaseAdmin
+      .from('orders')
+      .select(`
         *,
-        products (
-          nama,
-          image_url
+        order_items (
+          *,
+          products (
+            nama,
+            image_url
+          )
         )
-      )
-    `)
-    .eq('id', order_id)
-    .eq('customer_id', customer.id)
-    .single();
+      `)
+      .eq('id', order_id)
+      .eq('customer_id', customer.id)
+      .single();
+    orderData = result.data;
+    orderError = result.error;
+  } catch (singleError: any) {
+    console.error('[order detail] .single() threw:', singleError);
+    orderError = singleError;
+  }
 
   if (orderError || !orderData) {
+    console.error('[order detail] order not found:', orderError);
     return Astro.redirect('/404');
   }
   order = orderData;
 } catch (error) {
   console.error('Order detail fetch error:', error);
-  return new Response('Terjadi kesalahan saat memuat data pesanan.', { status: 500 });
+  return Astro.redirect('/500');
 }
 
 const formatRupiah = (number: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(number || 0);
