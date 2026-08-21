@@ -312,6 +312,13 @@ const TrackingView = ({ orderNumber, compact = false }: Props) => {
         </div>
       ) : null}
 
+      {data.notes && (
+        <div className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-slate-200">
+          <h2 className="font-bold mb-2">Catatan Pesanan</h2>
+          <p className="text-sm text-slate-600">{data.notes}</p>
+        </div>
+      )}
+
       {data.is_internal && (
         <div className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-slate-200">
           <h2 className="font-bold mb-2">Butuh Bantuan?</h2>

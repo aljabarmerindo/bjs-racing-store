@@ -19,6 +19,7 @@ export const GET: APIRoute = async ({ params }) => {
         total_amount,
         subtotal_products,
         shipping_cost,
+        notes,
         courier_details,
         shipping_address,
         created_at,
@@ -115,6 +116,7 @@ export const GET: APIRoute = async ({ params }) => {
           quantity: it.quantity,
           price: it.price,
         })),
+        notes: o.notes || null,
       }),
       { status: 200, headers: { "Content-Type": "application/json" } },
     );

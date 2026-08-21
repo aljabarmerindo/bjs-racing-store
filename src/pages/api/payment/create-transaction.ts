@@ -73,6 +73,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
             shipping_cost,
             payment_method,
             voucher_code,
+            notes,
         } = body;
         const typedCartItems = cart_items as FrontendCartItem[];
 
@@ -275,6 +276,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
                 discount_amount: finalDiscountAmount,
                 shipping_address: address,
                 courier_details: courier,
+                notes: (body as any).notes || null,
                 status: "awaiting_payment",
               })
               .eq("id", existingOrderId)
@@ -299,6 +301,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
                   discount_amount: finalDiscountAmount,
                   shipping_address: address,
                   courier_details: courier,
+                  notes: (body as any).notes || null,
                   status: "awaiting_payment",
               })
               .select()
@@ -322,6 +325,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
                 discount_amount: finalDiscountAmount,
                 shipping_address: address,
                 courier_details: courier,
+                notes: (body as any).notes || null,
                 status: "awaiting_payment",
             })
             .select()

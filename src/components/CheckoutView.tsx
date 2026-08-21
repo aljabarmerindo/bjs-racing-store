@@ -180,6 +180,8 @@ export default function CheckoutView({ orderId, initialItems }: CheckoutViewProp
     "qris" | "dana" | "ovo" | "gopay" | "shopeepay" | "transfer_bank" | "virtual_account" | null
   >(null);
 
+  const [orderNotes, setOrderNotes] = useState("");
+
   const PAYMENT_METHOD_OPTIONS: { value: PaymentMethod; label: string; description?: string }[] = [
     { value: "qris", label: "QRIS", description: "QRIS / E-Wallet" },
     { value: "dana", label: "DANA", description: "E-Wallet DANA" },
@@ -680,6 +682,7 @@ export default function CheckoutView({ orderId, initialItems }: CheckoutViewProp
       payment_method: selectedPaymentMethod,
       voucher_code: appliedVoucher?.code || null,
       discount_amount: appliedVoucher?.discount_amount || 0,
+      notes: orderNotes || null,
       courier: {
         code: courierDetails?.code,
         name: courierDetails?.name,
@@ -824,6 +827,18 @@ export default function CheckoutView({ orderId, initialItems }: CheckoutViewProp
         </div>
 
         <div className="bg-white p-6 rounded-xl shadow-md">
+          <h2 className="text-xl font-bold mb-4">Catatan Pesanan (Opsional)</h2>
+          <textarea
+            value={orderNotes}
+            onChange={(e) => setOrderNotes(e.target.value.slice(0, 500))}
+            placeholder="Contoh: Jangan dititip ke kosong, tolong panggil saya saat sampai, dll."
+            className="w-full p-3 border rounded-md bg-gray-50 text-sm"
+            rows={3}
+          />
+          <p className="text-xs text-gray-500 mt-1">{orderNotes.length}/500 karakter</p>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-md">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold">Metode Pengiriman</h2>
             <button
@@ -860,7 +875,7 @@ export default function CheckoutView({ orderId, initialItems }: CheckoutViewProp
                 const newCount = count + 1;
                 setRateCheckCount(newCount);
                 setLastCheckedAt(now);
-                sessionStorage.setItem("rate_check_count", JSON.stringify({
+                sessionStorage.setItem(storageKey, JSON.stringify({
                   date: today,
                   count: newCount,
                 }));
