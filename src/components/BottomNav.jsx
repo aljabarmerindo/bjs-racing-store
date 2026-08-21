@@ -18,6 +18,9 @@ import {
   Squares2X2Icon as Squares2X2Solid,
   UserIcon as UserSolid,
   NewspaperIcon as NewspaperSolid,
+  SwatchIcon as SwatchSolid,
+  HomeModernIcon as HomeModernSolid,
+  CameraIcon as CameraSolid,
 } from "@heroicons/react/24/solid";
 
 function SprayPaintIcon({ active }) {
@@ -39,9 +42,9 @@ const tabs = [
 ];
 
 const gridLinks = [
-  { label: "Katalog Pilok", path: "/katalog-warna", Icon: SwatchIcon },
-  { label: "Garasi Virtual", path: "/simulator", Icon: HomeModernIcon },
-  { label: "Scan Warna", path: "/scan-warna", Icon: CameraIcon },
+  { label: "Katalog Pilok", path: "/katalog-warna", Icon: SwatchIcon, ActiveIcon: SwatchSolid },
+  { label: "Garasi Virtual", path: "/simulator", Icon: HomeModernIcon, ActiveIcon: HomeModernSolid },
+  { label: "Scan Warna", path: "/scan-warna", Icon: CameraIcon, ActiveIcon: CameraSolid },
 ];
 
 /* ── BottomNav ─────────────────────────────────────── */
@@ -75,6 +78,9 @@ const BottomNav = () => {
   const isActive = (path) =>
     path === "/" ? currentPath === "/" : currentPath.startsWith(path);
 
+  const gridPaths = gridLinks.map((link) => link.path);
+  const isGridActive = showGridMenu || gridPaths.some((path) => isActive(path));
+
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
       <nav className="flex items-center justify-around h-16 px-1" aria-label="Navigasi bawah">
@@ -103,10 +109,10 @@ const BottomNav = () => {
           <button
             type="button"
             onClick={() => setShowGridMenu((prev) => !prev)}
-            className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors ${showGridMenu ? "text-orange-500" : "text-slate-800"}`}
+            className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors ${isGridActive ? "text-orange-500" : "text-slate-800"}`}
             aria-label="Menu lainnya"
           >
-            <Squares2X2Icon className="w-6 h-6" />
+            {isGridActive ? <Squares2X2Solid className="w-6 h-6" /> : <Squares2X2Icon className="w-6 h-6" />}
             <span className="text-[10px] font-semibold leading-tight">Lainnya</span>
           </button>
 
@@ -114,6 +120,7 @@ const BottomNav = () => {
             <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 bg-white rounded-xl border border-slate-200 shadow-xl py-2 z-50">
               {gridLinks.map((link) => {
                 const active = isActive(link.path);
+                const IconComponent = active ? link.ActiveIcon : link.Icon;
                 return (
                   <a
                     key={link.path}
@@ -121,7 +128,7 @@ const BottomNav = () => {
                     onClick={() => setShowGridMenu(false)}
                     className={`flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors ${active ? "text-orange-600 bg-orange-50" : "text-slate-700 hover:bg-slate-50"}`}
                   >
-                    <link.Icon className={`w-5 h-5 ${active ? "text-orange-500" : "text-slate-400"}`} />
+                    <IconComponent className={`w-5 h-5 ${active ? "text-orange-500" : "text-slate-400"}`} />
                     {link.label}
                   </a>
                 );
