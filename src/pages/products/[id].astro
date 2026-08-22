@@ -76,6 +76,6 @@ if (session) {
             />
         )}
 
-        {isAdmin && ( <ImageUploader client:load productId={product.id} /> )}
+        {isAdmin && ( <ImageUploader client:load productId={product.id} kategori={product.kategori} merek={product.merek} /> )}
     </div>
 </MainLayout>

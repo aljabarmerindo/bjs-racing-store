@@ -11,7 +11,7 @@ const SLOT_CONFIG = [
   { key: "image_url_3", label: "Gambar 3", accept: "image/jpeg, image/png, image/webp", suffix: "3" },
 ];
 
-const ImageUploader = ({ productId, onUploadComplete = () => {} }) => {
+const ImageUploader = ({ productId, kategori = "", merek = "", onUploadComplete = () => {} }) => {
   const [files, setFiles] = useState({});
   const [previews, setPreviews] = useState({});
   const [isUploading, setIsUploading] = useState(false);
@@ -38,26 +38,16 @@ const ImageUploader = ({ productId, onUploadComplete = () => {} }) => {
         useWebWorker: true,
       };
 
-      const BUCKET_NAME = "produk-pilok";
+      const isPilok = kategori === "Pilok";
+      const BUCKET_NAME = isPilok ? "produk-pilok" : "produk-parts";
 
-      const convertToWebP = (blob) => {
-        return new Promise((resolve) => {
-          const img = new Image();
-          img.onload = () => {
-            const canvas = document.createElement("canvas");
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0);
-            canvas.toBlob(
-              (webpBlob) => resolve(webpBlob),
-              "image/webp",
-              0.85,
-            );
-          };
-          img.onerror = () => resolve(blob);
-          img.src = URL.createObjectURL(blob);
-        });
+      const slugify = (text) => {
+        return text
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9\s-]/g, "")
+          .replace(/\s+/g, "-")
+          .replace(/-+/g, "-");
       };
 
       const uploadFile = async (file, path) => {
@@ -76,7 +66,14 @@ const ImageUploader = ({ productId, onUploadComplete = () => {} }) => {
 
       for (const [key, file] of Object.entries(files)) {
         const slot = SLOT_CONFIG.find((s) => s.key === key);
-        const path = `public/${productId}-${slot?.suffix || key}.webp`;
+        let path;
+        if (isPilok) {
+          path = `public/${productId}-${slot?.suffix || key}.webp`;
+        } else {
+          const kategoriSlug = slugify(kategori || "lainnya");
+          const merekSlug = slugify(merek || "umum");
+          path = `${kategoriSlug}/${merekSlug}/${productId}-${slot?.suffix || key}.webp`;
+        }
         updateData[key] = await uploadFile(file, path);
       }
 
