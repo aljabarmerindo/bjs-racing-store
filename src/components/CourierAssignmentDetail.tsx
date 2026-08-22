@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { getOsrmRoute, formatDistance, formatDuration } from "@/lib/osrm";
 import { supabase } from "@/lib/supabaseBrowserClient";
+import OptimizedImage from "./OptimizedImage.jsx";
 
 const STORE_LAT = Number(import.meta.env.BITESHIP_ORIGIN_LAT || -6.5244682);
 const STORE_LNG = Number(import.meta.env.BITESHIP_ORIGIN_LNG || 110.7674915);
@@ -360,7 +361,7 @@ const CourierAssignmentDetail = ({ assignmentId }: Props) => {
       {photoUrl ? (
         <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
           <h2 className="font-bold mb-2">Foto Bukti</h2>
-          <img src={photoUrl} alt="Bukti pengiriman" className="rounded-lg max-h-64" />
+          <OptimizedImage src={photoUrl} alt="Bukti pengiriman" width={400} className="rounded-lg max-h-64" />
         </div>
       ) : null}
 

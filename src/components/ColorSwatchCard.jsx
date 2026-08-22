@@ -2,6 +2,7 @@
 
 import React from "react";
 import WishlistButton from "./WishlistButton.jsx";
+import OptimizedImage from "./OptimizedImage.jsx";
 
 
 const ColorSwatchCard = ({ product }) => {
@@ -9,9 +10,10 @@ const ColorSwatchCard = ({ product }) => {
         <div className="text-center group">
             <a href={`/products/${product.id}`} className="block">
                 <div className="aspect-square w-full flex items-center justify-center p-2">
-                    <img
+                    <OptimizedImage
                         src={product.color_swatch_url}
                         alt={product.nama}
+                        width={150}
                         className="w-full h-full object-cover rounded-full shadow-md transition-transform duration-300 group-hover:scale-110"
                     />
                 </div>

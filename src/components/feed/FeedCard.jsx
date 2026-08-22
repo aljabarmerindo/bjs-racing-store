@@ -1,5 +1,6 @@
 // src/components/feed/FeedCard.jsx
 import React from "react";
+import OptimizedImage from "../OptimizedImage.jsx";
 
 const getYouTubeId = (url) => {
   if (!url) return null;
@@ -36,16 +37,18 @@ const FeedCard = ({ post }) => {
       <a href={`/blog/${post.slug || post.id}`} className="flex flex-col h-full">
         <div className="relative aspect-video bg-slate-900">
           {ytId ? (
-            <img
+            <OptimizedImage
               src={`https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`}
               alt={post.title || 'Video'}
+              width={400}
               className="w-full h-full object-cover"
               loading="lazy"
             />
           ) : hasMedia ? (
-            <img
+            <OptimizedImage
               src={mediaUrl}
               alt={post.title || 'Feed image'}
+              width={600}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               loading="lazy"
             />

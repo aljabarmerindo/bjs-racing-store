@@ -4,6 +4,7 @@ import React from "react";
 import AddToCartButton from "./AddToCartButton.jsx";
 import { FiStar } from "react-icons/fi";
 import WishlistButton from "./WishlistButton.jsx";
+import OptimizedImage from "./OptimizedImage.jsx";
 
 
 const ProductCard = ({ product }) => {
@@ -36,9 +37,10 @@ const ProductCard = ({ product }) => {
                 <div className="relative aspect-square bg-white flex items-center justify-center">
                     {/* Gambar Utama */}
                     {product.image_url ? (
-                        <img
+                        <OptimizedImage
                             src={product.image_url}
                             alt={product.nama}
+                            width={600}
                             className="w-full h-full object-contain transition-transform group-hover:scale-105"
                         />
                     ) : (
@@ -76,9 +78,10 @@ const ProductCard = ({ product }) => {
                     <div className="absolute bottom-1 left-4 flex flex-col items-center md:hidden">
                         {product.color_swatch_url && (
                             <div className="w-12 h-12 rounded-full shadow-lg flex items-center justify-center overflow-hidden">
-                                <img
+                                <OptimizedImage
                                     src={product.color_swatch_url}
                                     alt={`Warna ${product.nama}`}
+                                    width={100}
                                     className="w-full h-full object-cover"
                                 />
                             </div>
@@ -101,9 +104,10 @@ const ProductCard = ({ product }) => {
                     <div className="absolute bottom-1 left-4 hidden md:flex flex-col items-center">
                         {product.color_swatch_url && (
                             <div className="w-16 h-16 rounded-full shadow-lg flex items-center justify-center overflow-hidden">
-                                <img
+                                <OptimizedImage
                                     src={product.color_swatch_url}
                                     alt={`Warna ${product.nama}`}
+                                    width={150}
                                     className="w-full h-full object-cover"
                                 />
                             </div>

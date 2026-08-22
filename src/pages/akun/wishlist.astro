@@ -1,6 +1,7 @@
 ---
 // File: /src/pages/akun/wishlist.astro
 import AccountLayout from '@/layouts/AccountLayout.astro';
+import OptimizedImage from '@/components/OptimizedImage.astro';
 ---
 
 <AccountLayout title="Wishlist Saya" currentPage={Astro.url.pathname}>
@@ -94,7 +95,7 @@ import AccountLayout from '@/layouts/AccountLayout.astro';
           <div class="bg-white rounded-xl shadow-md overflow-hidden group border border-slate-200 hover:border-orange-500 transition-all duration-300 flex flex-col h-full">
             <a href="/products/${p.id}" class="block flex flex-col flex-grow">
               <div class="relative aspect-square bg-white flex items-center justify-center">
-                ${p.image_url ? `<img src="${p.image_url}" alt="${p.nama}" class="w-full h-full object-contain transition-transform group-hover:scale-105" />` : '<div class="w-full h-full bg-slate-100 rounded-md"></div>'}
+                ${p.image_url ? `<OptimizedImage src="${p.image_url}" alt="${p.nama}" width={600} class="w-full h-full object-contain transition-transform group-hover:scale-105" />` : '<div class="w-full h-full bg-slate-100 rounded-md"></div>'}
                 ${[p.image_url_2, p.image_url_3].filter(Boolean).length > 0 ? `<div class="absolute top-2 right-2 bg-black/60 text-white text-[10px] font-bold px-2 py-1 rounded-full">+${[p.image_url_2, p.image_url_3].filter(Boolean).length}</div>` : ''}
                 <div class="absolute top-2 left-2 flex flex-col items-start gap-1">
                   ${hasDiscount ? `<div class="bg-red-500 text-white text-[10px] md:text-xs font-bold px-2 py-0.5 rounded">DISKON ${discountPercentage}%</div>` : ''}
@@ -102,11 +103,11 @@ import AccountLayout from '@/layouts/AccountLayout.astro';
                   ${isLowStock ? `<div class="bg-yellow-400 text-yellow-900 text-[10px] md:text-xs font-bold px-2 py-0.5 rounded">STOK TERAKHIR</div>` : ''}
                 </div>
                 <div class="absolute bottom-1 left-4 flex flex-col items-center md:hidden">
-                  ${p.color_swatch_url ? `<div class="w-14 h-14 rounded-full shadow-lg flex items-center justify-center overflow-hidden"><img src="${p.color_swatch_url}" alt="Warna ${p.nama}" class="w-full h-full object-cover" /></div>` : ''}
+                  ${p.color_swatch_url ? `<div class="w-14 h-14 rounded-full shadow-lg flex items-center justify-center overflow-hidden"><OptimizedImage src="${p.color_swatch_url}" alt="Warna ${p.nama}" width={100} class="w-full h-full object-cover" /></div>` : ''}
                   <p class="text-sm font-bold text-slate-900 bg-white/70 px-1 rounded mt-1">${p.sku || ''}</p>
                 </div>
                 <div class="absolute bottom-1 left-4 hidden md:flex flex-col items-center">
-                  ${p.color_swatch_url ? `<div class="w-16 h-16 rounded-full shadow-lg flex items-center justify-center overflow-hidden"><img src="${p.color_swatch_url}" alt="Warna ${p.nama}" class="w-full h-full object-cover" /></div>` : ''}
+                  ${p.color_swatch_url ? `<div class="w-16 h-16 rounded-full shadow-lg flex items-center justify-center overflow-hidden"><OptimizedImage src="${p.color_swatch_url}" alt="Warna ${p.nama}" width={150} class="w-full h-full object-cover" /></div>` : ''}
                   <p class="text-base font-bold text-slate-900 bg-white/70 px-1 rounded mt-1">${p.sku || ''}</p>
                 </div>
               </div>

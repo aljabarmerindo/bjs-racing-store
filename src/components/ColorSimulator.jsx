@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabaseBrowserClient.ts";
 import { useAppStore } from "../lib/store";
 import { FiShoppingCart } from "react-icons/fi";
+import OptimizedImage from "./OptimizedImage.jsx";
 
 // --- TAMBAHKAN FUNGSI BARU DI SINI ---
 const hexToHsl = (hex) => {
@@ -334,9 +335,10 @@ const ColorSimulator = ({ initialProductId = null }) => {
                     }}
                     className={`text-center p-2 border-2 rounded-lg ${selectedLine === line.line_name ? "border-orange-500 bg-orange-50" : "border-slate-200 hover:border-slate-400"}`}
                   >
-                    <img
+                    <OptimizedImage
                       src={line.image_url}
                       alt={line.line_name}
+                      width={200}
                       className="h-24 mx-auto object-contain mb-2"
                     />
                     <p className="text-xs font-semibold">{line.line_name}</p>
@@ -370,9 +372,10 @@ const ColorSimulator = ({ initialProductId = null }) => {
       {/* Kolom Tengah */}
       <div className="w-full lg:w-1/2 space-y-6">
         <div className="aspect-video bg-white rounded-xl shadow-lg flex items-center justify-center p-4">
-          <img
+          <OptimizedImage
             src={simulationImageUrl || selectedObjectModel?.base_image_url}
             alt="Tampilan Simulasi"
+            width={800}
             className="max-w-full max-h-full object-contain"
           />
         </div>
@@ -409,9 +412,10 @@ const ColorSimulator = ({ initialProductId = null }) => {
                   className={`w-14 h-14 rounded-full border-2 transition-all flex-shrink-0 ${selectedColorProduct?.id === product.id ? "border-orange-500 scale-110 ring-2 ring-orange-200" : "border-white hover:border-slate-300"}`}
                   title={product.nama}
                 >
-                  <img
+                  <OptimizedImage
                     src={product.color_swatch_url}
                     alt={product.nama}
+                    width={100}
                     className="w-full h-full object-cover rounded-full"
                   />
                 </button>

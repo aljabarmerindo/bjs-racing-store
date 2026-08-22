@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabaseBrowserClient.ts";
 import { nowWIB } from "@/lib/utils.ts";
 import { FiZap, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import OptimizedImage from "./OptimizedImage.jsx";
 
 const LIMIT = 6;
 
@@ -228,15 +229,16 @@ const FlashSaleSection = () => {
                     >
                       <div className="relative aspect-square bg-white">
                         {product.image_url ? (
-                          <img
+                          <OptimizedImage
                             src={product.image_url}
                             alt={product.nama}
+                            width={400}
                             loading="lazy"
                             decoding="async"
                             className="w-full h-full object-contain"
                           />
                         ) : (
-                          <div className="w-full h-full bg-slate-100" />
+                            <div className="w-full h-full bg-slate-100" />
                         )}
                         <div className="absolute top-1.5 left-1.5 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded">
                           -{discountPct}%

@@ -8,6 +8,8 @@ import TrackingView from '@/components/TrackingView.tsx';
 import OrderTrackingMap from '@/components/OrderTrackingMap.tsx';
 import bwipjs from 'bwip-js';
 import { formatItemDimsCm, getProductDimsCm, getProductWeightGram, getWeightBasis, volumetricWeightGram } from '@/lib/packageDimensions';
+import OptimizedImage from '@/components/OptimizedImage.astro';
+---
 
 const { session } = Astro.locals;
 const { order_id } = Astro.params;
@@ -306,7 +308,7 @@ if (showShippingLabel) {
               <div class="flex items-center gap-4">
                 <div class="w-16 h-16 bg-slate-100 rounded-md flex-shrink-0">
                   {item.products && item.products.image_url ? (
-                    <img src={item.products.image_url} alt={item.products.nama || 'Produk'} class="w-full h-full object-contain" />
+                    <OptimizedImage src={item.products.image_url} alt={item.products.nama || 'Produk'} width={150} class="w-full h-full object-contain" />
                   ) : (
                     <div class="w-full h-full flex items-center justify-center text-slate-400 text-xs">No Img</div>
                   )}

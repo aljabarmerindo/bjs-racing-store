@@ -1,6 +1,7 @@
 // src/components/PromoBanner.jsx
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabaseBrowserClient";
+import OptimizedImage from "./OptimizedImage.jsx";
 
 const FALLBACK_SLIDES = [
   {
@@ -241,11 +242,11 @@ const PromoBanner = ({ slides: initialSlides = [] }: { slides?: Slide[] }) => {
             }`}
           >
             {slide.image_url ? (
-              <img
+              <OptimizedImage
                 src={slide.image_url}
                 alt={slide.title}
+                width={1200}
                 className="absolute inset-0 w-full h-full object-cover"
-                draggable={false}
               />
             ) : (
               <>

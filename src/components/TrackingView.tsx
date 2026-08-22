@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { getOsrmRoute } from "@/lib/osrm";
 import { supabase } from "@/lib/supabaseBrowserClient";
+import OptimizedImage from "./OptimizedImage.jsx";
 
 const STORE_LAT = Number(import.meta.env.BITESHIP_ORIGIN_LAT || -6.5244682);
 const STORE_LNG = Number(import.meta.env.BITESHIP_ORIGIN_LNG || 110.7674915);
@@ -308,7 +309,7 @@ const TrackingView = ({ orderNumber, compact = false }: Props) => {
       {asg?.photo_url ? (
         <div className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-slate-200">
           <h2 className="font-bold mb-2">Bukti Pengiriman</h2>
-          <img src={asg.photo_url} alt="Bukti pengiriman" className="rounded-lg w-full max-h-72 object-cover" />
+          <OptimizedImage src={asg.photo_url} alt="Bukti pengiriman" width={600} className="rounded-lg w-full max-h-72 object-cover" />
         </div>
       ) : null}
 
@@ -342,7 +343,7 @@ const TrackingView = ({ orderNumber, compact = false }: Props) => {
             {data.items.map((it: any, i: number) => (
               <li key={i} className="py-2 flex items-center gap-3">
                 {it.image_url ? (
-                  <img src={it.image_url} alt={it.nama} className="w-12 h-12 object-cover rounded-lg" />
+                  <OptimizedImage src={it.image_url} alt={it.nama} width={100} className="w-12 h-12 object-cover rounded-lg" />
                 ) : (
                   <div className="w-12 h-12 bg-slate-100 rounded-lg" />
                 )}

@@ -12,7 +12,8 @@ import {
 } from "react-icons/fi";
 import ProductInfoTabs from "./ProductInfoTabs.jsx";
 import WishlistButton from "./WishlistButton.jsx";
-import RelatedProducts from "./RelatedProducts.jsx"; // Kita gunakan lagi komponen ini
+import RelatedProducts from "./RelatedProducts.jsx";
+import OptimizedImage from "./OptimizedImage.jsx"; // Kita gunakan lagi komponen ini
 
 const OnderdilDetailView = ({ initialProduct, allProductVariants }) => {
     const [selectedVariant, setSelectedVariant] = useState(initialProduct);
@@ -151,9 +152,10 @@ const OnderdilDetailView = ({ initialProduct, allProductVariants }) => {
             <div className="relative aspect-square">
                 <div className="rounded-lg flex items-center justify-center overflow-hidden h-full">
                     {images.length > 0 ? (
-                        <img
+                        <OptimizedImage
                             src={images[currentImageIndex]}
                             alt={selectedVariant.nama}
+                            width={800}
                             className="w-full h-full object-contain transition-opacity duration-300"
                         />
                     ) : (

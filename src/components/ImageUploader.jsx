@@ -40,11 +40,32 @@ const ImageUploader = ({ productId, onUploadComplete = () => {} }) => {
 
       const BUCKET_NAME = "produk-pilok";
 
+      const convertToWebP = (blob) => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            canvas.toBlob(
+              (webpBlob) => resolve(webpBlob),
+              "image/webp",
+              0.85,
+            );
+          };
+          img.onerror = () => resolve(blob);
+          img.src = URL.createObjectURL(blob);
+        });
+      };
+
       const uploadFile = async (file, path) => {
-        const compressedFile = await imageCompression(file, compressionOptions);
+        let compressedFile = await imageCompression(file, compressionOptions);
+        compressedFile = await convertToWebP(compressedFile);
         const { error: uploadError } = await supabase.storage
           .from(BUCKET_NAME)
-          .upload(path, compressedFile, { upsert: true });
+          .upload(path, compressedFile, { upsert: true, contentType: "image/webp" });
         if (uploadError) throw uploadError;
 
         const {
@@ -55,7 +76,7 @@ const ImageUploader = ({ productId, onUploadComplete = () => {} }) => {
 
       for (const [key, file] of Object.entries(files)) {
         const slot = SLOT_CONFIG.find((s) => s.key === key);
-        const path = `public/${productId}-${slot?.suffix || key}.jpg`;
+        const path = `public/${productId}-${slot?.suffix || key}.webp`;
         updateData[key] = await uploadFile(file, path);
       }
 

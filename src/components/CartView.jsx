@@ -2,6 +2,7 @@
 // Cart view — responsive marketplace-style layout with item selection.
 import React from "react";
 import { useAppStore } from "../lib/store.ts";
+import OptimizedImage from "./OptimizedImage.jsx";
 
 const formatRupiah = (n) =>
   new Intl.NumberFormat("id-ID", {
@@ -210,9 +211,9 @@ const CartView = ({ checkoutEnabled = true }) => {
 
           {/* Image + swatch — clickable */}
           <a href={`/products/${item.product_id}`} className="relative w-[85px] h-[85px] flex-shrink-0 bg-slate-50 rounded-lg">
-            <img src={item.image_url} alt={item.nama} className="w-full h-full object-contain rounded-lg" />
+            <OptimizedImage src={item.image_url} alt={item.nama} width={200} className="w-full h-full object-contain rounded-lg" />
             {item.color_swatch_url && (
-              <img src={item.color_swatch_url} alt="" className="absolute bottom-2 left-2 w-[45px] h-[45px] object-cover rounded-full border border-slate-200 shadow-sm" />
+              <OptimizedImage src={item.color_swatch_url} alt="" width={100} className="absolute bottom-2 left-2 w-[45px] h-[45px] object-cover rounded-full border border-slate-200 shadow-sm" />
             )}
           </a>
 
@@ -265,9 +266,9 @@ const CartView = ({ checkoutEnabled = true }) => {
 
         {/* Image + swatch — clickable */}
         <a href={`/products/${item.product_id}`} className="relative w-[95px] h-[95px] lg:w-[120px] lg:h-[120px] flex-shrink-0 bg-slate-50 rounded-lg">
-          <img src={item.image_url} alt={item.nama} className="w-full h-full object-contain rounded-lg" />
+          <OptimizedImage src={item.image_url} alt={item.nama} width={300} className="w-full h-full object-contain rounded-lg" />
           {item.color_swatch_url && (
-            <img src={item.color_swatch_url} alt="" className="absolute bottom-2 left-2 w-[45px] h-[45px] object-cover rounded-full border border-slate-200 shadow-sm" />
+            <OptimizedImage src={item.color_swatch_url} alt="" width={150} className="absolute bottom-2 left-2 w-[45px] h-[45px] object-cover rounded-full border border-slate-200 shadow-sm" />
           )}
         </a>
 

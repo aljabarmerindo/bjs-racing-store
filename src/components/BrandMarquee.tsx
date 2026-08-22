@@ -1,6 +1,7 @@
 // src/components/BrandMarquee.jsx
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseBrowserClient";
+import OptimizedImage from "./OptimizedImage.jsx";
 
 const FALLBACK_BRANDS = [
   { id: "yoshimura", name: "Yoshimura", logo_url: null },
@@ -20,12 +21,13 @@ const DURATION = 50;
 const BrandLogo = ({ brand }: { brand: Brand }) => (
   <div className="flex-none px-4 mobile:px-6 flex flex-col items-center justify-center select-none gap-1.5">
     {brand.logo_url ? (
-      <img
+      <OptimizedImage
         src={brand.logo_url}
         alt={brand.name}
-        className="h-8 mobile:h-10 tablet:h-12 object-contain"
+        width={150}
         loading="lazy"
         decoding="async"
+        className="h-8 mobile:h-10 tablet:h-12 object-contain"
       />
     ) : null}
     <span className="text-xs mobile:text-sm tablet:text-base font-bold text-slate-400 hover:text-orange-500 transition-colors duration-200 whitespace-nowrap tracking-tight">

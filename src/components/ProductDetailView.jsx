@@ -6,6 +6,7 @@ import { FiShoppingCart, FiStar, FiEye, FiPlus, FiMinus } from "react-icons/fi";
 import ProductInfoTabs from "./ProductInfoTabs.jsx";
 import WishlistButton from "./WishlistButton.jsx";
 import RelatedProducts from "./RelatedProducts.jsx";
+import OptimizedImage from "./OptimizedImage.jsx";
 
 const ProductDetailView = ({ initialProduct, allProductVariants }) => {
     const [selectedVariant, setSelectedVariant] = useState(initialProduct);
@@ -152,9 +153,10 @@ const ProductDetailView = ({ initialProduct, allProductVariants }) => {
             {/* --- KOLOM KIRI: TAMPILAN GAMBAR (SEKARANG DINAMIS) --- */}
             <div className="relative aspect-square rounded-lg flex items-center justify-center overflow-hidden">
                 {currentImage ? (
-                    <img
+                    <OptimizedImage
                         src={currentImage}
                         alt={selectedVariant.nama}
+                        width={800}
                         className="w-full h-full object-contain transition-opacity duration-300"
                     />
                 ) : (
@@ -209,9 +211,10 @@ const ProductDetailView = ({ initialProduct, allProductVariants }) => {
                 <div className="absolute bottom-8 left-8 flex flex-col items-center">
                     {selectedVariant.color_swatch_url && (
                         <div className="w-28 h-28 rounded-full shadow-lg overflow-hidden">
-                            <img
+                            <OptimizedImage
                                 src={selectedVariant.color_swatch_url}
                                 alt={`Warna ${selectedVariant.nama}`}
+                                width={200}
                                 className="w-full h-full object-cover"
                             />
                         </div>
