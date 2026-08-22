@@ -41,16 +41,10 @@ const ProductInfoTabs = ({ product }) => {
         )}
         {activeTab === "spesifikasi" && (
           <div>
-            {product.specifications &&
-            Object.keys(product.specifications).length > 0 ? (
-              <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                {Object.entries(product.specifications).map(([key, value]) => (
-                  <div key={key}>
-                    <dt className="font-semibold text-slate-800">{key}</dt>
-                    <dd className="text-slate-600">{value}</dd>
-                  </div>
-                ))}
-              </dl>
+            {product.specifications ? (
+              <div className="prose max-w-none text-slate-600 whitespace-pre-wrap">
+                {product.specifications}
+              </div>
             ) : (
               <p className="text-slate-600">Spesifikasi belum tersedia.</p>
             )}
