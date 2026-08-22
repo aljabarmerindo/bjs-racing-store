@@ -28,6 +28,13 @@ const ImageUploader = ({ productId, kategori = "", merek = "", onUploadComplete 
       alert("Silakan pilih setidaknya satu gambar untuk diupload.");
       return;
     }
+
+    const isPilok = kategori === "Pilok";
+    if (!isPilok && (!kategori || !merek)) {
+      alert("Isi Kategori dan Merek terlebih dahulu sebelum upload gambar untuk produk non-Pilok.");
+      return;
+    }
+
     setIsUploading(true);
 
     try {
@@ -38,7 +45,6 @@ const ImageUploader = ({ productId, kategori = "", merek = "", onUploadComplete 
         useWebWorker: true,
       };
 
-      const isPilok = kategori === "Pilok";
       const BUCKET_NAME = isPilok ? "produk-pilok" : "produk-parts";
 
       const slugify = (text) => {
